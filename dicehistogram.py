@@ -10,13 +10,23 @@ import os
 
 RAW_DIR = 'capture'
 CROPPED_DIR = 'crop'
+MAX_EDGE_CROPPED = 320
 
-def TrimOutliers(coordinates):
+
+def TrimOutliersGetExtrema(coordinates):
   coordinates.sort()
   histogram = collections.defaultdict(lambda: 0)
   for v in coordinates:
     histogram[v] = histogram[v] + 1
-  return [v for v, c in histogram.iteritems() if c > 8]
+  histogram = sorted(histogram.items())
+  drop_threshold = 0
+  while histogram[-1][0] - histogram[0][0] > MAX_EDGE_CROPPED:
+    drop_threshold += 1
+    new_start = 0 if histogram[0][0] > drop_threshold else 1
+    new_end = len(histogram) if histogram[0][0] > drop_threshold else -1
+    histogram = histogram[new_start:new_end]
+  return histogram[0][0], histogram[-1][0]
+
 
 def ExtractSubject(in_filename, out_filename):
   print in_filename, out_filename
@@ -42,20 +52,21 @@ def ExtractSubject(in_filename, out_filename):
     #else:
     #  out_image.putpixel((x, y), (r, g, b))
 
-  matched_x = TrimOutliers(matched_x)
-  matched_y = TrimOutliers(matched_y)
-  bound = (min(matched_x), min(matched_y), max(matched_x), max(matched_y))
+  min_x, max_x = TrimOutliersGetExtrema(matched_x)
+  min_y, max_y = TrimOutliersGetExtrema(matched_y)
+  bound = (min_x, min_y, max_x, max_y)
   print bound
   out_image = out_image.crop(bound)
   print out_image.size
   out_image.save(out_filename)
   #out_image.show()
 
+
 if __name__ == '__main__':
   for raw_image_filename in os.listdir(RAW_DIR):
     if not raw_image_filename.endswith('jpg'):
       continue
-    #if not raw_image_filename.startswith('IMG_20150731_142130048'):
+    #if not raw_image_filename.startswith('IMG_20150731_142214364'):
     #  continue
     ExtractSubject(
         os.path.join(RAW_DIR, raw_image_filename),
