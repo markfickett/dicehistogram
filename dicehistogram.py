@@ -10,29 +10,43 @@ import os
 
 RAW_DIR = 'capture'
 CROPPED_DIR = 'crop'
-MAX_EDGE_CROPPED = 320
+# All cropped images must have uniform size, for machine learning input.
+EDGE_CROPPED = 310
 
 
-def TrimOutliersGetExtrema(coordinates):
+def TrimOutliersGetExtrema(coordinates, upper_bound_inclusive):
   coordinates.sort()
   histogram = collections.defaultdict(lambda: 0)
   for v in coordinates:
     histogram[v] = histogram[v] + 1
   histogram = sorted(histogram.items())
   drop_threshold = 0
-  while histogram[-1][0] - histogram[0][0] > MAX_EDGE_CROPPED:
+  while histogram[-1][0] - histogram[0][0] > EDGE_CROPPED:
     drop_threshold += 1
     new_start = 0 if histogram[0][0] > drop_threshold else 1
     new_end = len(histogram) if histogram[0][0] > drop_threshold else -1
     histogram = histogram[new_start:new_end]
-  return histogram[0][0], histogram[-1][0]
+
+  low, high = histogram[0][0], histogram[-1][0]
+  while high - low < EDGE_CROPPED:
+    high += 1
+    if high - low < EDGE_CROPPED:
+      low -= 1
+  if low < 0:
+    high -= low
+    low = 0
+  elif high > upper_bound_inclusive:
+    low -= (high - upper_bound_inclusive)
+    high = upper_bound_inclusive
+
+  return low, high
 
 
 def ExtractSubject(in_filename, out_filename):
   print in_filename, out_filename
   image = PIL.Image.open(in_filename)
   print image.mode, image.size, image.format
-  h, w = image.size
+  w, h = image.size
 
   image_data = image.getdata()
   out_image = PIL.Image.new(image.mode, image.size)
@@ -41,8 +55,8 @@ def ExtractSubject(in_filename, out_filename):
   matched_x = []
   matched_y = []
   for n, (r, g, b) in enumerate(image_data):
-    y = n / h
-    x = n % h
+    y = n / w
+    x = n % w
     if n % tenths == 0:
       print (x, y)
     if max(r, b) >= g:
@@ -52,8 +66,8 @@ def ExtractSubject(in_filename, out_filename):
     #else:
     #  out_image.putpixel((x, y), (r, g, b))
 
-  min_x, max_x = TrimOutliersGetExtrema(matched_x)
-  min_y, max_y = TrimOutliersGetExtrema(matched_y)
+  min_x, max_x = TrimOutliersGetExtrema(matched_x, w - 1)
+  min_y, max_y = TrimOutliersGetExtrema(matched_y, h - 1)
   bound = (min_x, min_y, max_x, max_y)
   print bound
   out_image = out_image.crop(bound)
@@ -66,7 +80,7 @@ if __name__ == '__main__':
   for raw_image_filename in os.listdir(RAW_DIR):
     if not raw_image_filename.endswith('jpg'):
       continue
-    #if not raw_image_filename.startswith('IMG_20150731_142214364'):
+    #if not raw_image_filename.startswith('IMG_20150731_142126751'):
     #  continue
     ExtractSubject(
         os.path.join(RAW_DIR, raw_image_filename),
