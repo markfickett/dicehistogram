@@ -16,7 +16,7 @@ CROPPED_DIR = 'crop'
 EDGE_CROPPED = 310
 
 COMPARISON_SIZE = EDGE_CROPPED / 4
-DISTANCE_THRESHOLD = 230000 # (COMPARISON_SIZE**2 * 255) / 25
+DISTANCE_THRESHOLD = 750000 # (COMPARISON_SIZE**2 * 255) / 25
 
 
 def TrimOutliersGetExtrema(coordinates, upper_bound_inclusive):
@@ -85,38 +85,49 @@ class ImageComparison(object):
     self.image = image
     self.filename = filename
     self.distance = None
-    self.resized = self.image.convert(mode='L').resize(
+    #self.resized = self.image.convert(mode='L').resize(
+    #    (COMPARISON_SIZE, COMPARISON_SIZE), resample=PIL.Image.BILINEAR)
+    self.resized = self.image.resize(
         (COMPARISON_SIZE, COMPARISON_SIZE), resample=PIL.Image.BILINEAR)
     self.diff = None
 
 
 def AssignToCluster(in_filename, clusters):
   image = ImageComparison(PIL.Image.open(in_filename), in_filename)
+  best_distance = float('Inf')
   best_members = None
+  best_diff = None
   for representative, members in clusters:
-    distance = FindDistance(image, representative)
+    distance, diff = FindDistance(image, representative)
     print '%s diff %s = %d' % (
         representative.filename, image.filename, distance)
-    if distance < DISTANCE_THRESHOLD and (image.distance is None or distance < image.distance):
-      image.distance = distance
+    if distance < best_distance:
+      best_distance = distance
+      best_diff = diff
       best_members = members
-  if best_members is None:
+  image.distance = best_distance
+  image.diff = best_diff
+  if best_members is None or best_distance > DISTANCE_THRESHOLD:
     clusters.append((image, []))
   else:
     best_members.append(image)
 
 
 def FindDistance(image, representative):
-  min_diff = float('Inf')
+  best_distance = float('Inf')
+  best_diff = None
   for r in xrange(0, 360, 10):
     abs_diff = PIL.ImageChops.difference(
         image.resized.rotate(r),
         representative.resized)
-    diff_sum = sum(abs_diff.getdata())
-    if diff_sum < min_diff:
-      min_diff = diff_sum
-      image.diff = abs_diff
-  return min_diff
+    diff_sum = 0
+    for parts in abs_diff.getdata():
+      diff_sum += sum(parts)
+    #diff_sum = sum(abs_diff.getdata())
+    if diff_sum < best_distance:
+      best_distance = diff_sum
+      best_diff = abs_diff
+  return best_distance, best_diff
 
 
 def BuildClusterSummaryImage(clusters):
