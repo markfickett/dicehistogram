@@ -15,8 +15,9 @@ CROPPED_DIR = 'crop'
 # All cropped images must have uniform size, for machine learning input.
 EDGE_CROPPED = 310
 
-COMPARISON_SIZE = EDGE_CROPPED / 4
-DISTANCE_THRESHOLD = 750000 # (COMPARISON_SIZE**2 * 255) / 25
+COMPARISON_SIZE = EDGE_CROPPED / 6
+OFFSET_SEARCH = 6
+DISTANCE_THRESHOLD = 90000
 
 
 def TrimOutliersGetExtrema(coordinates, upper_bound_inclusive):
@@ -85,9 +86,7 @@ class ImageComparison(object):
     self.image = image
     self.filename = filename
     self.distance = None
-    #self.resized = self.image.convert(mode='L').resize(
-    #    (COMPARISON_SIZE, COMPARISON_SIZE), resample=PIL.Image.BILINEAR)
-    self.resized = self.image.resize(
+    self.resized = self.image.convert(mode='L').resize(
         (COMPARISON_SIZE, COMPARISON_SIZE), resample=PIL.Image.BILINEAR)
     self.diff = None
 
@@ -100,7 +99,7 @@ def AssignToCluster(in_filename, clusters):
   for representative, members in clusters:
     distance, diff = FindDistance(image, representative)
     print '%s diff %s = %d' % (
-        representative.filename, image.filename, distance)
+        image.filename, representative.filename, distance)
     if distance < best_distance:
       best_distance = distance
       best_diff = diff
@@ -117,16 +116,16 @@ def FindDistance(image, representative):
   best_distance = float('Inf')
   best_diff = None
   for r in xrange(0, 360, 10):
-    abs_diff = PIL.ImageChops.difference(
-        image.resized.rotate(r),
-        representative.resized)
-    diff_sum = 0
-    for parts in abs_diff.getdata():
-      diff_sum += sum(parts)
-    #diff_sum = sum(abs_diff.getdata())
-    if diff_sum < best_distance:
-      best_distance = diff_sum
-      best_diff = abs_diff
+    rotated = image.resized.rotate(r)
+    for dx in xrange(-OFFSET_SEARCH, OFFSET_SEARCH):
+      for dy in xrange(-OFFSET_SEARCH, OFFSET_SEARCH):
+        abs_diff = PIL.ImageChops.difference(
+            PIL.ImageChops.offset(rotated, dx, dy),
+            representative.resized)
+        diff_sum = sum(abs_diff.getdata())
+        if diff_sum < best_distance:
+          best_distance = diff_sum
+          best_diff = abs_diff
   return best_distance, best_diff
 
 
