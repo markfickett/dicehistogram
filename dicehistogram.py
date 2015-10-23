@@ -338,7 +338,12 @@ if __name__ == '__main__':
             os.path.join(CROPPED_DIR, cropped_image_filename), clusters)
     except KeyboardInterrupt, e:
       print 'got ^C, early stop for categorization'
-    print 'building summary'
+
+    for representative, members in clusters:
+      print representative.filename, (1 + len(members))
+
+    summary_path = '/tmp/summary_image.jpg'
+    print 'building summary image, will save to', summary_path
     summary = BuildClusterSummaryImage(clusters)
-    summary.save('/tmp/summary_image.jpg')
+    summary.save(summary_path)
     summary.show()
