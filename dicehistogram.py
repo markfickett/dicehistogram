@@ -37,7 +37,7 @@ COMPARISON_THRESHOLD = 170
 OFFSET_SEARCH = 30 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 2
 ROTATION_SEARCH_INCREMENT = 10
-DISTANCE_THRESHOLD = 30000
+DISTANCE_THRESHOLD = 100
 
 
 def _Summarize(name, image):
@@ -250,7 +250,17 @@ def FindDistance(image, representative):
         abs_diff = PIL.ImageChops.difference(
             PIL.ImageChops.offset(rotated, dx, dy),
             representative.resized)
-        diff_sum = sum(abs_diff.getdata())
+        # Sum the diffs, but exclude isolated diffs. This is a cheap alternative
+        # to doing an erode before doing the sum.
+        run_count = 0
+        diff_sum = 0
+        for v in abs_diff.getdata():
+          if v:
+            run_count += 1
+          else:
+            if run_count > 1:
+              diff_sum += run_count
+            run_count = 0
         if diff_sum < best_distance:
           best_distance = diff_sum
           best_diff = abs_diff
@@ -288,34 +298,38 @@ if __name__ == '__main__':
   if EXTRACT in run_stages:
     raw_image_names = os.listdir(RAW_DIR)
     n = len(raw_image_names)
-    for i, raw_image_filename in enumerate(raw_image_names):
-      if (raw_image_filename == MASK_IMAGE_FILENAME
-          or not raw_image_filename.lower().endswith('jpg')):
-        continue
-      try:
-        cropped_file_path = os.path.join(CROPPED_DIR, raw_image_filename)
-        if not re_crop and os.path.isfile(cropped_file_path):
-          continue
-        print '%d/%d ' % (i, n),
-        ExtractSubject(
-            os.path.join(RAW_DIR, raw_image_filename),
-            cropped_file_path,
-            os.path.join(RAW_DIR, REFERENCE_IMAGE_FILENAME),
-            os.path.join(RAW_DIR, MASK_IMAGE_FILENAME))
-      except NoDieFoundError, e:
-        print 'No die found in %s' % raw_image_filename
+    try:
+       for i, raw_image_filename in enumerate(raw_image_names):
+         if (raw_image_filename == MASK_IMAGE_FILENAME
+             or not raw_image_filename.lower().endswith('jpg')):
+           continue
+         try:
+           cropped_file_path = os.path.join(CROPPED_DIR, raw_image_filename)
+           if not re_crop and os.path.isfile(cropped_file_path):
+             continue
+           print '%d/%d ' % (i, n),
+           ExtractSubject(
+               os.path.join(RAW_DIR, raw_image_filename),
+               cropped_file_path,
+               os.path.join(RAW_DIR, REFERENCE_IMAGE_FILENAME),
+               os.path.join(RAW_DIR, MASK_IMAGE_FILENAME))
+         except NoDieFoundError, e:
+           print 'No die found in %s' % raw_image_filename
+    except KeyboardInterrupt, e:
+      print 'got ^C, early stop for crops'
   if CLUSTER in run_stages:
     clusters = []
     cropped_image_names = os.listdir(CROPPED_DIR)
     n = len(cropped_image_names)
-    for i, cropped_image_filename in enumerate(cropped_image_names):
-      if i > 10:
-        break
-      if not cropped_image_filename.lower().endswith('jpg'):
-        continue
-      print '%d/%d ' % (i, n),
-      AssignToCluster(
-          os.path.join(CROPPED_DIR, cropped_image_filename), clusters)
+    try:
+      for i, cropped_image_filename in enumerate(cropped_image_names):
+        if not cropped_image_filename.lower().endswith('jpg'):
+          continue
+        print '%d/%d ' % (i, n),
+        AssignToCluster(
+            os.path.join(CROPPED_DIR, cropped_image_filename), clusters)
+    except KeyboardInterrupt, e:
+      print 'got ^C, early stop for categorization'
     print 'building summary'
     summary = BuildClusterSummaryImage(clusters)
     summary.save('/tmp/summary_image.jpg')
