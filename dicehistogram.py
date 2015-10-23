@@ -42,6 +42,9 @@ OFFSET_SEARCH_INCREMENT = 2
 ROTATION_SEARCH_INCREMENT = 10
 DISTANCE_THRESHOLD = 130
 
+# Edge size for the otherwise unaltered image in the summary image.
+SUMMARY_MEMBER_IMAGE_SIZE = 150
+
 
 def _Summarize(name, image):
   print name, image.mode, image.size, image.format
@@ -207,11 +210,12 @@ def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
 
 class ImageComparison(object):
   def __init__(self, image, filename):
-    self.image = image
+    self.image = image.resize(
+        (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
     self.filename = filename
     self.distance = None
-    w = self.image.size[0] / COMPARISON_RESIZE_FACTOR
-    self.resized = self.image.resize((w, w), resample=PIL.Image.BILINEAR)
+    w = image.size[0] / COMPARISON_RESIZE_FACTOR
+    self.resized = image.resize((w, w), resample=PIL.Image.BILINEAR)
     center = self.resized.size[0] / 2
     r = COMPARISON_CENTER_CROP_SIZE / 2
     self.resized = (self.resized
@@ -276,22 +280,25 @@ def FindErodedDistance(image, representative, early_exit_threshold):
 
 
 def BuildClusterSummaryImage(clusters):
-  h = EDGE_CROPPED * len(clusters)
+  if not clusters:
+    return
+  large_edge = clusters[0][0].image.size[0]
+  h = large_edge * len(clusters)
   w = 0
   for _, members in clusters:
     w = max(w, 1 + len(members))
-  w *= EDGE_CROPPED
+  w *= large_edge
   summary_image = PIL.Image.new('RGB', (w, h))
   draw = PIL.ImageDraw.Draw(summary_image)
   for i, (representative, members) in enumerate(clusters):
-    y = i * EDGE_CROPPED
+    y = i * large_edge
     for j, member in enumerate([representative] + members):
-      x = j * EDGE_CROPPED
+      x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.filename)
       if member.diff is not None:
         summary_image.paste(
-            member.diff, (x, y + (EDGE_CROPPED - member.diff.size[0])))
+            member.diff, (x, y + (large_edge - member.diff.size[0])))
       if member.distance is not None:
         draw.text((x, y + 20), str(member.distance))
   return summary_image
@@ -301,7 +308,7 @@ if __name__ == '__main__':
   re_crop = False
   EXTRACT = 0
   CLUSTER = 1
-  run_stages = (EXTRACT, CLUSTER,)
+  run_stages = (CLUSTER,)
   if EXTRACT in run_stages:
     raw_image_names = os.listdir(RAW_DIR)
     n = len(raw_image_names)
@@ -343,6 +350,7 @@ if __name__ == '__main__':
 
     summary_path = '/tmp/summary_image.jpg'
     print 'building summary image, will save to', summary_path
-    summary = BuildClusterSummaryImage(clusters)
-    summary.save(summary_path)
-    summary.show()
+    if clusters:
+      summary = BuildClusterSummaryImage(clusters)
+      summary.save(summary_path)
+      summary.show()
