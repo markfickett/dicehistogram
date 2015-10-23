@@ -301,8 +301,7 @@ if __name__ == '__main__':
   re_crop = False
   EXTRACT = 0
   CLUSTER = 1
-  #run_stages = (EXTRACT, CLUSTER,)
-  run_stages = (CLUSTER,)
+  run_stages = (EXTRACT, CLUSTER,)
   if EXTRACT in run_stages:
     raw_image_names = os.listdir(RAW_DIR)
     n = len(raw_image_names)
