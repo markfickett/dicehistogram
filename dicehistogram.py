@@ -34,12 +34,20 @@ EROSION = 2
 SCAN_DISTANCE = 400
 
 # Categorization parameters.
+# Before comparison, the cropped image is sized down by this factor (and
+# converted to grayscale).
 COMPARISON_RESIZE_FACTOR = 4
+# Before comparison, the resized image is center-cropped with a square.
 COMPARISON_CENTER_CROP_SIZE = 270 / COMPARISON_RESIZE_FACTOR
+# Before comparison, the resized/cropped image is thresholded at this value.
 COMPARISON_THRESHOLD = 170
+# During comparison, search +/- this many pixels translation for a match.
 OFFSET_SEARCH = 40 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 2
+# During comparison the image is rotated 360d, this many degrees at a time.
 ROTATION_SEARCH_INCREMENT = 10
+# Absolute difference (number of differing pixels) below which comparisons
+# are considered a match.
 DISTANCE_THRESHOLD = 130
 
 # Edge size for the otherwise unaltered image in the summary image.
