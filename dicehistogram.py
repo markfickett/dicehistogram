@@ -20,9 +20,11 @@ MASK_IMAGE_FILENAME = 'DSC_6667_redmask.JPG'
 # Photo taken of the area without a die at all.
 REFERENCE_IMAGE_FILENAME = 'DSC_6669.JPG'
 
+DIFF_THRESHOLD = 150
+SCAN_DISTANCE = 400
+
 COMPARISON_SIZE = EDGE_CROPPED / 6
 OFFSET_SEARCH = 6
-DIFF_THRESHOLD = 150
 DISTANCE_THRESHOLD = 90000
 
 
@@ -94,6 +96,10 @@ def GetReference(reference_filename, mask):
   return reference_image
 
 
+class NoDieFoundError(RuntimeError):
+  pass
+
+
 def ExtractSubject(
     in_filename,
     out_filename,
@@ -110,28 +116,78 @@ def ExtractSubject(
   image = PIL.Image.composite(image, white, mask)
   diff = PIL.ImageChops.difference(reference, image)
 
-  tenths = (h * w) / 10
-  matched_x = []
-  matched_y = []
-  for n, (dr, dg, db) in enumerate(diff.getdata()):
-    y = n / w
-    x = n % w
-    if n % tenths == 0:
-      print (x, y)
-    if sum((dr, dg, db)) >= DIFF_THRESHOLD:
-      diff.putpixel((x, y), (254, 0, 0))
-      matched_x.append(x)
-      matched_y.append(y)
-  diff.show()
-
-  # NEXT: Rework bound computation.
-  min_x, max_x = TrimOutliersGetExtrema(matched_x, w - 1)
-  min_y, max_y = TrimOutliersGetExtrema(matched_y, h - 1)
-  bound = (min_x, min_y, max_x, max_y)
+  bound = FindLargeDiffBound(diff)
   print bound
+  bound = MakeSquare(bound, diff.size, EDGE_CROPPED)
   out_image = image.crop(bound)
   _Summarize('output', out_image)
   out_image.save(out_filename)
+
+
+def FindLargeDiffBound(diff):
+  """
+  Scan the image in horizontal lines at SCAN_DISTANCE intervals. When we find
+  a stripe that's all above threshold at least SCAN_DISTANCE/4 long,
+  flood-fill it. If the total area is >= SCAN_DISTANCE**2, return its bounds.
+  """
+  w, h = diff.size
+  found_line_len = 0
+  for y in xrange(0, h, SCAN_DISTANCE):
+    for x in xrange(w):
+      if sum(diff.getpixel((x, y))) > DIFF_THRESHOLD:
+        #diff.putpixel((x, y), (0, DIFF_THRESHOLD + 1, 0))
+        found_line_len += 1
+      else:
+        #diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
+        found_line_len = 0
+      if found_line_len > SCAN_DISTANCE / 4:
+        print 'potential region at', x, y
+        visited = set()
+        region = set()
+        active = set()
+        active.add((x, y))
+        while active:
+          (i, j) = active.pop()
+          visited.add((i, j))
+          if sum(diff.getpixel((i, j))) > DIFF_THRESHOLD:
+            region.add((i, j))
+            diff.putpixel((i, j), (255, 0, 0))
+            for dx in xrange(-1, 2):
+              for dy in xrange(-1, 2):
+                nx, ny = (i + dx, j + dy)
+                if ((dx, dy) != (0, 0)
+                    and nx >= 0 and nx < w and ny >= 0 and ny < h
+                    and (nx, ny) not in visited):
+                  active.add((nx, ny))
+        print 'region area', len(region)
+        if len(region) > SCAN_DISTANCE**2:
+          x_max = y_max = 0
+          x_min = w - 1
+          y_min = h - 1
+          for (i, j) in region:
+            x_min = min(x_min, i)
+            x_max = max(x_max, i)
+            y_min = min(y_min, j)
+            y_max = max(y_max, j)
+          return (x_min, y_min, x_max, y_max)
+  #diff.show()
+  raise NoDieFoundError()
+
+
+def MakeSquare((x_min_in, y_min_in, x_max_in, y_max_in), (w, h), length):
+  x_min, x_max = AdjustBound(x_min_in, x_max_in, w, length)
+  y_min, y_max = AdjustBound(y_min_in, y_max_in, h, length)
+  return (x_min, y_min, x_max, y_max)
+
+
+def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
+  x_min = x_min_in
+  x_max = x_max_in
+  while x_max - x_min < length:
+    x_min = max(0, x_min - 1)
+    x_max = min(x_exclusive_bound - 1, x_max + 1)
+  x_max += length - (x_max - x_min)
+  return x_min, x_max
 
 
 class ImageComparison(object):
@@ -214,11 +270,14 @@ if __name__ == '__main__':
     for raw_image_filename in ('DSC_6769.JPG', 'DSC_6882.JPG', 'DSC_6995.JPG', 'DSC_7108.JPG', 'DSC_7221.JPG'):
       if not raw_image_filename.lower().endswith('jpg'):
         continue
-      ExtractSubject(
-          os.path.join(RAW_DIR, raw_image_filename),
-          os.path.join(CROPPED_DIR, raw_image_filename),
-          os.path.join(RAW_DIR, REFERENCE_IMAGE_FILENAME),
-          os.path.join(RAW_DIR, MASK_IMAGE_FILENAME))
+      try:
+        ExtractSubject(
+            os.path.join(RAW_DIR, raw_image_filename),
+            os.path.join(CROPPED_DIR, raw_image_filename),
+            os.path.join(RAW_DIR, REFERENCE_IMAGE_FILENAME),
+            os.path.join(RAW_DIR, MASK_IMAGE_FILENAME))
+      except NoDieFoundError, e:
+        print 'No die found in %s' % raw_image_filename
   if CLUSTER in run_stages:
     clusters = []
     for cropped_image_filename in os.listdir(CROPPED_DIR):
