@@ -266,9 +266,9 @@ if __name__ == '__main__':
   #run_stages = (EXTRACT, CLUSTER,)
   run_stages = (EXTRACT,)
   if EXTRACT in run_stages:
-    #for raw_image_filename in os.listdir(RAW_DIR):
-    for raw_image_filename in ('DSC_6769.JPG', 'DSC_6882.JPG', 'DSC_6995.JPG', 'DSC_7108.JPG', 'DSC_7221.JPG'):
-      if not raw_image_filename.lower().endswith('jpg'):
+    for raw_image_filename in os.listdir(RAW_DIR):
+      if (raw_image_filename == MASK_IMAGE_FILENAME
+          or not raw_image_filename.lower().endswith('jpg')):
         continue
       try:
         ExtractSubject(
