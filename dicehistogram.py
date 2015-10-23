@@ -26,6 +26,9 @@ REFERENCE_IMAGE_FILENAME = 'DSC_6669.JPG'
 # considered as potentially part of the die. Comparison is against the
 # reference image.
 DIFF_THRESHOLD = 150
+# Diffs without at least this many pixels together (different in a row) are
+# ignored. This avoids counting thin edges.
+EROSION = 2
 # Distance between scan lines when searching the image for the die. This should
 # be roughly the apparent radius of the die.
 SCAN_DISTANCE = 400
@@ -34,7 +37,7 @@ SCAN_DISTANCE = 400
 COMPARISON_RESIZE_FACTOR = 4
 COMPARISON_CENTER_CROP_SIZE = 270 / COMPARISON_RESIZE_FACTOR
 COMPARISON_THRESHOLD = 170
-OFFSET_SEARCH = 26 / COMPARISON_RESIZE_FACTOR
+OFFSET_SEARCH = 40 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 2
 ROTATION_SEARCH_INCREMENT = 10
 DISTANCE_THRESHOLD = 100
@@ -224,7 +227,8 @@ def AssignToCluster(in_filename, clusters):
   best_members = None
   best_diff = None
   for representative, members in clusters:
-    distance, diff = FindErodedDistance(image, representative)
+    distance, diff = FindErodedDistance(
+        image, representative, DISTANCE_THRESHOLD)
     print '%s diff/erode %s = %d' % (
         image.filename, representative.filename, distance)
     if distance < best_distance:
@@ -242,7 +246,7 @@ def AssignToCluster(in_filename, clusters):
     best_members.append(image)
 
 
-def FindErodedDistance(image, representative):
+def FindErodedDistance(image, representative, early_exit_threshold):
   best_distance = float('Inf')
   best_diff = None
   for r in xrange(0, 360, ROTATION_SEARCH_INCREMENT):
@@ -260,12 +264,14 @@ def FindErodedDistance(image, representative):
           if v:
             run_count += 1
           else:
-            if run_count > 2:
+            if run_count > EROSION:
               diff_sum += run_count
             run_count = 0
         if diff_sum < best_distance:
           best_distance = diff_sum
           best_diff = abs_diff
+          if best_distance < early_exit_threshold:
+            return best_distance, best_diff
   return best_distance, best_diff
 
 
