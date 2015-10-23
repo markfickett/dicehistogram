@@ -17,12 +17,20 @@ EDGE_CROPPED = 620
 
 # Photo where the area the die might be in is pure red.
 MASK_IMAGE_FILENAME = 'DSC_6667_redmask.JPG'
+# A background color to fill in with where the mask removes superfluous detail.
+MASK_FILL_COLOR = (185, 175, 175)
 # Photo taken of the area without a die at all.
 REFERENCE_IMAGE_FILENAME = 'DSC_6669.JPG'
 
+# Pixels with a difference (summed across RGB) greater than this value will be
+# considered as potentially part of the die. Comparison is against the
+# reference image.
 DIFF_THRESHOLD = 150
+# Distance between scan lines when searching the image for the die. This should
+# be roughly the apparent radius of the die.
 SCAN_DISTANCE = 400
 
+# Categorization parameters.
 COMPARISON_SIZE = EDGE_CROPPED / 6
 OFFSET_SEARCH = 6
 DISTANCE_THRESHOLD = 90000
@@ -90,7 +98,7 @@ def GetReference(reference_filename, mask):
   if not reference_image:
     reference_image = PIL.Image.open(reference_filename)
     _Summarize('ref', reference_image)
-    white = PIL.Image.new('RGB', reference_image.size, 'white')
+    white = PIL.Image.new('RGB', reference_image.size, MASK_FILL_COLOR)
     reference_image = PIL.Image.composite(reference_image, white, mask)
     _Summarize('ref masked', reference_image)
   return reference_image
@@ -110,7 +118,7 @@ def ExtractSubject(
   _Summarize('input', image)
   w, h = image.size
 
-  white = PIL.Image.new('RGB', image.size, 'white')
+  white = PIL.Image.new('RGB', image.size, MASK_FILL_COLOR)
   mask = PrepareMask(mask_filename)
   reference = GetReference(reference_filename, mask)
   image = PIL.Image.composite(image, white, mask)
