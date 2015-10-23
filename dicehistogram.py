@@ -26,9 +26,6 @@ REFERENCE_IMAGE_FILENAME = 'DSC_6669.JPG'
 # considered as potentially part of the die. Comparison is against the
 # reference image.
 DIFF_THRESHOLD = 150
-# Diffs without at least this many pixels together (different in a row) are
-# ignored. This avoids counting thin edges.
-EROSION = 2
 # Distance between scan lines when searching the image for the die. This should
 # be roughly the apparent radius of the die.
 SCAN_DISTANCE = 400
@@ -36,7 +33,7 @@ SCAN_DISTANCE = 400
 # Categorization parameters.
 # Before comparison, the cropped image is sized down by this factor (and
 # converted to grayscale).
-COMPARISON_RESIZE_FACTOR = 4
+COMPARISON_RESIZE_FACTOR = 8
 # Before comparison, the resized image is center-cropped with a square.
 COMPARISON_CENTER_CROP_SIZE = 270 / COMPARISON_RESIZE_FACTOR
 # Before comparison, the resized/cropped image is thresholded at this value.
@@ -45,10 +42,13 @@ COMPARISON_THRESHOLD = 170
 OFFSET_SEARCH = 40 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 2
 # During comparison the image is rotated 360d, this many degrees at a time.
-ROTATION_SEARCH_INCREMENT = 10
-# Absolute difference (number of differing pixels) below which comparisons
-# are considered a match.
-DISTANCE_THRESHOLD = 130
+ROTATION_SEARCH_INCREMENT = 5
+# Diffs without at least this many pixels together (different in a row) are
+# ignored. This avoids counting thin edges.
+DO_EROSION_THRESHOLD = 25000
+# Absolute difference (number of differing pixels) below which eroded
+# comparisons are considered a match.
+DISTANCE_THRESHOLD = 10
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
@@ -239,15 +239,14 @@ def AssignToCluster(in_filename, clusters):
   best_members = None
   best_diff = None
   for representative, members in clusters:
-    distance, diff = FindErodedDistance(
-        image, representative, DISTANCE_THRESHOLD)
+    distance, diff = FindErodedDistance(image, representative)
     print '%s diff/erode %s = %d' % (
         image.filename, representative.filename, distance)
     if distance < best_distance:
       best_distance = distance
       best_diff = diff
       best_members = members
-      if distance < DISTANCE_THRESHOLD:
+      if distance <= DISTANCE_THRESHOLD:
         break
   image.distance = best_distance
   image.diff = best_diff
@@ -258,7 +257,7 @@ def AssignToCluster(in_filename, clusters):
     best_members.append(image)
 
 
-def FindErodedDistance(image, representative, early_exit_threshold):
+def FindErodedDistance(image, representative):
   best_distance = float('Inf')
   best_diff = None
   for r in xrange(0, 360, ROTATION_SEARCH_INCREMENT):
@@ -268,23 +267,45 @@ def FindErodedDistance(image, representative, early_exit_threshold):
         abs_diff = PIL.ImageChops.difference(
             PIL.ImageChops.offset(rotated, dx, dy),
             representative.resized)
-        # Sum the diffs, but exclude isolated diffs. This is a cheap alternative
-        # to doing an erode before doing the sum.
-        run_count = 0
-        diff_sum = 0
-        for v in abs_diff.getdata():
-          if v:
-            run_count += 1
-          else:
-            if run_count > EROSION:
-              diff_sum += run_count
-            run_count = 0
+        diff_sum = GetErodedSum(abs_diff)
         if diff_sum < best_distance:
           best_distance = diff_sum
           best_diff = abs_diff
-          if best_distance < early_exit_threshold:
+          if best_distance <= DISTANCE_THRESHOLD:
             return best_distance, best_diff
   return best_distance, best_diff
+
+
+def GetErodedSum(diff):
+  diff_data = list(diff.getdata())
+  basic_sum = sum(diff_data)
+  if basic_sum > DO_EROSION_THRESHOLD:
+    return basic_sum
+
+  data_iter = iter(diff_data)
+  data_matrix = []
+  w, h = diff.size
+  for x in xrange(w):
+    row = []
+    for y in xrange(h):
+      row.append(data_iter.next())
+    data_matrix.append(row)
+
+  interior_count = 0
+  for x in xrange(w):
+    for y in xrange(h):
+      if not data_matrix[x][y]:
+        continue
+      num_missing = 0
+      for dx in xrange(-1, 2):
+        for dy in xrange(-1, 2):
+          if not data_matrix[(x + dx) % w][(y + dy) % h]:
+            num_missing += 1
+        if num_missing > 4:
+          break
+      if num_missing <= 4:
+        interior_count += 1
+  return interior_count
 
 
 def BuildClusterSummaryImage(clusters):
