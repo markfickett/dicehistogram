@@ -269,19 +269,26 @@ def BuildClusterSummaryImage(clusters):
 
 
 if __name__ == '__main__':
+  re_crop = False
   EXTRACT = 0
   CLUSTER = 1
   #run_stages = (EXTRACT, CLUSTER,)
   run_stages = (EXTRACT,)
   if EXTRACT in run_stages:
-    for raw_image_filename in os.listdir(RAW_DIR):
+    raw_image_names = os.listdir(RAW_DIR)
+    n = len(raw_image_names)
+    for i, raw_image_filename in enumerate(raw_image_names):
       if (raw_image_filename == MASK_IMAGE_FILENAME
           or not raw_image_filename.lower().endswith('jpg')):
         continue
       try:
+        cropped_file_path = os.path.join(CROPPED_DIR, raw_image_filename)
+        if not re_crop and os.path.isfile(cropped_file_path):
+          continue
+        print '%d/%d ' % (i, n),
         ExtractSubject(
             os.path.join(RAW_DIR, raw_image_filename),
-            os.path.join(CROPPED_DIR, raw_image_filename),
+            cropped_file_path,
             os.path.join(RAW_DIR, REFERENCE_IMAGE_FILENAME),
             os.path.join(RAW_DIR, MASK_IMAGE_FILENAME))
       except NoDieFoundError, e:
