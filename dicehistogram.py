@@ -31,9 +31,13 @@ DIFF_THRESHOLD = 150
 SCAN_DISTANCE = 400
 
 # Categorization parameters.
-COMPARISON_SIZE = EDGE_CROPPED / 6
-OFFSET_SEARCH = 6
-DISTANCE_THRESHOLD = 90000
+COMPARISON_RESIZE_FACTOR = 4
+COMPARISON_CENTER_CROP_SIZE = 270 / COMPARISON_RESIZE_FACTOR
+COMPARISON_THRESHOLD = 170
+OFFSET_SEARCH = 30 / COMPARISON_RESIZE_FACTOR
+OFFSET_SEARCH_INCREMENT = 2
+ROTATION_SEARCH_INCREMENT = 10
+DISTANCE_THRESHOLD = 30000
 
 
 def _Summarize(name, image):
@@ -203,8 +207,14 @@ class ImageComparison(object):
     self.image = image
     self.filename = filename
     self.distance = None
-    self.resized = self.image.convert(mode='L').resize(
-        (COMPARISON_SIZE, COMPARISON_SIZE), resample=PIL.Image.BILINEAR)
+    w = self.image.size[0] / COMPARISON_RESIZE_FACTOR
+    self.resized = self.image.resize((w, w), resample=PIL.Image.BILINEAR)
+    center = self.resized.size[0] / 2
+    r = COMPARISON_CENTER_CROP_SIZE / 2
+    self.resized = (self.resized
+      .crop((center - r, center - r, center + r, center + r))
+      .convert(mode='L')
+      .point(lambda x: 254 if x > COMPARISON_THRESHOLD else 0))
     self.diff = None
 
 
@@ -224,6 +234,7 @@ def AssignToCluster(in_filename, clusters):
   image.distance = best_distance
   image.diff = best_diff
   if best_members is None or best_distance > DISTANCE_THRESHOLD:
+    print '%s starts new cluster' % image.filename
     clusters.append((image, []))
   else:
     best_members.append(image)
@@ -232,10 +243,10 @@ def AssignToCluster(in_filename, clusters):
 def FindDistance(image, representative):
   best_distance = float('Inf')
   best_diff = None
-  for r in xrange(0, 360, 10):
+  for r in xrange(0, 360, ROTATION_SEARCH_INCREMENT):
     rotated = image.resized.rotate(r)
-    for dx in xrange(-OFFSET_SEARCH, OFFSET_SEARCH):
-      for dy in xrange(-OFFSET_SEARCH, OFFSET_SEARCH):
+    for dx in xrange(-OFFSET_SEARCH, OFFSET_SEARCH, OFFSET_SEARCH_INCREMENT):
+      for dy in xrange(-OFFSET_SEARCH, OFFSET_SEARCH, OFFSET_SEARCH_INCREMENT):
         abs_diff = PIL.ImageChops.difference(
             PIL.ImageChops.offset(rotated, dx, dy),
             representative.resized)
@@ -262,7 +273,7 @@ def BuildClusterSummaryImage(clusters):
       draw.text((x, y), member.filename)
       if member.diff is not None:
         summary_image.paste(
-            member.diff, (x, y + (EDGE_CROPPED - COMPARISON_SIZE)))
+            member.diff, (x, y + (EDGE_CROPPED - member.diff.size[0])))
       if member.distance is not None:
         draw.text((x, y + 20), str(member.distance))
   return summary_image
@@ -273,7 +284,7 @@ if __name__ == '__main__':
   EXTRACT = 0
   CLUSTER = 1
   #run_stages = (EXTRACT, CLUSTER,)
-  run_stages = (EXTRACT,)
+  run_stages = (CLUSTER,)
   if EXTRACT in run_stages:
     raw_image_names = os.listdir(RAW_DIR)
     n = len(raw_image_names)
@@ -295,9 +306,17 @@ if __name__ == '__main__':
         print 'No die found in %s' % raw_image_filename
   if CLUSTER in run_stages:
     clusters = []
-    for cropped_image_filename in os.listdir(CROPPED_DIR):
-      if not cropped_image_filename.endswith('jpg'):
+    cropped_image_names = os.listdir(CROPPED_DIR)
+    n = len(cropped_image_names)
+    for i, cropped_image_filename in enumerate(cropped_image_names):
+      if i > 10:
+        break
+      if not cropped_image_filename.lower().endswith('jpg'):
         continue
+      print '%d/%d ' % (i, n),
       AssignToCluster(
           os.path.join(CROPPED_DIR, cropped_image_filename), clusters)
-    BuildClusterSummaryImage(clusters).save('/tmp/summary_image.jpg')
+    print 'building summary'
+    summary = BuildClusterSummaryImage(clusters)
+    summary.save('/tmp/summary_image.jpg')
+    summary.show()
