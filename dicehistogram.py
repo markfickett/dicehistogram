@@ -34,7 +34,7 @@ SCAN_DISTANCE = 400
 COMPARISON_RESIZE_FACTOR = 4
 COMPARISON_CENTER_CROP_SIZE = 270 / COMPARISON_RESIZE_FACTOR
 COMPARISON_THRESHOLD = 170
-OFFSET_SEARCH = 30 / COMPARISON_RESIZE_FACTOR
+OFFSET_SEARCH = 26 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 2
 ROTATION_SEARCH_INCREMENT = 10
 DISTANCE_THRESHOLD = 100
@@ -224,13 +224,15 @@ def AssignToCluster(in_filename, clusters):
   best_members = None
   best_diff = None
   for representative, members in clusters:
-    distance, diff = FindDistance(image, representative)
-    print '%s diff %s = %d' % (
+    distance, diff = FindErodedDistance(image, representative)
+    print '%s diff/erode %s = %d' % (
         image.filename, representative.filename, distance)
     if distance < best_distance:
       best_distance = distance
       best_diff = diff
       best_members = members
+      if distance < DISTANCE_THRESHOLD:
+        break
   image.distance = best_distance
   image.diff = best_diff
   if best_members is None or best_distance > DISTANCE_THRESHOLD:
@@ -240,7 +242,7 @@ def AssignToCluster(in_filename, clusters):
     best_members.append(image)
 
 
-def FindDistance(image, representative):
+def FindErodedDistance(image, representative):
   best_distance = float('Inf')
   best_diff = None
   for r in xrange(0, 360, ROTATION_SEARCH_INCREMENT):
@@ -258,7 +260,7 @@ def FindDistance(image, representative):
           if v:
             run_count += 1
           else:
-            if run_count > 1:
+            if run_count > 2:
               diff_sum += run_count
             run_count = 0
         if diff_sum < best_distance:
