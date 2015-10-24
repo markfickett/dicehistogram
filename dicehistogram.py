@@ -9,7 +9,7 @@ import os
 RAW_DIR = 'capture/151023d20autoroll'
 CROPPED_DIR = 'crop/d20autoroll'
 # All cropped images must have uniform size, for machine learning input.
-EDGE_CROPPED = 620
+EDGE_CROPPED = 660
 
 # Photo where the area the die might be in is pure red.
 MASK_IMAGE_FILENAME = 'mask.JPG'
@@ -44,7 +44,7 @@ ROTATION_SEARCH_INCREMENT = 5
 DO_EROSION_THRESHOLD = 30000
 # Absolute difference (number of differing pixels) below which eroded
 # comparisons are considered a match.
-DISTANCE_THRESHOLD = 10
+DISTANCE_THRESHOLD = 25
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
@@ -328,6 +328,7 @@ def BuildClusterSummaryImage(clusters):
             member.diff, (x, y + (large_edge - member.diff.size[0])))
       if member.distance is not None:
         draw.text((x, y + 20), str(member.distance))
+    draw.text((0, y + 40), '%d members' % (len(members) + 1))
   return summary_image
 
 
