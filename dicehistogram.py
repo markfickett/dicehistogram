@@ -30,26 +30,27 @@ SCAN_DISTANCE = 400
 # Categorization parameters.
 # Before comparison, the cropped image is sized down by this factor (and
 # converted to grayscale).
-COMPARISON_RESIZE_FACTOR = 6
+COMPARISON_RESIZE_FACTOR = 10
 # Before comparison, the resized image is center-cropped with a square.
-COMPARISON_CENTER_CROP_SIZE = 230 / COMPARISON_RESIZE_FACTOR
-# Before comparison, the resized/cropped image is thresholded at this value.
-COMPARISON_THRESHOLD = 170
+COMPARISON_CENTER_CROP_SIZE = 550 / COMPARISON_RESIZE_FACTOR
+# Before comparison, the resized/cropped image is thresholded at this value to
+# convert it to a bitmap, fully black or white image.
+COMPARISON_THRESHOLD = 180
 # During comparison, search +/- this many pixels translation for a match.
-OFFSET_SEARCH = 30 / COMPARISON_RESIZE_FACTOR
+OFFSET_SEARCH = 20 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 1
 # During comparison the image is rotated 360d, this many degrees at a time.
-ROTATION_SEARCH_INCREMENT = 8
+ROTATION_SEARCH_INCREMENT = 6
 # Erosion (removing pixels from a diff where those pixels have matches nearby)
 # removes thin outlines. Such outlines are common when a match is offset just
 # slightly. But eroding leaves blobs (indicative of larger mismatches)  intact.
 # Try erosion when at most this many pixels differ.
-DO_EROSION_THRESHOLD = 90
+DO_EROSION_THRESHOLD = 210
 # Pixels with this many exposed sides (including diagonals) get eroded.
 EROSION_THRESHOLD = 4
-# Absolute difference (number of differing pixels) below which eroded
+# Absolute difference (number of differing pixels) at/below which eroded
 # comparisons are considered a match.
-DISTANCE_THRESHOLD = 2
+DISTANCE_THRESHOLD = 10
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
@@ -229,9 +230,9 @@ class ImageComparison(object):
     self.filename = filename
     self.distance = None
     w = image.size[0] / COMPARISON_RESIZE_FACTOR
-    self.resized = image.resize((w, w), resample=PIL.Image.BILINEAR)
-    center = self.resized.size[0] / 2
+    center = w / 2
     r = COMPARISON_CENTER_CROP_SIZE / 2
+    self.resized = image.resize((w, w), resample=PIL.Image.BILINEAR)
     self.resized = (self.resized
       .crop((center - r, center - r, center + r, center + r))
       .convert(mode='L')
@@ -347,9 +348,11 @@ def BuildClusterSummaryImage(clusters, skip_len):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.filename[skip_len:])
+      top_for_resized = y + (large_edge - member.resized.size[0])
+      summary_image.paste(member.resized, (x, top_for_resized))
       if member.diff is not None:
         summary_image.paste(
-            member.diff, (x, y + (large_edge - member.diff.size[0])))
+            member.diff, (x + member.resized.size[0], top_for_resized))
       if member.distance is not None:
         draw.text((x, y + 20), str(member.distance))
     draw.text((0, y + 40), '%d members' % (len(members) + 1))
