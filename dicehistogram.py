@@ -29,22 +29,24 @@ SCAN_DISTANCE = 400
 # Categorization parameters.
 # Before comparison, the cropped image is sized down by this factor (and
 # converted to grayscale).
-COMPARISON_RESIZE_FACTOR = 8
+COMPARISON_RESIZE_FACTOR = 4
 # Before comparison, the resized image is center-cropped with a square.
-COMPARISON_CENTER_CROP_SIZE = 280 / COMPARISON_RESIZE_FACTOR
+COMPARISON_CENTER_CROP_SIZE = 310 / COMPARISON_RESIZE_FACTOR
 # Before comparison, the resized/cropped image is thresholded at this value.
 COMPARISON_THRESHOLD = 170
 # During comparison, search +/- this many pixels translation for a match.
-OFFSET_SEARCH = 40 / COMPARISON_RESIZE_FACTOR
+OFFSET_SEARCH = 30 / COMPARISON_RESIZE_FACTOR
 OFFSET_SEARCH_INCREMENT = 2
 # During comparison the image is rotated 360d, this many degrees at a time.
 ROTATION_SEARCH_INCREMENT = 5
 # Diffs without at least this many pixels together (different in a row) are
 # ignored. This avoids counting thin edges.
-DO_EROSION_THRESHOLD = 30000
+DO_EROSION_THRESHOLD = 50000
+# Pixels with this many exposed sides (including diagonals) get eroded.
+EROSION_THRESHOLD = 3
 # Absolute difference (number of differing pixels) below which eroded
 # comparisons are considered a match.
-DISTANCE_THRESHOLD = 25
+DISTANCE_THRESHOLD = 15
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
@@ -84,7 +86,7 @@ def TrimOutliersGetExtrema(coordinates, upper_bound_inclusive):
 
 global mask_image
 mask_image = None
-def PrepareMask(mask_filename):
+def GetMask1WhereRed(mask_filename):
   global mask_image
   if not mask_image:
     mask_source_image = PIL.Image.open(mask_filename)
@@ -135,7 +137,7 @@ def ExtractSubject(
   w, h = image.size
 
   white = PIL.Image.new('RGB', image.size, MASK_FILL_COLOR)
-  mask = PrepareMask(mask_filename)
+  mask = GetMask1WhereRed(mask_filename)
   reference = GetReference(reference_filename, mask)
   image = PIL.Image.composite(image, white, mask)
   diff = PIL.ImageChops.difference(reference, image)
@@ -216,6 +218,8 @@ def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
 
 
 class ImageComparison(object):
+  _resized_circle_mask = None
+
   def __init__(self, image, filename):
     self.image = image.resize(
         (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
@@ -228,8 +232,20 @@ class ImageComparison(object):
     self.resized = (self.resized
       .crop((center - r, center - r, center + r, center + r))
       .convert(mode='L')
-      .point(lambda x: 254 if x > COMPARISON_THRESHOLD else 0))
+      .point(lambda x: 254 if x > COMPARISON_THRESHOLD else 0)
+      .convert(mode='1'))
     self.diff = None
+
+  @classmethod
+  def GetCenterCropCircleMask(cls):
+    """Returns a circle mask for the resized comparison/diff image."""
+    if cls._resized_circle_mask is None:
+      w = COMPARISON_CENTER_CROP_SIZE
+      dx = OFFSET_SEARCH
+      cls._resized_circle_mask = PIL.Image.new('1', (w, w), 0)
+      draw = PIL.ImageDraw.Draw(cls._resized_circle_mask)
+      draw.ellipse((dx, dx, w - dx, w - dx), fill=1)
+    return cls._resized_circle_mask
 
 
 def AssignToCluster(in_filename, clusters):
@@ -239,7 +255,7 @@ def AssignToCluster(in_filename, clusters):
   best_diff = None
   for representative, members in clusters:
     distance, diff = FindErodedDistance(image, representative)
-    print '%s diff/erode %s = %d' % (
+    print '%s - %s = %d' % (
         image.filename, representative.filename, distance)
     if distance < best_distance:
       best_distance = distance
@@ -266,6 +282,8 @@ def FindErodedDistance(image, representative):
         abs_diff = PIL.ImageChops.difference(
             PIL.ImageChops.offset(rotated, dx, dy),
             representative.resized)
+        abs_diff = PIL.ImageChops.logical_and(
+            abs_diff, ImageComparison.GetCenterCropCircleMask())
         diff_sum = GetErodedSum(abs_diff)
         if diff_sum < best_distance:
           best_distance = diff_sum
@@ -300,14 +318,14 @@ def GetErodedSum(diff):
         for dy in xrange(-1, 2):
           if not data_matrix[(x + dx) % w][(y + dy) % h]:
             num_missing += 1
-        if num_missing > 4:
+        if num_missing >= EROSION_THRESHOLD:
           break
-      if num_missing <= 4:
+      if num_missing < EROSION_THRESHOLD:
         interior_count += 1
   return interior_count
 
 
-def BuildClusterSummaryImage(clusters):
+def BuildClusterSummaryImage(clusters, filename_prefix_to_strip):
   if not clusters:
     return
   large_edge = clusters[0][0].image.size[0]
@@ -325,7 +343,7 @@ def BuildClusterSummaryImage(clusters):
         [representative] + members[:SUMMARY_MAX_MEMBERS - 1]):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
-      draw.text((x, y), member.filename)
+      draw.text((x, y), member.filename[len(filename_prefix_to_strip):])
       if member.diff is not None:
         summary_image.paste(
             member.diff, (x, y + (large_edge - member.diff.size[0])))
@@ -382,6 +400,6 @@ if __name__ == '__main__':
     summary_path = '/tmp/summary_image.jpg'
     print 'building summary image, will save to', summary_path
     if clusters:
-      summary = BuildClusterSummaryImage(clusters)
+      summary = BuildClusterSummaryImage(clusters, CROPPED_DIR)
       summary.save(summary_path)
       summary.show()
