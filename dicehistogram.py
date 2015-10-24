@@ -4,6 +4,7 @@ import PIL.ImageChops
 import PIL.ImageDraw
 
 import collections
+import json
 import os
 
 RAW_DIR = 'capture/151023d20autoroll'
@@ -325,7 +326,7 @@ def GetErodedSum(diff):
   return interior_count
 
 
-def BuildClusterSummaryImage(clusters, filename_prefix_to_strip):
+def BuildClusterSummaryImage(clusters, skip_len):
   if not clusters:
     return
   large_edge = clusters[0][0].image.size[0]
@@ -343,7 +344,7 @@ def BuildClusterSummaryImage(clusters, filename_prefix_to_strip):
         [representative] + members[:SUMMARY_MAX_MEMBERS - 1]):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
-      draw.text((x, y), member.filename[len(filename_prefix_to_strip):])
+      draw.text((x, y), member.filename[skip_len:])
       if member.diff is not None:
         summary_image.paste(
             member.diff, (x, y + (large_edge - member.diff.size[0])))
@@ -397,9 +398,20 @@ if __name__ == '__main__':
     for representative, members in clusters:
       print representative.filename, (1 + len(members))
 
-    summary_path = '/tmp/summary_image.jpg'
-    print 'building summary image, will save to', summary_path
     if clusters:
-      summary = BuildClusterSummaryImage(clusters, CROPPED_DIR)
+      skip_len = len(CROPPED_DIR) + 1
+      summary_path = '/tmp/summary_image.jpg'
+      print 'building summary image, will save to', summary_path
+      summary = BuildClusterSummaryImage(clusters, skip_len)
       summary.save(summary_path)
       summary.show()
+
+      data_path = '/tmp/summary_data.json'
+      print 'saving summary data to', data_path
+      data_summary = []
+      for representative, members in clusters:
+        data_summary.append(
+            [representative.filename[skip_len:]]
+             + [m.filename[skip_len:] for m in members])
+      with open(data_path, 'w') as data_file:
+        json.dump(data_summary, data_file)
