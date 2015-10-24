@@ -48,6 +48,7 @@ DISTANCE_THRESHOLD = 25
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
+SUMMARY_MAX_MEMBERS = 8
 
 
 def _Summarize(name, image):
@@ -314,12 +315,14 @@ def BuildClusterSummaryImage(clusters):
   w = 0
   for _, members in clusters:
     w = max(w, 1 + len(members))
+  w = min(SUMMARY_MAX_MEMBERS, w)
   w *= large_edge
   summary_image = PIL.Image.new('RGB', (w, h))
   draw = PIL.ImageDraw.Draw(summary_image)
   for i, (representative, members) in enumerate(clusters):
     y = i * large_edge
-    for j, member in enumerate([representative] + members):
+    for j, member in enumerate(
+        [representative] + members[:SUMMARY_MAX_MEMBERS - 1]):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.filename)
