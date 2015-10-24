@@ -30,24 +30,26 @@ SCAN_DISTANCE = 400
 # Categorization parameters.
 # Before comparison, the cropped image is sized down by this factor (and
 # converted to grayscale).
-COMPARISON_RESIZE_FACTOR = 4
+COMPARISON_RESIZE_FACTOR = 6
 # Before comparison, the resized image is center-cropped with a square.
-COMPARISON_CENTER_CROP_SIZE = 310 / COMPARISON_RESIZE_FACTOR
+COMPARISON_CENTER_CROP_SIZE = 230 / COMPARISON_RESIZE_FACTOR
 # Before comparison, the resized/cropped image is thresholded at this value.
 COMPARISON_THRESHOLD = 170
 # During comparison, search +/- this many pixels translation for a match.
 OFFSET_SEARCH = 30 / COMPARISON_RESIZE_FACTOR
-OFFSET_SEARCH_INCREMENT = 2
+OFFSET_SEARCH_INCREMENT = 1
 # During comparison the image is rotated 360d, this many degrees at a time.
-ROTATION_SEARCH_INCREMENT = 5
-# Diffs without at least this many pixels together (different in a row) are
-# ignored. This avoids counting thin edges.
-DO_EROSION_THRESHOLD = 50000
+ROTATION_SEARCH_INCREMENT = 8
+# Erosion (removing pixels from a diff where those pixels have matches nearby)
+# removes thin outlines. Such outlines are common when a match is offset just
+# slightly. But eroding leaves blobs (indicative of larger mismatches)  intact.
+# Try erosion when at most this many pixels differ.
+DO_EROSION_THRESHOLD = 90
 # Pixels with this many exposed sides (including diagonals) get eroded.
-EROSION_THRESHOLD = 3
+EROSION_THRESHOLD = 4
 # Absolute difference (number of differing pixels) below which eroded
 # comparisons are considered a match.
-DISTANCE_THRESHOLD = 15
+DISTANCE_THRESHOLD = 2
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
@@ -277,12 +279,12 @@ def FindErodedDistance(image, representative):
   best_distance = float('Inf')
   best_diff = None
   for r in xrange(0, 360, ROTATION_SEARCH_INCREMENT):
-    rotated = image.resized.rotate(r)
+    rotated = representative.resized.rotate(r)
     for dx in xrange(-OFFSET_SEARCH, OFFSET_SEARCH, OFFSET_SEARCH_INCREMENT):
       for dy in xrange(-OFFSET_SEARCH, OFFSET_SEARCH, OFFSET_SEARCH_INCREMENT):
         abs_diff = PIL.ImageChops.difference(
             PIL.ImageChops.offset(rotated, dx, dy),
-            representative.resized)
+            image.resized)
         abs_diff = PIL.ImageChops.logical_and(
             abs_diff, ImageComparison.GetCenterCropCircleMask())
         diff_sum = GetErodedSum(abs_diff)
@@ -296,7 +298,7 @@ def FindErodedDistance(image, representative):
 
 def GetErodedSum(diff):
   diff_data = list(diff.getdata())
-  basic_sum = sum(diff_data)
+  basic_sum = sum(diff_data) / 255
   if basic_sum > DO_EROSION_THRESHOLD:
     return basic_sum
 
