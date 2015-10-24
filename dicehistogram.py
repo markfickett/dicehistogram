@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append('~/mwf/gitclients/experimental-mwf/google3/blaze-bin/third_party/py/PIL/selftest.runfiles/google3/third_party/py/')
-
 import PIL
 import PIL.Image
 import PIL.ImageChops
@@ -10,17 +6,17 @@ import PIL.ImageDraw
 import collections
 import os
 
-RAW_DIR = 'capture/151021autoroll'
-CROPPED_DIR = 'crop'
+RAW_DIR = 'capture/151023d20autoroll'
+CROPPED_DIR = 'crop/d20autoroll'
 # All cropped images must have uniform size, for machine learning input.
 EDGE_CROPPED = 620
 
 # Photo where the area the die might be in is pure red.
-MASK_IMAGE_FILENAME = 'DSC_6667_redmask.JPG'
+MASK_IMAGE_FILENAME = 'mask.JPG'
 # A background color to fill in with where the mask removes superfluous detail.
 MASK_FILL_COLOR = (185, 175, 175)
 # Photo taken of the area without a die at all.
-REFERENCE_IMAGE_FILENAME = 'DSC_6669.JPG'
+REFERENCE_IMAGE_FILENAME = 'reference.JPG'
 
 # Pixels with a difference (summed across RGB) greater than this value will be
 # considered as potentially part of the die. Comparison is against the
@@ -35,7 +31,7 @@ SCAN_DISTANCE = 400
 # converted to grayscale).
 COMPARISON_RESIZE_FACTOR = 8
 # Before comparison, the resized image is center-cropped with a square.
-COMPARISON_CENTER_CROP_SIZE = 270 / COMPARISON_RESIZE_FACTOR
+COMPARISON_CENTER_CROP_SIZE = 280 / COMPARISON_RESIZE_FACTOR
 # Before comparison, the resized/cropped image is thresholded at this value.
 COMPARISON_THRESHOLD = 170
 # During comparison, search +/- this many pixels translation for a match.
@@ -45,7 +41,7 @@ OFFSET_SEARCH_INCREMENT = 2
 ROTATION_SEARCH_INCREMENT = 5
 # Diffs without at least this many pixels together (different in a row) are
 # ignored. This avoids counting thin edges.
-DO_EROSION_THRESHOLD = 25000
+DO_EROSION_THRESHOLD = 30000
 # Absolute difference (number of differing pixels) below which eroded
 # comparisons are considered a match.
 DISTANCE_THRESHOLD = 10
@@ -101,7 +97,8 @@ def PrepareMask(mask_filename):
       x = n % w
       if n % tenths == 0:
         print (x, y)
-      if (r, g, b) == (254, 0, 0):
+      # Look for pure red, but allow for colorspace interaction.
+      if r > 250 and g < 40 and b < 40:
         alpha.append(1)
       else:
         alpha.append(0)
@@ -160,8 +157,9 @@ def FindLargeDiffBound(diff):
   found_line_len = 0
   for y in xrange(0, h, SCAN_DISTANCE):
     for x in xrange(w):
-      if sum(diff.getpixel((x, y))) > DIFF_THRESHOLD:
-        #diff.putpixel((x, y), (0, DIFF_THRESHOLD + 1, 0))
+      r, g, b = diff.getpixel((x, y))
+      if sum((r, g, b)) > DIFF_THRESHOLD:
+        #diff.putpixel((x, y), (r + 50, g + 50, b))
         found_line_len += 1
       else:
         #diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
@@ -175,9 +173,10 @@ def FindLargeDiffBound(diff):
         while active:
           (i, j) = active.pop()
           visited.add((i, j))
-          if sum(diff.getpixel((i, j))) > DIFF_THRESHOLD:
+          r, g, b = diff.getpixel((i, j))
+          if sum((r, g, b)) > DIFF_THRESHOLD:
             region.add((i, j))
-            diff.putpixel((i, j), (255, 0, 0))
+            #diff.putpixel((i, j), (r + 40, g - 20, b - 20))
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -196,7 +195,6 @@ def FindLargeDiffBound(diff):
             y_min = min(y_min, j)
             y_max = max(y_max, j)
           return (x_min, y_min, x_max, y_max)
-  #diff.show()
   raise NoDieFoundError()
 
 
@@ -337,7 +335,7 @@ if __name__ == '__main__':
   re_crop = False
   EXTRACT = 0
   CLUSTER = 1
-  run_stages = (CLUSTER,)
+  run_stages = (EXTRACT, CLUSTER)
   if EXTRACT in run_stages:
     raw_image_names = os.listdir(RAW_DIR)
     n = len(raw_image_names)
