@@ -65,7 +65,7 @@ def FindLargeDiffBound(diff):
       r, g, b = diff.getpixel((x, y))
       if sum((r, g, b)) > DIFF_THRESHOLD:
         if DEBUG:
-          diff.putpixel((x, y), (r + 50, g + 50, b))
+          diff.putpixel((x, y), (254, g, b))
         found_line_len += 1
       else:
         if DEBUG:
