@@ -20,7 +20,7 @@ DIFF_THRESHOLD = 150
 # be roughly the apparent radius of the die.
 SCAN_DISTANCE = 400
 
-DEBUG = True
+DEBUG = False
 
 
 def _Summarize(name, image):
