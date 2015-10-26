@@ -18,18 +18,17 @@ def init_feature():
     return detector, matcher
 
 
-def filter_matches(kp1, kp2, matches, ratio = 0.75):
-    mkp1, mkp2 = [], []
+def filter_matches(features_a, features_b, matches, ratio = 0.75):
+    matching_features_a, matching_features_b = [], []
     for m in matches:
         if len(m) == 2 and m[0].distance < m[1].distance * ratio:
             m = m[0]
-            mkp1.append( kp1[m.queryIdx] )
-            mkp2.append( kp2[m.trainIdx] )
-    p1 = numpy.float32([kp.pt for kp in mkp1])
-    p2 = numpy.float32([kp.pt for kp in mkp2])
-    kp_pairs = zip(mkp1, mkp2)
+            matching_features_a.append( features_a[m.queryIdx] )
+            matching_features_b.append( features_b[m.trainIdx] )
+    p1 = numpy.float32([kp.pt for kp in matching_features_a])
+    p2 = numpy.float32([kp.pt for kp in matching_features_b])
+    kp_pairs = zip(matching_features_a, matching_features_b)
     return p1, p2, kp_pairs
-
 
 
 if __name__ == '__main__':
@@ -52,13 +51,13 @@ if __name__ == '__main__':
         print 'unknown feature'
         sys.exit(1)
 
-    kp1, desc1 = detector.detectAndCompute(img1, None)
-    kp2, desc2 = detector.detectAndCompute(img2, None)
-    print 'img1 - %d features, img2 - %d features' % (len(kp1), len(kp2))
+    features_a, desc1 = detector.detectAndCompute(img1, None)
+    features_b, desc2 = detector.detectAndCompute(img2, None)
+    print 'img1 - %d features, img2 - %d features' % (len(features_a), len(features_b))
 
     print 'matching...'
     raw_matches = matcher.knnMatch(desc1, trainDescriptors = desc2, k = 2) #2
-    p1, p2, kp_pairs = filter_matches(kp1, kp2, raw_matches)
+    p1, p2, kp_pairs = filter_matches(features_a, features_b, raw_matches)
     print len(p1), len(p2)
     if len(p1) >= 4:
         H, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
