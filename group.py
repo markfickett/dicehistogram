@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Stage 2: Use feature detection/comparison to group images of rolled dice.
 
 Example:

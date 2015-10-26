@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Stage 1: Extract dice from images by comparing to a reference image.
 
 Example:
