@@ -13,6 +13,16 @@ import argparse
 import collections
 import json
 
+
+def PrintHistogram(labeled_file_sets):
+  max_count = 0
+  for label, filename_set in labeled_file_sets.iteritems():
+    max_count = max(max_count, len(filename_set))
+  for label, filename_set in sorted(labeled_file_sets.items()):
+    c = len(filename_set)
+    print '%4d %4d %s' % (label, c, '=' * (c * 60 / max_count))
+
+
 if __name__ == '__main__':
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
@@ -38,8 +48,8 @@ if __name__ == '__main__':
          + 'they must match.')
         % (len(positional), len(summary_data)))
 
-  counts = collections.defaultdict(lambda: 0)
+  labeled_file_sets = collections.defaultdict(lambda: set())
   for filename_list, label in zip(summary_data, labels):
-    counts[label] += len(filename_list)
-  for label, count in sorted(counts.items()):
-    print '%4d\t%4d' % (label, count)
+    labeled_file_sets[label].update(filename_list)
+
+  PrintHistogram(labeled_file_sets)
