@@ -17,11 +17,8 @@ import argparse
 import json
 import os
 
-MATCH_COUNT_THRESHOLD = 35
-
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 90
-SUMMARY_MAX_MEMBERS = 35
 
 
 class ImageComparison(object):
@@ -52,7 +49,7 @@ def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
   return p1, p2, zip(matching_features_a, matching_features_b)
 
 
-def AssignToCluster(in_filename, clusters):
+def AssignToCluster(in_filename, clusters, match_count_threshold):
   image = ImageComparison(in_filename)
   best_match_count = 0
   best_members = None
@@ -70,17 +67,17 @@ def AssignToCluster(in_filename, clusters):
       best_match_count = match_count
       best_members = members
       image.best_match = representative
-      if match_count >= MATCH_COUNT_THRESHOLD:
+      if match_count >= match_count_threshold:
         break
   image.match_count = best_match_count
-  if best_members is None or best_match_count < MATCH_COUNT_THRESHOLD:
+  if best_members is None or best_match_count < match_count_threshold:
     print '%s starts new cluster' % image.filename
     clusters.append((image, []))
   else:
     best_members.append(image)
 
 
-def BuildClusterSummaryImage(clusters, skip_len):
+def BuildClusterSummaryImage(clusters, skip_len, max_members):
   if not clusters:
     return
   large_edge = clusters[0][0].image.size[0]
@@ -88,14 +85,14 @@ def BuildClusterSummaryImage(clusters, skip_len):
   w = 0
   for _, members in clusters:
     w = max(w, 1 + len(members))
-  w = min(SUMMARY_MAX_MEMBERS, w)
+  w = min(max_members, w)
   w *= large_edge
   summary_image = PIL.Image.new('RGB', (w, h))
   draw = PIL.ImageDraw.Draw(summary_image)
   for i, (representative, members) in enumerate(clusters):
     y = i * large_edge
     for j, member in enumerate(
-        [representative] + members[:SUMMARY_MAX_MEMBERS - 1]):
+        [representative] + members[:max_members - 1]):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.filename[skip_len:])
@@ -114,6 +111,13 @@ if __name__ == '__main__':
       description=summary_line,
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.add_argument(
+      '--match-count-threshold', '-m', default=35, type=int,
+      dest='match_count_threshold',
+      help='Number of matching features to consider two images a match.')
+  parser.add_argument(
+      '--summary-max-members', default=35, type=int, dest='summary_max_members',
+      help='Max number of images to show per grouping in the summary image.')
 
   args, positional = parser.parse_known_args()
   if len(positional) != 1:
@@ -129,7 +133,9 @@ if __name__ == '__main__':
         continue
       print '%d/%d ' % (i, n),
       AssignToCluster(
-          os.path.join(cropped_dir, cropped_image_filename), clusters)
+          os.path.join(cropped_dir, cropped_image_filename),
+          clusters,
+          args.match_count_threshold)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
@@ -140,7 +146,8 @@ if __name__ == '__main__':
     skip_len = len(cropped_dir) + 1
     summary_path = '/tmp/summary_image.jpg'
     print 'building summary image, will save to', summary_path
-    summary = BuildClusterSummaryImage(clusters, skip_len)
+    summary = BuildClusterSummaryImage(
+        clusters, skip_len, args.summary_max_members)
     summary.save(summary_path)
     summary.show()
 
