@@ -9,10 +9,6 @@ import os
 
 import common
 
-# Photo where the area the die might be in is pure red.
-MASK_IMAGE_FILENAME = 'mask.JPG'
-# A background color to fill in with where the mask removes superfluous detail.
-MASK_FILL_COLOR = (185, 175, 175)
 # Photo taken of the area without a die at all.
 REFERENCE_IMAGE_FILENAME = 'reference.JPG'
 
@@ -24,46 +20,20 @@ DIFF_THRESHOLD = 150
 # be roughly the apparent radius of the die.
 SCAN_DISTANCE = 400
 
+DEBUG = True
+
 
 def _Summarize(name, image):
   print name, image.mode, image.size, image.format
 
 
-global mask_image
-mask_image = None
-def GetMask1WhereRed(mask_filename):
-  global mask_image
-  if not mask_image:
-    mask_source_image = PIL.Image.open(mask_filename)
-    _Summarize('mask', mask_source_image)
-    w, h = mask_source_image.size
-    mask_image = PIL.Image.new('1', mask_source_image.size, None)
-    alpha = []
-    tenths = w * h / 10
-    for n, (r, g, b) in enumerate(mask_source_image.getdata()):
-      y = n / w
-      x = n % w
-      if n % tenths == 0:
-        print (x, y)
-      # Look for pure red, but allow for colorspace interaction.
-      if r > 250 and g < 40 and b < 40:
-        alpha.append(1)
-      else:
-        alpha.append(0)
-    mask_image.putdata(alpha)
-  return mask_image
-
-
 global reference_image
 reference_image = None
-def GetReference(reference_filename, mask):
+def GetReference(reference_filename):
   global reference_image
   if not reference_image:
     reference_image = PIL.Image.open(reference_filename)
     _Summarize('ref', reference_image)
-    white = PIL.Image.new('RGB', reference_image.size, MASK_FILL_COLOR)
-    reference_image = PIL.Image.composite(reference_image, white, mask)
-    _Summarize('ref masked', reference_image)
   return reference_image
 
 
@@ -74,17 +44,13 @@ class NoDieFoundError(RuntimeError):
 def ExtractSubject(
     in_filename,
     out_filename,
-    reference_filename,
-    mask_filename):
+    reference_filename):
   print in_filename, out_filename
   image = PIL.Image.open(in_filename)
   _Summarize('input', image)
   w, h = image.size
 
-  white = PIL.Image.new('RGB', image.size, MASK_FILL_COLOR)
-  mask = GetMask1WhereRed(mask_filename)
-  reference = GetReference(reference_filename, mask)
-  image = PIL.Image.composite(image, white, mask)
+  reference = GetReference(reference_filename)
   diff = PIL.ImageChops.difference(reference, image)
 
   bound = FindLargeDiffBound(diff)
@@ -107,10 +73,12 @@ def FindLargeDiffBound(diff):
     for x in xrange(w):
       r, g, b = diff.getpixel((x, y))
       if sum((r, g, b)) > DIFF_THRESHOLD:
-        #diff.putpixel((x, y), (r + 50, g + 50, b))
+        if DEBUG:
+          diff.putpixel((x, y), (r + 50, g + 50, b))
         found_line_len += 1
       else:
-        #diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
+        if DEBUG:
+          diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
         found_line_len = 0
       if found_line_len > SCAN_DISTANCE / 4:
         print 'potential region at', x, y
@@ -124,7 +92,7 @@ def FindLargeDiffBound(diff):
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > DIFF_THRESHOLD:
             region.add((i, j))
-            #diff.putpixel((i, j), (r + 40, g - 20, b - 20))
+            diff.putpixel((i, j), (r + 40, g - 20, b - 20))
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -142,7 +110,11 @@ def FindLargeDiffBound(diff):
             x_max = max(x_max, i)
             y_min = min(y_min, j)
             y_max = max(y_max, j)
+          if DEBUG:
+            diff.show()
           return (x_min, y_min, x_max, y_max)
+  if DEBUG:
+    diff.show()
   raise NoDieFoundError()
 
 
@@ -168,8 +140,7 @@ if __name__ == '__main__':
   raw_image_names = os.listdir(common.RAW_DIR)
   n = len(raw_image_names)
   for i, raw_image_filename in enumerate(raw_image_names):
-    if (raw_image_filename == MASK_IMAGE_FILENAME
-        or not raw_image_filename.lower().endswith('jpg')):
+    if not raw_image_filename.lower().endswith('jpg'):
       continue
     try:
       cropped_file_path = os.path.join(common.CROPPED_DIR, raw_image_filename)
@@ -179,7 +150,6 @@ if __name__ == '__main__':
       ExtractSubject(
           os.path.join(common.RAW_DIR, raw_image_filename),
           cropped_file_path,
-          os.path.join(common.RAW_DIR, REFERENCE_IMAGE_FILENAME),
-          os.path.join(common.RAW_DIR, MASK_IMAGE_FILENAME))
+          os.path.join(common.RAW_DIR, REFERENCE_IMAGE_FILENAME))
     except NoDieFoundError, e:
       print 'No die found in %s' % raw_image_filename
