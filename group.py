@@ -116,6 +116,15 @@ if __name__ == '__main__':
       dest='match_count_threshold',
       help='Number of matching features to consider two images a match.')
   parser.add_argument(
+      '--summary-image', '-s', dest='summary_image',
+      help='File path for the summary image. If the path is omitted, '
+           + 'the summary image is generated and shown but not saved.')
+  parser.add_argument(
+      '--summary-data', '-d', dest='summary_data',
+      default='/tmp/summary_data.json',
+      help='File path for the summary data. The JSON, an ordered list of lists '
+           + 'of files, each forming an equivalency set.')
+  parser.add_argument(
       '--summary-max-members', default=35, type=int, dest='summary_max_members',
       help='Max number of images to show per grouping in the summary image.')
 
@@ -143,20 +152,19 @@ if __name__ == '__main__':
     print representative.filename, (1 + len(members))
 
   if clusters:
-    skip_len = len(cropped_dir) + 1
-    summary_path = '/tmp/summary_image.jpg'
-    print 'building summary image, will save to', summary_path
+    skip_len = len(cropped_dir)
     summary = BuildClusterSummaryImage(
         clusters, skip_len, args.summary_max_members)
-    summary.save(summary_path)
+    if args.summary_image:
+      summary.save(args.summary_image)
+      print 'summary image saved to', args.summary_image
     summary.show()
 
-    data_path = '/tmp/summary_data.json'
-    print 'saving summary data to', data_path
+    print 'saving summary data to', args.summary_data
     data_summary = []
     for representative, members in clusters:
       data_summary.append(
           [representative.filename[skip_len:]]
            + [m.filename[skip_len:] for m in members])
-    with open(data_path, 'w') as data_file:
+    with open(args.summary_data, 'w') as data_file:
       json.dump(data_summary, data_file)
