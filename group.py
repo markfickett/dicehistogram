@@ -4,6 +4,8 @@ Example:
     %(prog)s data/<die_description>/crop/
 Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
+
+The input ("crop") directory should contain extracted die images from stage 1.
 """
 
 import cv2

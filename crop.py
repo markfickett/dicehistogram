@@ -2,6 +2,16 @@
 
 Example:
   %(prog)s data/<die_description>/capture/ data/<die_description>/crop/
+
+The input ("capture") directory should contain images of a rolled die. Images
+should be from a fixed camera pointed at a fixed surface (or a rolling mechanism
+that returns to the same state for each photo), with a die rolled in the
+camera's field of view in each picture; except one picture, specified by
+--reference, which should have no die in it.
+
+Each image is processed to find the die in it. That region is cropped out, and
+the result is saved into the output ("crop") directory with the same name as
+the corresponding input image.
 """
 
 import argparse
