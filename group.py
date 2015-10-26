@@ -1,7 +1,7 @@
 """Stage 2: Use feature detection/comparison to group images of rolled dice.
 
 Example:
-    %(prog)s crop_dir/
+    %(prog)s data/<die_description>/crop/
 Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
 """

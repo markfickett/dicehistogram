@@ -1,7 +1,7 @@
 """Stage 1: Extract dice from images by comparing to a reference image.
 
 Example:
-  %(prog)s fullsize_dir/ crop_dir/
+  %(prog)s data/<die_description>/capture/ data/<die_description>/crop/
 """
 
 import argparse
