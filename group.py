@@ -12,11 +12,11 @@ import os
 
 import common
 
-MATCH_COUNT_THRESHOLD = 40
+MATCH_COUNT_THRESHOLD = 25
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 150
-SUMMARY_MAX_MEMBERS = 50
+SUMMARY_MAX_MEMBERS = 20
 
 
 class ImageComparison(object):
@@ -32,6 +32,7 @@ class ImageComparison(object):
       raise RuntimeError('OpenCV could not open %s' % in_filename)
     self.features, self.descriptors = self.detector.detectAndCompute(
         cv_image, None)
+    self.best_match = None
     self.match_count = 0
 
 
@@ -58,17 +59,14 @@ def AssignToCluster(in_filename, clusters):
     p1, p2, matching_feature_pairs = FilterMatches(
         image.features, representative.features, raw_matches)
     match_count = min(len(p1), len(p2))
-    """
-    if len(p1) >= 4:
-      unused_homography, matched_points = cv2.findHomography(
-          p1, p2, cv2.RANSAC, 5.0)
-      match_count = numpy.sum(matched_points)  # inliers
     print '%s match %s = %d' % (
          image.filename, representative.filename, match_count)
-    """
     if match_count > best_match_count:
       best_match_count = match_count
       best_members = members
+      image.best_match = representative
+      if match_count >= MATCH_COUNT_THRESHOLD:
+        break
   image.match_count = best_match_count
   if best_members is None or best_match_count < MATCH_COUNT_THRESHOLD:
     print '%s starts new cluster' % image.filename
@@ -99,6 +97,9 @@ def BuildClusterSummaryImage(clusters, skip_len):
       draw.text((x, y + 20), 'features: %d' % len(member.features))
       draw.text((x, y + 40), 'matches: %d' % member.match_count)
     draw.text((0, y + 60), 'members: %d' % (len(members) + 1))
+    if representative.best_match:
+      did_not_match = representative.best_match.filename[skip_len:]
+      draw.text((0, y + 50), '  %s' % did_not_match)
   return summary_image
 
 
