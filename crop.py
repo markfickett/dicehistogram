@@ -27,16 +27,6 @@ def _Summarize(name, image):
   print name, image.mode, image.size, image.format
 
 
-global reference_image
-reference_image = None
-def GetReference(reference_filename):
-  global reference_image
-  if not reference_image:
-    reference_image = PIL.Image.open(reference_filename)
-    _Summarize('ref', reference_image)
-  return reference_image
-
-
 class NoDieFoundError(RuntimeError):
   pass
 
@@ -50,7 +40,8 @@ def ExtractSubject(
   _Summarize('input', image)
   w, h = image.size
 
-  reference = GetReference(reference_filename)
+  reference = PIL.Image.open(reference_filename)
+  _Summarize('ref', reference)
   diff = PIL.ImageChops.difference(reference, image)
 
   bound = FindLargeDiffBound(diff)
