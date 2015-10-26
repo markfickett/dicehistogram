@@ -18,6 +18,7 @@ import PIL.ImageDraw
 import argparse
 import json
 import os
+import sys
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 90
@@ -51,7 +52,7 @@ def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
   return p1, p2, zip(matching_features_a, matching_features_b)
 
 
-def AssignToCluster(in_filename, clusters, match_count_threshold):
+def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
   image = ImageComparison(in_filename)
   best_match_count = 0
   best_members = None
@@ -64,7 +65,9 @@ def AssignToCluster(in_filename, clusters, match_count_threshold):
         image.features, representative.features, raw_matches)
     match_count = min(len(p1), len(p2))
     print '%s match %s = %d' % (
-         image.filename, representative.filename, match_count)
+        image.filename[skip_len:],
+        representative.filename[skip_len:],
+        match_count)
     if match_count > best_match_count:
       best_match_count = match_count
       best_members = members
@@ -137,6 +140,7 @@ if __name__ == '__main__':
 
   clusters = []
   cropped_image_names = os.listdir(cropped_dir)
+  skip_len = len(cropped_dir)  # to reduce length of log messages
   n = len(cropped_image_names)
   try:
     for i, cropped_image_filename in enumerate(cropped_image_names):
@@ -146,27 +150,30 @@ if __name__ == '__main__':
       AssignToCluster(
           os.path.join(cropped_dir, cropped_image_filename),
           clusters,
-          args.match_count_threshold)
+          args.match_count_threshold,
+          skip_len)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
+  if not clusters:
+    print 'No data!'
+    sys.exit(1)
+
   for representative, members in clusters:
-    print representative.filename, (1 + len(members))
+    print representative.filename[skip_len:], (1 + len(members))
 
-  if clusters:
-    skip_len = len(cropped_dir)
-    summary = BuildClusterSummaryImage(
-        clusters, skip_len, args.summary_max_members)
-    if args.summary_image:
-      summary.save(args.summary_image)
-      print 'summary image saved to', args.summary_image
-    summary.show()
+  summary = BuildClusterSummaryImage(
+      clusters, skip_len, args.summary_max_members)
+  if args.summary_image:
+    summary.save(args.summary_image)
+    print 'summary image saved to', args.summary_image
+  summary.show()
 
-    print 'saving summary data to', args.summary_data
-    data_summary = []
-    for representative, members in clusters:
-      data_summary.append(
-          [representative.filename[skip_len:]]
-           + [m.filename[skip_len:] for m in members])
-    with open(args.summary_data, 'w') as data_file:
-      json.dump(data_summary, data_file)
+  print 'saving summary data to', args.summary_data
+  data_summary = []
+  for representative, members in clusters:
+    data_summary.append(
+        [representative.filename[skip_len:]]
+         + [m.filename[skip_len:] for m in members])
+  with open(args.summary_data, 'w') as data_file:
+    json.dump(data_summary, data_file)
