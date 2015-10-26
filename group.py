@@ -1,5 +1,7 @@
-"""Use feature detection/comparison to group images of rolled dice.
+"""Stage 2: Use feature detection/comparison to group images of rolled dice.
 
+Example:
+    %(prog)s crop_dir/
 Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
 """
@@ -11,10 +13,9 @@ import PIL
 import PIL.Image
 import PIL.ImageDraw
 
+import argparse
 import json
 import os
-
-import common
 
 MATCH_COUNT_THRESHOLD = 35
 
@@ -108,8 +109,19 @@ def BuildClusterSummaryImage(clusters, skip_len):
 
 
 if __name__ == '__main__':
+  summary_line, _, main_doc = __doc__.partition('\n\n')
+  parser = argparse.ArgumentParser(
+      description=summary_line,
+      epilog=main_doc,
+      formatter_class=argparse.RawDescriptionHelpFormatter)
+
+  args, positional = parser.parse_known_args()
+  if len(positional) != 1:
+    parser.error('missing input directory for cropped images')
+  cropped_dir = positional[0]
+
   clusters = []
-  cropped_image_names = os.listdir(common.CROPPED_DIR)
+  cropped_image_names = os.listdir(cropped_dir)
   n = len(cropped_image_names)
   try:
     for i, cropped_image_filename in enumerate(cropped_image_names):
@@ -117,7 +129,7 @@ if __name__ == '__main__':
         continue
       print '%d/%d ' % (i, n),
       AssignToCluster(
-          os.path.join(common.CROPPED_DIR, cropped_image_filename), clusters)
+          os.path.join(cropped_dir, cropped_image_filename), clusters)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
@@ -125,7 +137,7 @@ if __name__ == '__main__':
     print representative.filename, (1 + len(members))
 
   if clusters:
-    skip_len = len(common.CROPPED_DIR) + 1
+    skip_len = len(cropped_dir) + 1
     summary_path = '/tmp/summary_image.jpg'
     print 'building summary image, will save to', summary_path
     summary = BuildClusterSummaryImage(clusters, skip_len)
