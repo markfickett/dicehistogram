@@ -1,4 +1,4 @@
-"""Extract dice from images by comparing to a reference image.
+"""Stage 1: Extract dice from images by comparing to a reference image.
 
 Example:
   %(prog)s fullsize_dir/ crop_dir/
