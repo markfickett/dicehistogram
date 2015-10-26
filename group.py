@@ -1,22 +1,26 @@
+"""Use feature detection/comparison to group images of rolled dice.
+
+Based on OpenCV's find_obj.py example, as in:
+    find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
+"""
+
 import cv2
 import numpy
 
 import PIL
 import PIL.Image
-import PIL.ImageChops
 import PIL.ImageDraw
 
-import collections
 import json
 import os
 
 import common
 
-MATCH_COUNT_THRESHOLD = 25
+MATCH_COUNT_THRESHOLD = 35
 
 # Edge size for the otherwise unaltered image in the summary image.
-SUMMARY_MEMBER_IMAGE_SIZE = 150
-SUMMARY_MAX_MEMBERS = 20
+SUMMARY_MEMBER_IMAGE_SIZE = 90
+SUMMARY_MAX_MEMBERS = 35
 
 
 class ImageComparison(object):
