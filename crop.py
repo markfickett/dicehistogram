@@ -103,7 +103,7 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
         sliding_window.append(0)
       if len(sliding_window) > scan_distance:
         recent_found_num -= sliding_window.pop(0)
-      if recent_found_num > scan_distance / 2:
+      if recent_found_num > scan_distance / 3:
         print 'potential region at', x, y
         recent_found_num = 0
         sliding_window = []
@@ -196,21 +196,30 @@ if __name__ == '__main__':
 
   raw_image_names = os.listdir(raw_dir)
   n = len(raw_image_names)
-  for i, raw_image_filename in enumerate(raw_image_names):
-    if not raw_image_filename.lower().endswith('jpg'):
-      continue
-    try:
-      cropped_file_path = os.path.join(cropped_dir, raw_image_filename)
-      if not args.force and os.path.isfile(cropped_file_path):
+  c = 0
+  no_die_found_in = []
+  try:
+    for i, raw_image_filename in enumerate(raw_image_names):
+      if not raw_image_filename.lower().endswith('jpg'):
         continue
-      print '%d/%d ' % (i, n),
-      ExtractSubject(
-          os.path.join(raw_dir, raw_image_filename),
-          cropped_file_path,
-          os.path.join(raw_dir, args.reference),
-          args.scan_distance,
-          args.crop_size,
-          args.analysis_resize_factor,
-          debug=args.verbose)
-    except NoDieFoundError, e:
-      print 'No die found in %s' % raw_image_filename
+      try:
+        cropped_file_path = os.path.join(cropped_dir, raw_image_filename)
+        if not args.force and os.path.isfile(cropped_file_path):
+          continue
+        print '%d/%d ' % (i, n),
+        c += 1
+        ExtractSubject(
+            os.path.join(raw_dir, raw_image_filename),
+            cropped_file_path,
+            os.path.join(raw_dir, args.reference),
+            args.scan_distance,
+            args.crop_size,
+            args.analysis_resize_factor,
+            debug=args.verbose)
+      except NoDieFoundError, e:
+        print 'No die found in %s' % raw_image_filename
+        no_die_found_in.append(raw_image_filename)
+  except KeyboardInterrupt, e:
+    print 'got ^C, early exit for crop'
+  print 'Processed %d images, die not found in %d. %s' % (
+      c, len(no_die_found_in), no_die_found_in or '')
