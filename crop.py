@@ -57,7 +57,8 @@ def ExtractSubject(
   w, h = orig_image.size
   rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
   image = orig_image.resize((rw, rh))
-  _Summarize('analysis input', image)
+  if debug:
+    _Summarize('analysis input', image)
 
   reference = PIL.Image.open(reference_filename)
   if reference.size != (w, h):
@@ -65,7 +66,8 @@ def ExtractSubject(
         'image size %s does not match reference size %s'
         % ((w, h), reference.size))
   reference = reference.resize((rw, rh))
-  _Summarize('analysis ref', reference)
+  if debug:
+    _Summarize('analysis ref', reference)
   diff = PIL.ImageChops.difference(reference, image)
 
   analysis_bound = FindLargeDiffBound(
@@ -73,7 +75,8 @@ def ExtractSubject(
   bound = [analysis_resize_factor * b for b in analysis_bound]
   bound = MakeSquare(bound, orig_image.size, edge_cropped)
   out_image = orig_image.crop(bound)
-  _Summarize('output', out_image)
+  if debug:
+    _Summarize('output', out_image)
   out_image.save(out_filename)
 
 
