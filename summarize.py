@@ -12,15 +12,37 @@ to be integers.
 import argparse
 import collections
 import json
+import numpy
 
-
+HISTOGRAM_BASE_LEN = 50
 def PrintHistogram(labeled_file_sets):
-  max_count = 0
-  for label, filename_set in labeled_file_sets.iteritems():
-    max_count = max(max_count, len(filename_set))
+  values = [len(filenames_set) for filenames_set in labeled_file_sets.values()]
+  total = sum(values)
+  np_values = numpy.array(values)
+  mean = numpy.mean(np_values)
+  np_values = np_values / mean
+
+  expected_value = 0
+  for label, filename_set in labeled_file_sets.items():
+    normalized_value = len(filename_set) / mean
+    expected_value += label * normalized_value
+  expected_value = expected_value / len(labeled_file_sets)
+
+  print 'N=%d normalized stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
+      total,
+      numpy.std(np_values),
+      min(np_values),
+      max(np_values),
+      expected_value)
   for label, filename_set in sorted(labeled_file_sets.items()):
-    c = len(filename_set)
-    print '%4d %4d %s' % (label, c, '=' * (c * 60 / max_count))
+    v = len(filename_set) / mean
+    i = int(v * HISTOGRAM_BASE_LEN)
+    if i < HISTOGRAM_BASE_LEN:
+      bar = '=' * i
+    else:
+      bar = ('=' * (HISTOGRAM_BASE_LEN - 1)) + '*' + (
+          '=' * (i - HISTOGRAM_BASE_LEN))
+    print '%4d %4.2f %s' % (label, v, bar)
 
 
 if __name__ == '__main__':
