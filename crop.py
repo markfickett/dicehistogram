@@ -13,6 +13,11 @@ camera's field of view in each picture; except one picture, specified by
 Each image is processed to find the die in it. That region is cropped out, and
 the result is saved into the output ("crop") directory with the same name as
 the corresponding input image.
+
+The camera should be on full manual, including:
+ - focus
+ - white balance
+ - rotation (do not auto-rotate images)
 """
 
 import argparse
@@ -84,6 +89,7 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
         found_line_len = 0
       if found_line_len > scan_distance / 4:
         print 'potential region at', x, y
+        found_line_len = 0
         visited = set()
         region = set()
         active = set()
