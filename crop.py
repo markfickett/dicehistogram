@@ -75,21 +75,26 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
   flood-fill it. If the total area is >= scan_distance**2, return its bounds.
   """
   w, h = diff.size
-  found_line_len = 0
-  for y in xrange(0, h, scan_distance):
+  recent_found_num = 0
+  sliding_window = []
+  for y in xrange(scan_distance / 2, h, scan_distance):
     for x in xrange(w):
       r, g, b = diff.getpixel((x, y))
       if sum((r, g, b)) > DIFF_THRESHOLD:
         if debug:
           diff.putpixel((x, y), (254, g, b))
-        found_line_len += 1
+        sliding_window.append(1)
+        recent_found_num += 1
       else:
         if debug:
           diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
-        found_line_len = 0
-      if found_line_len > scan_distance / 4:
+        sliding_window.append(0)
+      if len(sliding_window) > scan_distance:
+        recent_found_num -= sliding_window.pop(0)
+      if recent_found_num > scan_distance / 2:
         print 'potential region at', x, y
-        found_line_len = 0
+        recent_found_num = 0
+        sliding_window = []
         visited = set()
         region = set()
         active = set()
