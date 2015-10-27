@@ -2,7 +2,7 @@
 """Stage 3: Summarize die roll data.
 
 Example:
-    %(prog)s 6 3 4 5 1 2
+    %(prog)s --summary-data data/d6/summary.json 6 3 4 5 1 2
 
 Positional arguments are labels for the die-roll image groupings, in the same
 order as they appear in the summary data (or summary image). They are expected
