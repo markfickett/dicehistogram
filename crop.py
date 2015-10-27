@@ -95,22 +95,20 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
       if sum((r, g, b)) > DIFF_THRESHOLD:
         if debug:
           diff.putpixel((x, y), (254, g, b))
-        sliding_window.append(1)
+        sliding_window.append((x, y))
         recent_found_num += 1
       else:
         if debug:
           diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
-        sliding_window.append(0)
+        sliding_window.append(None)
       if len(sliding_window) > scan_distance * 2:
-        recent_found_num -= sliding_window.pop(0)
+        if sliding_window.pop(0) is not None:
+          recent_found_num -= 1
       if recent_found_num > scan_distance / 2:
         print 'potential region at', x, y
-        recent_found_num = 0
-        sliding_window = []
         visited = set()
         region = set()
-        active = set()
-        active.add((x, y))
+        active = set(filter(bool, sliding_window[scan_distance / 2:]))
         while active:
           (i, j) = active.pop()
           visited.add((i, j))
@@ -126,6 +124,8 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
                     and (nx, ny) not in visited):
                   active.add((nx, ny))
         print 'region area', len(region)
+        recent_found_num = 0
+        sliding_window = []
         if len(region) > scan_distance**2:
           x_max = y_max = 0
           x_min = w - 1
