@@ -50,20 +50,29 @@ def ExtractSubject(
     reference_filename,
     scan_distance,
     edge_cropped,
+    analysis_resize_factor,
     debug=False):
   print in_filename, out_filename
-  image = PIL.Image.open(in_filename)
-  _Summarize('input', image)
-  w, h = image.size
+  orig_image = PIL.Image.open(in_filename)
+  w, h = orig_image.size
+  rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
+  image = orig_image.resize((rw, rh))
+  _Summarize('analysis input', image)
 
   reference = PIL.Image.open(reference_filename)
-  _Summarize('ref', reference)
+  if reference.size != (w, h):
+    raise RuntimeError(
+        'image size %s does not match reference size %s'
+        % ((w, h), reference.size))
+  reference = reference.resize((rw, rh))
+  _Summarize('analysis ref', reference)
   diff = PIL.ImageChops.difference(reference, image)
 
-  bound = FindLargeDiffBound(diff, scan_distance, debug=debug)
-  print bound
-  bound = MakeSquare(bound, diff.size, edge_cropped)
-  out_image = image.crop(bound)
+  analysis_bound = FindLargeDiffBound(
+      diff, scan_distance / analysis_resize_factor, debug=debug)
+  bound = [analysis_resize_factor * b for b in analysis_bound]
+  bound = MakeSquare(bound, orig_image.size, edge_cropped)
+  out_image = orig_image.crop(bound)
   _Summarize('output', out_image)
   out_image.save(out_filename)
 
@@ -154,7 +163,7 @@ if __name__ == '__main__':
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--scan-distance', '-d', dest='scan_distance', type=int, default=400,
+      '--scan-distance', '-d', dest='scan_distance', type=int, default=300,
       help='Distance between scan lines when searching the image for the die. '
            + 'This should be roughly the apparent radius of the die.')
   parser.add_argument(
@@ -163,8 +172,13 @@ if __name__ == '__main__':
            + 'is an image like the others but with no die present.')
   parser.add_argument(
       '--crop-size', '-c', dest='crop_size', default=660, type=int,
-      help='Size (length in pixels of either edge) of cropped images, which '
-           + 'should contain the die fully.')
+      help='Size (length in pixels of either edge) to crop from the original '
+           + 'image, which should contain the die fully. Exported for stage 2.')
+  parser.add_argument(
+      '--analysis-resize-factor', '-a', dest='analysis_resize_factor',
+      default=6, type=int,
+      help='Divisor for the image size. Source and reference will be resized '
+           + 'during analysis/searching. (Output is crop-size.)')
   parser.add_argument(
       '--force', '-f', action='store_true',
       help='Overwrite existing crops.')
@@ -193,6 +207,7 @@ if __name__ == '__main__':
           os.path.join(raw_dir, args.reference),
           args.scan_distance,
           args.crop_size,
+          args.analysis_resize_factor,
           debug=args.verbose)
     except NoDieFoundError, e:
       print 'No die found in %s' % raw_image_filename
