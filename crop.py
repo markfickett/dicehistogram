@@ -101,9 +101,9 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
         if debug:
           diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
         sliding_window.append(0)
-      if len(sliding_window) > scan_distance:
+      if len(sliding_window) > scan_distance * 2:
         recent_found_num -= sliding_window.pop(0)
-      if recent_found_num > scan_distance / 3:
+      if recent_found_num > scan_distance / 2:
         print 'potential region at', x, y
         recent_found_num = 0
         sliding_window = []
