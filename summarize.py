@@ -7,6 +7,11 @@ Example:
 Positional arguments are labels for the die-roll image groupings, in the same
 order as they appear in the summary data (or summary image). They are expected
 to be integers.
+
+TODO:
+ - Image of histogram?
+ - Sequence graph.
+ - Heatmap of common polyhedrals.
 """
 
 import argparse
