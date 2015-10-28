@@ -83,7 +83,7 @@ def ExtractSubject(
 def FindLargeDiffBound(diff, scan_distance, debug=False):
   """
   Scan the image in horizontal lines at scan_distance intervals. When we find
-  a stripe that's all above threshold at least scan_distance/4 long,
+  a stripe that's all above threshold about scan_distance/2 long,
   flood-fill it. If the total area is >= scan_distance**2, return its bounds.
   """
   w, h = diff.size
@@ -105,7 +105,6 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
         if sliding_window.pop(0) is not None:
           recent_found_num -= 1
       if recent_found_num > scan_distance / 2:
-        print 'potential region at', x, y
         visited = set()
         region = set()
         active = set(filter(bool, sliding_window[:scan_distance]))
@@ -125,7 +124,8 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
                     and nx >= 0 and nx < w and ny >= 0 and ny < h
                     and (nx, ny) not in visited):
                   active.add((nx, ny))
-        print 'region area', len(region)
+        print 'region at (%d, %d) area %d (%d%% target)' % (
+            x, y, len(region), int(100 * len(region) / scan_distance**2))
         recent_found_num = 0
         sliding_window = []
         if len(region) > scan_distance**2:
