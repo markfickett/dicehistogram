@@ -41,8 +41,22 @@ class ImageComparison(object):
       raise RuntimeError('OpenCV could not open %s' % in_filename)
     self.features, self.descriptors = self.detector.detectAndCompute(
         cv_image, None)
+    if self.descriptors is None or not len(self.descriptors):
+      raise NoFeaturesError('No features in %s' % self.filename)
     self.best_match = None
     self.match_count = 0
+
+  def GetMatchCount(self, other, skip_len):
+    raw_matches = ImageComparison.matcher.knnMatch(
+        self.descriptors, trainDescriptors=other.descriptors, k=2)
+    p1, p2, matching_feature_pairs = FilterMatches(
+        self.features, other.features, raw_matches)
+    match_count = min(len(p1), len(p2))
+    print '%s match %s = %d' % (
+        self.filename[skip_len:],
+        other.filename[skip_len:],
+        match_count)
+    return match_count
 
 
 def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
@@ -62,22 +76,10 @@ class NoFeaturesError(RuntimeError):
 
 def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
   image = ImageComparison(in_filename)
-  if not len(image.descriptors):
-    raise NoFeaturesError('No features in %s' % in_filename)
   best_match_count = 0
   best_members = None
   for representative, members in clusters:
-    raw_matches = ImageComparison.matcher.knnMatch(
-        image.descriptors,
-        trainDescriptors=representative.descriptors,
-        k=2)
-    p1, p2, matching_feature_pairs = FilterMatches(
-        image.features, representative.features, raw_matches)
-    match_count = min(len(p1), len(p2))
-    print '%s match %s = %d' % (
-        image.filename[skip_len:],
-        representative.filename[skip_len:],
-        match_count)
+    match_count = image.GetMatchCount(representative, skip_len)
     if match_count > best_match_count:
       best_match_count = match_count
       best_members = members
@@ -90,6 +92,10 @@ def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
     clusters.append((image, []))
   else:
     best_members.append(image)
+
+
+def CombineSmallClusters(clusters, match_count_threshold, skip_len):
+  return clusters
 
 
 def BuildClusterSummaryImage(clusters, skip_len, max_members):
@@ -188,6 +194,8 @@ if __name__ == '__main__':
           clusters,
           args.match_count_threshold,
           skip_len)
+    clusters = CombineSmallClusters(
+        clusters, args.match_count_threshold, skip_len)
   except (NoFeaturesError, cv2.error), e:
     print e
     failed_files.append(cropped_image_filename)
