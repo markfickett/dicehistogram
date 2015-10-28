@@ -56,8 +56,14 @@ def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
   return p1, p2, zip(matching_features_a, matching_features_b)
 
 
+class NoFeaturesError(RuntimeError):
+  pass
+
+
 def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
   image = ImageComparison(in_filename)
+  if not image.descriptors:
+    raise NoFeaturesError('No features in %s' % in_filename)
   best_match_count = 0
   best_members = None
   for representative, members in clusters:
@@ -157,8 +163,8 @@ if __name__ == '__main__':
           clusters,
           args.match_count_threshold,
           skip_len)
-  except cv2.error, e:
-    print cropped_image_filename, e
+  except (NoFeaturesError, cv2.error), e:
+    print e
     failed_files.append(cropped_image_filename)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
