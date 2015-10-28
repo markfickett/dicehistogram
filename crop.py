@@ -108,14 +108,16 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
         print 'potential region at', x, y
         visited = set()
         region = set()
-        active = set(filter(bool, sliding_window[scan_distance / 2:]))
+        active = set(filter(bool, sliding_window[:scan_distance]))
+        if debug:
+          for ax, ay in active:
+            diff.putpixel((ax, ay), (0, 254, 0))
         while active:
           (i, j) = active.pop()
           visited.add((i, j))
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > DIFF_THRESHOLD:
             region.add((i, j))
-            diff.putpixel((i, j), (r + 40, g - 20, b - 20))
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -127,20 +129,33 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
         recent_found_num = 0
         sliding_window = []
         if len(region) > scan_distance**2:
-          x_max = y_max = 0
-          x_min = w - 1
-          y_min = h - 1
-          for (i, j) in region:
-            x_min = min(x_min, i)
-            x_max = max(x_max, i)
-            y_min = min(y_min, j)
-            y_max = max(y_max, j)
-          if debug:
-            diff.show()
-          return (x_min, y_min, x_max, y_max)
+          return GetPixelSetBoundWithinImage(region, diff, debug=debug)
   if debug:
     diff.show()
   raise NoDieFoundError()
+
+
+def GetPixelSetBoundWithinImage(region, diff, debug=False):
+  x_max = y_max = 0
+  x_min = diff.size[0] - 1
+  y_min = diff.size[1] - 1
+  for (x, y) in region:
+    x_min = min(x_min, x)
+    x_max = max(x_max, x)
+    y_min = min(y_min, y)
+    y_max = max(y_max, y)
+    if debug:
+      r, g, b = diff.getpixel((x, y))
+      diff.putpixel((x, y), (r + 40, g - 20, b - 20))
+  if debug:
+    for x in xrange(x_min, x_max + 1, 2):
+      diff.putpixel((x, y_min), (0, 254, 0))
+      diff.putpixel((x, y_max), (0, 254, 0))
+    for y in xrange(y_min + 1, y_max, 2):
+      diff.putpixel((x_min, y), (0, 254, 0))
+      diff.putpixel((x_max, y), (0, 254, 0))
+    diff.show()
+  return (x_min, y_min, x_max, y_max)
 
 
 def MakeSquare((x_min_in, y_min_in, x_max_in, y_max_in), (w, h), length):
