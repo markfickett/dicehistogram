@@ -62,7 +62,7 @@ class NoFeaturesError(RuntimeError):
 
 def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
   image = ImageComparison(in_filename)
-  if not image.descriptors:
+  if not len(image.descriptors):
     raise NoFeaturesError('No features in %s' % in_filename)
   best_match_count = 0
   best_members = None
@@ -120,7 +120,7 @@ def BuildClusterSummaryImage(clusters, skip_len, max_members):
   return summary_image
 
 
-if __name__ == '__main__':
+def BuildArgParser():
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
       description=summary_line,
@@ -142,7 +142,32 @@ if __name__ == '__main__':
   parser.add_argument(
       '--summary-max-members', default=35, type=int, dest='summary_max_members',
       help='Max number of images to show per grouping in the summary image.')
+  return parser
 
+
+def SaveGrouping(clusters, summary_data, summary_image, summary_max_members):
+  for representative, members in clusters:
+    print representative.filename[skip_len:], (1 + len(members))
+
+  summary = BuildClusterSummaryImage(
+      clusters, skip_len, args.summary_max_members)
+  if args.summary_image:
+    summary.save(args.summary_image)
+    print 'summary image saved to', args.summary_image
+  summary.show()
+
+  print 'saving summary data to', args.summary_data
+  data_summary = []
+  for representative, members in clusters:
+    data_summary.append(
+        [representative.filename[skip_len:]]
+         + [m.filename[skip_len:] for m in members])
+  with open(args.summary_data, 'w') as data_file:
+    json.dump(data_summary, data_file)
+
+
+if __name__ == '__main__':
+  parser = BuildArgParser()
   args, positional = parser.parse_known_args()
   if len(positional) != 1:
     parser.error('missing input directory for cropped images')
@@ -174,21 +199,5 @@ if __name__ == '__main__':
     print 'No data!'
     sys.exit(1)
 
-  for representative, members in clusters:
-    print representative.filename[skip_len:], (1 + len(members))
-
-  summary = BuildClusterSummaryImage(
-      clusters, skip_len, args.summary_max_members)
-  if args.summary_image:
-    summary.save(args.summary_image)
-    print 'summary image saved to', args.summary_image
-  summary.show()
-
-  print 'saving summary data to', args.summary_data
-  data_summary = []
-  for representative, members in clusters:
-    data_summary.append(
-        [representative.filename[skip_len:]]
-         + [m.filename[skip_len:] for m in members])
-  with open(args.summary_data, 'w') as data_file:
-    json.dump(data_summary, data_file)
+  SaveGrouping(
+      clusters, args.summary_data, args.summary_image, args.summary_max_members)
