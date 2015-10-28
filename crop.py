@@ -174,7 +174,7 @@ def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
   return x_min, x_max
 
 
-if __name__ == '__main__':
+def BuildArgParser():
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
       description=summary_line,
@@ -203,7 +203,11 @@ if __name__ == '__main__':
   parser.add_argument(
       '--verbose', '-v', action='store_true',
       help='Show debug images during processing')
+  return parser
 
+
+if __name__ == '__main__':
+  parser = BuildArgParser()
   args, positional = parser.parse_known_args()
   if len(positional) != 2:
     parser.error('missing input and/or output directories')
