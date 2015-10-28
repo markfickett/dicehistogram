@@ -146,6 +146,7 @@ if __name__ == '__main__':
   cropped_image_names = os.listdir(cropped_dir)
   skip_len = len(cropped_dir)  # to reduce length of log messages
   n = len(cropped_image_names)
+  failed_files = []
   try:
     for i, cropped_image_filename in enumerate(cropped_image_names):
       if not cropped_image_filename.lower().endswith('jpg'):
@@ -156,9 +157,13 @@ if __name__ == '__main__':
           clusters,
           args.match_count_threshold,
           skip_len)
+  except cv2.error, e:
+    print cropped_image_filename, e
+    failed_files.append(cropped_image_filename)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
+  print len(failed_files), 'failed files:', failed_files
   if not clusters:
     print 'No data!'
     sys.exit(1)
