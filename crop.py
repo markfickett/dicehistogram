@@ -47,6 +47,20 @@ class NoDieFoundError(RuntimeError):
   pass
 
 
+global reference
+reference = None
+def GetResizedReference(reference_filename, orig_size, target_size):
+  global reference
+  if not reference:
+    reference = PIL.Image.open(reference_filename)
+    if reference.size != orig_size:
+      raise RuntimeError(
+          'reference size %s does not match image size %s'
+          % (reference.size, orig_size))
+    reference = reference.resize(target_size)
+  return reference
+
+
 def ExtractSubject(
     in_filename,
     out_filename,
@@ -63,18 +77,13 @@ def ExtractSubject(
   print in_filename, out_filename
   orig_image = PIL.Image.open(in_filename)
   w, h = orig_image.size
-  reference = PIL.Image.open(reference_filename)
-  if reference.size != (w, h):
-    raise RuntimeError(
-        'image size %s does not match reference size %s'
-        % ((w, h), reference.size))
-
   rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
   image = orig_image.resize((rw, rh))
+
+  reference = GetResizedReference(reference_filename, (w, h), (rw, rh))
+
   if debug:
     _Summarize('analysis input', image)
-  reference = reference.resize((rw, rh))
-  if debug:
     _Summarize('analysis ref', reference)
   diff = PIL.ImageChops.difference(reference, image)
 
