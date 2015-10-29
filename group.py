@@ -35,6 +35,7 @@ class ImageComparison(object):
 
   def __init__(self, in_filename):
     self.filename = in_filename
+    self.basename = os.path.basename(in_filename)
     self.image = PIL.Image.open(in_filename).resize(
         (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
     cv_image = cv2.imread(in_filename, 0)
@@ -47,7 +48,7 @@ class ImageComparison(object):
     self.best_match = None
     self.match_count = 0
 
-  def GetMatchCount(self, other, skip_len):
+  def GetMatchCount(self, other):
     """Returns how many features match between this image and the other."""
     raw_matches = ImageComparison.matcher.knnMatch(
         self.descriptors, trainDescriptors=other.descriptors, k=2)
@@ -55,9 +56,7 @@ class ImageComparison(object):
         self.features, other.features, raw_matches)
     match_count = min(len(p1), len(p2))
     print '%s match %s = %d' % (
-        self.filename[skip_len:],
-        other.filename[skip_len:],
-        match_count)
+        self.basename, other.basename, match_count)
     return match_count
 
 
@@ -78,7 +77,7 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
-def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
+def AssignToCluster(in_filename, clusters, match_count_threshold):
   """Reads an image of a die's face and assigns it to a group where it matches.
 
   The input clusters argument is modified. It stores a list of groups as
@@ -90,7 +89,7 @@ def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
   best_match_count = 0
   best_members = None
   for representative, members in clusters:
-    match_count = image.GetMatchCount(representative, skip_len)
+    match_count = image.GetMatchCount(representative)
     if match_count > best_match_count:
       best_match_count = match_count
       best_members = members
@@ -105,7 +104,7 @@ def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
     best_members.append(image)
 
 
-def CombineSmallClusters(clusters, match_count_threshold, skip_len):
+def CombineSmallClusters(clusters, match_count_threshold):
   """Finds small clusters and combines them with existing large clusters.
 
   In the previous step, the representative images for small clusters were only
@@ -147,7 +146,7 @@ def CombineSmallClusters(clusters, match_count_threshold, skip_len):
     for j in range(min_main_members):
       for i in range(len(main_clusters)):
         sample_member = main_clusters[i][1][j]
-        match_count = representative.GetMatchCount(sample_member, skip_len)
+        match_count = representative.GetMatchCount(sample_member)
         if match_count >= match_count_threshold:
           print 'reparent to', main_clusters[i][0].filename
           main_clusters[i][1].append(representative)
@@ -163,7 +162,7 @@ def CombineSmallClusters(clusters, match_count_threshold, skip_len):
   return main_clusters + not_reparented
 
 
-def BuildClusterSummaryImage(clusters, skip_len, max_members=None):
+def BuildClusterSummaryImage(clusters, max_members=None):
   """Draws a composite image summarizing the clusters."""
   if not clusters:
     return
@@ -186,12 +185,12 @@ def BuildClusterSummaryImage(clusters, skip_len, max_members=None):
     for j, member in enumerate(all_members):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
-      draw.text((x, y), member.filename[skip_len:])
+      draw.text((x, y), member.basename)
       draw.text((x, y + 20), 'features: %d' % len(member.features))
       draw.text((x, y + 40), 'matches: %d' % member.match_count)
     draw.text((0, y + 60), 'members: %d' % (len(members) + 1))
     if representative.best_match:
-      did_not_match = representative.best_match.filename[skip_len:]
+      did_not_match = representative.best_match.basename
       draw.text((0, y + 50), '  %s' % did_not_match)
   return summary_image
 
@@ -200,10 +199,9 @@ def SaveGrouping(
     clusters, summary_data, summary_image, summary_max_members=None):
   """Writes the summary image and the JSON representation of the groupings."""
   for representative, members in clusters:
-    print representative.filename[skip_len:], (1 + len(members))
+    print representative.basename, (1 + len(members))
 
-  summary = BuildClusterSummaryImage(
-      clusters, skip_len, summary_max_members)
+  summary = BuildClusterSummaryImage(clusters, summary_max_members)
   summary.save(summary_image)
   print 'summary image saved to', summary_image
   summary.show()
@@ -212,8 +210,8 @@ def SaveGrouping(
   data_summary = []
   for representative, members in clusters:
     data_summary.append(
-        [representative.filename[skip_len:]]
-         + [m.filename[skip_len:] for m in members])
+        [representative.basename]
+         + [m.basename for m in members])
   with open(summary_data, 'w') as data_file:
     json.dump(data_summary, data_file)
 
@@ -262,7 +260,6 @@ if __name__ == '__main__':
   clusters = []
 
   cropped_image_names = os.listdir(crop_dir)
-  skip_len = len(crop_dir)  # to reduce length of log messages
   n = len(cropped_image_names)
   failed_files = []
   try:
@@ -273,8 +270,7 @@ if __name__ == '__main__':
       AssignToCluster(
           os.path.join(crop_dir, cropped_image_filename),
           clusters,
-          args.match_count_threshold,
-          skip_len)
+          args.match_count_threshold)
   except (NoFeaturesError, cv2.error), e:
     print e
     failed_files.append(cropped_image_filename)
@@ -282,8 +278,7 @@ if __name__ == '__main__':
     print 'got ^C, early stop for categorization'
 
   try:
-    clusters = CombineSmallClusters(
-        clusters, args.match_count_threshold, skip_len)
+    clusters = CombineSmallClusters(clusters, args.match_count_threshold)
   except KeyboardInterrupt, e:
     print 'got ^C, cancelling combining clusters'
 
