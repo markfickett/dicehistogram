@@ -1,0 +1,57 @@
+<h2>How Fair Is My D20?</h2>
+
+<p>An automatic system for rolling a polyhedral die and taking photos of the rolls; extracting the image of just the die from those images; clustering the images of the die by which face is shown; and analyzing the results.<p>
+
+<p>I was inspired in part by the <a href="http://www.awesomedice.com/blog/353/d20-dice-randomness-test-chessex-vs-gamescience/">Awesome Dice Blog's 2012 post</a> comparing d20 fairness between two manufacturers. They rolled and tallied by hand.</p>
+
+<h2>Results</h2>
+
+TODO
+
+<h2>Hardware Setup (Die Roller and Camera)</h2>
+
+[video TODO]
+
+<p>A microcontroller runs a servo motor to shake a small tub, and triggers a camera to take pictures. More details: <a href="TODO">Arduino sketch and hardware parts list</a>.
+
+<h3>Construction</h3>
+
+<p>The main container is an empty (and well washed) ice cream carton, chosen for its flat bottom and sloping sides. The servo motor's arm is taped to the side, and a paperclip makes the pivot on the opposite side. A simple U of cardboard forms the stand (with weights on it to keep it still). The servo motor is mounted in a snugly fitting hole cut in the cardboard.</p>
+
+<p>The LEDs are placed through slots in the carton, facing downward. This keeps them from shining back up at the camera. One power supply wire is inside the carton, and one outside (soldered in place). A small piece of translucent plastic (from a nametag holder) makes a ramp so the die can roll over the LEDs/wire.</p>
+
+<p>Plastic wrap with a rubber-band provides a cover. This prevents the die from rolling out when the carton tips down for each roll. With the LEDs on and the room lights off, there is negligable glare.</p>
+
+<p>The camera is a Nikon D90, using a long (55-200mm) lens for low perspective distortion across the visual field. It is triggered via wired remote (though the GPS/remote port was defective and <a href="TODO">required repair</a>); and powered via its AC adapter port (using <a href="TODO">a 3D-printed plug</a>).</p>
+
+</h3>Performance</h3>
+
+<ul>
+<li>Timing: In several thousand rolls, only a few do not fully settle before the photograph is taken. With this timing, it captures TODO rolls per hour (or one every TODO seconds).</li>
+<li>Repeatability: Despite quick construction, the servo and its taped attachment reliably returns the tub to the same position, closely enough for analysis.</li>
+</ul>
+
+<h3>Improvements</h3>
+
+<ul>
+<li>Noise. The servo motor's whine carries, as does the sound of the die hitting the inside of the paper tub. Heavier or less resonant materials might help, as could lining the container with something like felt.</li>
+<li>Turbulence. The smaller dice (d4 and d6) slide down the tub's side when it tilts down, rather than rolling; this can lead to repeatedly rolling the same number. Bumpy sides on the container, or tilting further down, might help.</li>
+</ul>
+
+<h2>Software Explanation</h2>
+
+There are two computer-vision tasks in this process: finding the die within the larger photo of the die-rolling area; and figuring out which picture is of which face of the die.
+
+<h3>Cropping</h3>
+
+<p>A photo of the rolled die is diffed against a reference image.</p>
+
+<p>The result is scanned for areas of high difference to find the die. The die is flood-filled to find its area; the then image of the die is cropped out and saved.</p>
+
+<h3>Clustering</h3>
+
+<p>Images of the die are compared using features, detected and matched using OpenCV.</p>
+
+<p>The first step builds a list of dissimilar representative images, against which all other images get compared. Each representative gets a list of matching members (the images showing the same face of the die).</p>
+
+<p>This tends to result in big groups for each of the sides of the die, and a bunch of small groups (1-10 each) of images that didn't match any of the representatives well. So a second step takes the small groups and compares them to members of the larger groups (not just their representative images) to find a match.</p>

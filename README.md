@@ -1,42 +1,44 @@
-# How Fair Is My D20?
+# D20 Roll Fairness Evaluation
 
-An automatic system for rolling a polyhedral die and taking photos of the rolls; extracting the image of just the die from those images; clustering the images of the die by which face is shown; and analyzing the results.
+Scripts for extracting the image of just the die from automatically taken images; clustering the images of the die by which face is shown; and analyzing the results.
 
-I was inspired in part by the [Awesome Dice Blog's 2012 post](http://www.awesomedice.com/blog/353/d20-dice-randomness-test-chessex-vs-gamescience/) comparing d20 fairness between two manufacturers. They rolled and tallied by hand.
+[Full project details, algorithm overview, and results](TODO).
 
-## Results
+## Example Results
 
-TODO
+Analysis produces a histogram of rolls like this summary of a Chessex Gemini Copper-Steel d20:
 
-## Hardware Setup (Die Roller and Camera)
+```
+N=2397 normalized stddev=0.16 min=0.73 max=1.29 expected=10.30
+   1 0.90 =============================================
+   2 1.08 =================================================*====
+   3 1.18 =================================================*========
+   4 1.25 =================================================*============
+   5 0.81 ========================================
+   6 0.88 ============================================
+   7 0.77 ======================================
+   8 1.06 =================================================*==
+   9 1.17 =================================================*========
+  10 1.17 =================================================*========
+  11 1.29 =================================================*==============
+  12 1.06 =================================================*==
+  13 0.90 =============================================
+  14 0.95 ===============================================
+  15 0.87 ===========================================
+  16 0.73 ====================================
+  17 1.08 =================================================*====
+  18 0.94 ===============================================
+  19 1.00 =================================================*
+  20 0.89 ============================================
+```
 
-[video TODO]
-
-A microcontroller runs a servo motor to shake a small tub, and triggers a camera to take pictures. The microcontroller is an ATtiny85 running [a short Arduino sketch](#TODO). The camera is a D90 with a [3D-printed AC adapter plug](#TODO) and a [repaired wired-remote port](#TODO). All are powered by an ATX PSU (with a [9v regulator](#TODO) for the camera).
-
-Thanks to [Chris Wren](https://plus.google.com/+ChrisWren) for inspiration on this mechanism.
-
-TODO rate of rolls/photographs
-
-## Software Workflow (How To Use these Scripts)
+## How To Use these Scripts
 
 TODO
 mkdir
 crop (adjust scan distance)
 group (adjust threshold)
 summarize (label)
-
-## Software Explanation
-
-There are two computer-vision tasks in this process: finding the die within the larger photo of the die-rolling area; and figuring out which picture is of which face of the die.
-
-### Cropping
-
-TODO scan, sliding window / caveats, flood-fill
-
-### Clustering
-
-TODO feature extraction / matching, (re)grouping
 
 ## Dependencies
 
