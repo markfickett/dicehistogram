@@ -79,4 +79,5 @@ if __name__ == '__main__':
   for filename_list, label in zip(summary_data, labels):
     labeled_file_sets[label].update(filename_list)
 
+  print 'Summary of', args.summary_data
   PrintHistogram(labeled_file_sets)
