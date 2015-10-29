@@ -32,6 +32,7 @@ import PIL.Image
 import PIL.ImageChops
 import PIL.ImageDraw
 
+
 # Pixels with a difference (summed across RGB) greater than this value will be
 # considered as potentially part of the die. Comparison is against the
 # reference image.
@@ -54,19 +55,24 @@ def ExtractSubject(
     edge_cropped,
     analysis_resize_factor,
     debug=False):
+  """Finds the die in an image by comparing to a reference.
+
+  Scales the images down while performing the diff, then crops out the full
+  size image of the die from the original image and saves it.
+  """
   print in_filename, out_filename
   orig_image = PIL.Image.open(in_filename)
   w, h = orig_image.size
-  rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
-  image = orig_image.resize((rw, rh))
-  if debug:
-    _Summarize('analysis input', image)
-
   reference = PIL.Image.open(reference_filename)
   if reference.size != (w, h):
     raise RuntimeError(
         'image size %s does not match reference size %s'
         % ((w, h), reference.size))
+
+  rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
+  image = orig_image.resize((rw, rh))
+  if debug:
+    _Summarize('analysis input', image)
   reference = reference.resize((rw, rh))
   if debug:
     _Summarize('analysis ref', reference)
@@ -74,6 +80,7 @@ def ExtractSubject(
 
   analysis_bound = FindLargeDiffBound(
       diff, scan_distance / analysis_resize_factor, debug=debug)
+
   bound = [analysis_resize_factor * b for b in analysis_bound]
   bound = MakeSquare(bound, orig_image.size, edge_cropped)
   out_image = orig_image.crop(bound)
@@ -83,10 +90,11 @@ def ExtractSubject(
 
 
 def FindLargeDiffBound(diff, scan_distance, debug=False):
-  """
-  Scan the image in horizontal lines at scan_distance intervals. When we find
-  a stripe that's all above threshold about scan_distance/2 long,
+  """Scans the image in horizontal lines at scan_distance intervals. When
+  we find a stripe that's all above threshold about scan_distance/2 long,
   flood-fill it. If the total area is >= scan_distance**2, return its bounds.
+
+  If debug is true, show the analyzed diff image (with scan lines and bounds).
   """
   w, h = diff.size
   recent_found_num = 0
@@ -138,6 +146,10 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
 
 
 def GetPixelSetBoundWithinImage(region, diff, debug=False):
+  """Returns the bounds of a list of pixel coordinates.
+
+  If debug is true, draws the pixels and their bound on the image.
+  """
   x_max = y_max = 0
   x_min = diff.size[0] - 1
   y_min = diff.size[1] - 1
