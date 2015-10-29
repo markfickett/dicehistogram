@@ -2,16 +2,18 @@
 """Stage 1: Extract dice from images by comparing to a reference image.
 
 Example:
-  %(prog)s data/<die_description>/capture/ data/<die_description>/crop/
+  %(prog)s data/myd20/
+where data/myd20/ has a subdirectory data/myd20/capture/ with raw (aligned)
+photos of die rolls in it, including data/myd20/capture/reference.JPG.
 
-The input ("capture") directory should contain images of a rolled die. Images
+The input subdirectory (capture/) should contain images of a rolled die. Images
 should be from a fixed camera pointed at a fixed surface (or a rolling mechanism
 that returns to the same state for each photo), with a die rolled in the
 camera's field of view in each picture; except one picture, specified by
 --reference, which should have no die in it.
 
 Each image is processed to find the die in it. That region is cropped out, and
-the result is saved into the output ("crop") directory with the same name as
+the result is saved into the output subdirectory (crop/) with the same name as
 the corresponding input image.
 
 The camera should be on full manual, including:
@@ -185,6 +187,14 @@ def BuildArgParser():
       help='Distance between scan lines when searching the image for the die. '
            + 'This should be roughly the apparent radius of the die.')
   parser.add_argument(
+      '--capture-dir', default='capture', dest='capture_dir',
+      help='Subdirectory within the data directory containing raw input images '
+           + 'as well as the reference image.')
+  parser.add_argument(
+      '--crop-dir', default='crop', dest='crop_dir',
+      help='Subdirectory within the data directory which cropped images will '
+           + 'be written into.')
+  parser.add_argument(
       '--reference', '-r', default='reference.JPG',
       help='Filename (within the input directory) of the reference image. This '
            + 'is an image like the others but with no die present.')
@@ -201,7 +211,7 @@ def BuildArgParser():
       '--force', '-f', action='store_true',
       help='Overwrite existing crops.')
   parser.add_argument(
-      '--verbose', '-v', action='store_true',
+      '--debug', action='store_true',
       help='Show debug images during processing')
   return parser
 
@@ -209,11 +219,15 @@ def BuildArgParser():
 if __name__ == '__main__':
   parser = BuildArgParser()
   args, positional = parser.parse_known_args()
-  if len(positional) != 2:
-    parser.error('missing input and/or output directories')
-  raw_dir, cropped_dir = positional
+  if len(positional) != 1:
+    parser.error('A single argument for the data directory is required.')
+  data_dir = positional[0]
+  capture_dir = os.path.join(data_dir, args.capture_dir)
+  crop_dir = os.path.join(data_dir, args.crop_dir)
+  if not os.path.isdir(crop_dir):
+    os.makedirs(crop_dir)
 
-  raw_image_names = os.listdir(raw_dir)
+  raw_image_names = os.listdir(capture_dir)
   n = len(raw_image_names)
   c = 0
   no_die_found_in = []
@@ -222,19 +236,19 @@ if __name__ == '__main__':
       if not raw_image_filename.lower().endswith('jpg'):
         continue
       try:
-        cropped_file_path = os.path.join(cropped_dir, raw_image_filename)
+        cropped_file_path = os.path.join(crop_dir, raw_image_filename)
         if not args.force and os.path.isfile(cropped_file_path):
           continue
         print '%d/%d ' % (i, n),
         c += 1
         ExtractSubject(
-            os.path.join(raw_dir, raw_image_filename),
+            os.path.join(capture_dir, raw_image_filename),
             cropped_file_path,
-            os.path.join(raw_dir, args.reference),
+            os.path.join(capture_dir, args.reference),
             args.scan_distance,
             args.crop_size,
             args.analysis_resize_factor,
-            debug=args.verbose)
+            debug=args.debug)
       except NoDieFoundError, e:
         print 'No die found in %s' % raw_image_filename
         no_die_found_in.append(raw_image_filename)
