@@ -2,11 +2,12 @@
 """Stage 2: Use feature detection/comparison to group images of rolled dice.
 
 Example:
-    %(prog)s data/<die_description>/crop/
+    %(prog)s data/myd20/
+where there is a subdirectory data/myd20/crop/ containing extracted die images
+from stage 1.
+
 Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
-
-The input ("crop") directory should contain extracted die images from stage 1.
 """
 
 import cv2
@@ -170,6 +171,27 @@ def BuildClusterSummaryImage(clusters, skip_len, max_members=None):
   return summary_image
 
 
+def SaveGrouping(
+    clusters, summary_data, summary_image, summary_max_members=None):
+  for representative, members in clusters:
+    print representative.filename[skip_len:], (1 + len(members))
+
+  summary = BuildClusterSummaryImage(
+      clusters, skip_len, summary_max_members)
+  summary.save(summary_image)
+  print 'summary image saved to', summary_image
+  summary.show()
+
+  print 'saving summary data to', summary_data
+  data_summary = []
+  for representative, members in clusters:
+    data_summary.append(
+        [representative.filename[skip_len:]]
+         + [m.filename[skip_len:] for m in members])
+  with open(summary_data, 'w') as data_file:
+    json.dump(data_summary, data_file)
+
+
 def BuildArgParser():
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
@@ -181,14 +203,18 @@ def BuildArgParser():
       dest='match_count_threshold',
       help='Number of matching features to consider two images a match.')
   parser.add_argument(
-      '--summary-image', '-s', dest='summary_image',
+      '--crop-dir', default='crop', dest='crop_dir',
+      help='Subdirectory within the data directory of cropped images from '
+           + 'stage 1.')
+  parser.add_argument(
+      '--summary-image', '-s', dest='summary_image', default='summary.jpg',
       help='File path for the summary image. If the path is omitted, '
            + 'the summary image is generated and shown but not saved.')
   parser.add_argument(
-      '--summary-data', '-d', dest='summary_data',
-      default='/tmp/summary_data.json',
-      help='File path for the summary data. The JSON, an ordered list of lists '
-           + 'of files, each forming an equivalency set.')
+      '--summary-data', '-d', dest='summary_data', default='summary.json',
+      help='File path for the summary data under the data directory. The JSON '
+           + 'is an ordered list of lists. The inner lists are each names of '
+           + 'files which map to the same die face.')
   parser.add_argument(
       '--summary-max-members', default=35, type=int, dest='summary_max_members',
       help='Max number of images to show per grouping in the summary image. '
@@ -196,42 +222,21 @@ def BuildArgParser():
   return parser
 
 
-def SaveGrouping(
-    clusters, summary_data, summary_image, summary_max_members=None):
-  for representative, members in clusters:
-    print representative.filename[skip_len:], (1 + len(members))
-
-  summary = BuildClusterSummaryImage(
-      clusters, skip_len, summary_max_members)
-  if args.summary_image:
-    summary.save(args.summary_image)
-    print 'summary image saved to', args.summary_image
-  summary.show()
-
-  print 'saving summary data to', args.summary_data
-  data_summary = []
-  for representative, members in clusters:
-    data_summary.append(
-        [representative.filename[skip_len:]]
-         + [m.filename[skip_len:] for m in members])
-  with open(args.summary_data, 'w') as data_file:
-    json.dump(data_summary, data_file)
-
-
 if __name__ == '__main__':
   parser = BuildArgParser()
   args, positional = parser.parse_known_args()
   if len(positional) != 1:
-    parser.error('missing input directory for cropped images')
-  cropped_dir = positional[0]
+    parser.error('A single argument for the data directory is required.')
+  data_dir = positional[0]
+  crop_dir = os.path.join(data_dir, args.crop_dir)
 
   # List of (representative image, [member images]) tuples, which associates
   # one ImageComparison with all the other ImageComparisons (in a list) that
   # matched it.
   clusters = []
 
-  cropped_image_names = os.listdir(cropped_dir)
-  skip_len = len(cropped_dir)  # to reduce length of log messages
+  cropped_image_names = os.listdir(crop_dir)
+  skip_len = len(crop_dir)  # to reduce length of log messages
   n = len(cropped_image_names)
   failed_files = []
   try:
@@ -240,7 +245,7 @@ if __name__ == '__main__':
         continue
       print '%d/%d ' % (i, n),
       AssignToCluster(
-          os.path.join(cropped_dir, cropped_image_filename),
+          os.path.join(crop_dir, cropped_image_filename),
           clusters,
           args.match_count_threshold,
           skip_len)
@@ -261,7 +266,8 @@ if __name__ == '__main__':
     print 'No data!'
     sys.exit(1)
 
-  n = args.summary_max_members
-  if n <= 0:
-    n = None
-  SaveGrouping(clusters, args.summary_data, args.summary_image, n)
+  SaveGrouping(
+      clusters,
+      os.path.join(data_dir, args.summary_data),
+      os.path.join(data_dir, args.summary_image),
+      args.summary_max_members if args.summary_max_members > 0 else None)
