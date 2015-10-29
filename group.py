@@ -7,9 +7,6 @@ Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
 
 The input ("crop") directory should contain extracted die images from stage 1.
-
-TODO:
- - After main pass, check short member lists against long ones and reparent.
 """
 
 import cv2
@@ -95,10 +92,53 @@ def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
 
 
 def CombineSmallClusters(clusters, match_count_threshold, skip_len):
-  return clusters
+  clusters_by_len = []
+  for representative, members in clusters:
+    clusters_by_len.append((len(members), representative, members))
+  clusters_by_len.sort(reverse=True)
+  cluster_sizes = [c[0] for c in clusters_by_len]
+
+  for first_small_index in range(1, len(clusters_by_len)):
+    if cluster_sizes[first_small_index] < cluster_sizes[0] / 2:
+      break
+  print 'splitting: %s %s' % (
+      cluster_sizes[:first_small_index], cluster_sizes[first_small_index:])
+
+  main_clusters, tail_clusters = [], []
+  min_main_members = float('Inf')
+  for i, (unused_n, representative, members) in enumerate(clusters_by_len):
+    if i < first_small_index:
+      main_clusters.append(
+          (representative, sorted(members, key=lambda m: m.match_count)))
+      min_main_members = min(min_main_members, len(members))
+    else:
+      tail_clusters.append((representative, members))
+
+  print 'reparent %d small clusters to %d large clusters (try %d members)' % (
+      len(tail_clusters), len(main_clusters), min_main_members)
+  not_reparented = []
+  for representative, members in tail_clusters:
+    reparented = False
+    for j in range(min_main_members):
+      for i in range(len(main_clusters)):
+        sample_member = main_clusters[i][1][j]
+        match_count = representative.GetMatchCount(sample_member, skip_len)
+        if match_count >= match_count_threshold:
+          print 'reparent to', main_clusters[i][0].filename
+          main_clusters[i][1].append(representative)
+          main_clusters[i][1].extend(members)
+          reparented = True
+          break
+      if reparented:
+        break
+    if not reparented:
+      print 'failed to reparent', representative.filename
+      not_reparented.append((representative, members))
+
+  return main_clusters + not_reparented
 
 
-def BuildClusterSummaryImage(clusters, skip_len, max_members):
+def BuildClusterSummaryImage(clusters, skip_len, max_members=None):
   if not clusters:
     return
   large_edge = clusters[0][0].image.size[0]
@@ -106,14 +146,18 @@ def BuildClusterSummaryImage(clusters, skip_len, max_members):
   w = 0
   for _, members in clusters:
     w = max(w, 1 + len(members))
-  w = min(max_members, w)
+  if max_members is not None:
+    w = min(max_members, w)
   w *= large_edge
   summary_image = PIL.Image.new('RGB', (w, h))
   draw = PIL.ImageDraw.Draw(summary_image)
   for i, (representative, members) in enumerate(clusters):
     y = i * large_edge
-    for j, member in enumerate(
-        [representative] + members[:max_members - 1]):
+    if max_members is None:
+      all_members = [representative] + members
+    else:
+      all_members = [representative] + members[:max_members - 1]
+    for j, member in enumerate(all_members):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.filename[skip_len:])
@@ -147,16 +191,18 @@ def BuildArgParser():
            + 'of files, each forming an equivalency set.')
   parser.add_argument(
       '--summary-max-members', default=35, type=int, dest='summary_max_members',
-      help='Max number of images to show per grouping in the summary image.')
+      help='Max number of images to show per grouping in the summary image. '
+           + 'Set to <= 0 to allow unlimited members shown.')
   return parser
 
 
-def SaveGrouping(clusters, summary_data, summary_image, summary_max_members):
+def SaveGrouping(
+    clusters, summary_data, summary_image, summary_max_members=None):
   for representative, members in clusters:
     print representative.filename[skip_len:], (1 + len(members))
 
   summary = BuildClusterSummaryImage(
-      clusters, skip_len, args.summary_max_members)
+      clusters, skip_len, summary_max_members)
   if args.summary_image:
     summary.save(args.summary_image)
     print 'summary image saved to', args.summary_image
@@ -179,7 +225,11 @@ if __name__ == '__main__':
     parser.error('missing input directory for cropped images')
   cropped_dir = positional[0]
 
+  # List of (representative image, [member images]) tuples, which associates
+  # one ImageComparison with all the other ImageComparisons (in a list) that
+  # matched it.
   clusters = []
+
   cropped_image_names = os.listdir(cropped_dir)
   skip_len = len(cropped_dir)  # to reduce length of log messages
   n = len(cropped_image_names)
@@ -194,18 +244,24 @@ if __name__ == '__main__':
           clusters,
           args.match_count_threshold,
           skip_len)
-    clusters = CombineSmallClusters(
-        clusters, args.match_count_threshold, skip_len)
   except (NoFeaturesError, cv2.error), e:
     print e
     failed_files.append(cropped_image_filename)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
+  try:
+    clusters = CombineSmallClusters(
+        clusters, args.match_count_threshold, skip_len)
+  except KeyboardInterrupt, e:
+    print 'got ^C, cancelling combining clusters'
+
   print len(failed_files), 'failed files:', failed_files
   if not clusters:
     print 'No data!'
     sys.exit(1)
 
-  SaveGrouping(
-      clusters, args.summary_data, args.summary_image, args.summary_max_members)
+  n = args.summary_max_members
+  if n <= 0:
+    n = None
+  SaveGrouping(clusters, args.summary_data, args.summary_image, n)
