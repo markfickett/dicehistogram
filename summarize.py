@@ -2,11 +2,13 @@
 """Stage 3: Summarize die roll data.
 
 Example:
-    %(prog)s --summary-data data/d6/summary.json 6 3 4 5 1 2
+    %(prog)s data/myd6/ 5 6 4 1 2 1 1 3 1 2 1 6 1 1 5 1 1
+where data/myd20 contains the summary.json file written by stage 2.
 
 Positional arguments are labels for the die-roll image groupings, in the same
 order as they appear in the summary data (or summary image). They are expected
-to be integers.
+to be integers. Typically the first N will name the N sides of the die, and then
+additional labels will repeat labels for any stragglers.
 
 TODO:
  - Image of histogram?
@@ -18,6 +20,8 @@ import argparse
 import collections
 import json
 import numpy
+import os
+
 
 HISTOGRAM_BASE_LEN = 50
 def PrintHistogram(labeled_file_sets):
@@ -58,26 +62,28 @@ if __name__ == '__main__':
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
       '--summary-data', '-d', dest='summary_data',
-      default='/tmp/summary_data.json',
-      help='File path for the summary data, JSON written from stage 2.')
+      default='summary.json',
+      help='File name for the summary data, JSON written from stage 2.')
   args, positional = parser.parse_known_args()
-  labels = map(int, positional)
+  data_dir = positional[0]
+  labels = map(int, positional[1:])
 
-  with open(args.summary_data) as data_file:
+  summary_data_filename = os.path.join(data_dir, args.summary_data)
+  with open(summary_data_filename) as data_file:
     summary_data = json.load(data_file)
 
-  if len(positional) != len(summary_data):
-    print positional
-    for i, l in enumerate(summary_data):
-      print i, l[:4]
+  if len(labels) != len(summary_data):
+    print labels
+    for i, l in enumerate(summary_data, start=1):
+      print i, (l[:4] + ([] if len(l) <= 4 else ['...']))
     parser.error(
-        ('Got %d positional arguments but %d data groupings in summary data; '
-         + 'they must match.')
-        % (len(positional), len(summary_data)))
+        ('Got %d positional argument labels but %d data groupings in summary '
+         + 'data; they must match.')
+        % (len(labels), len(summary_data)))
 
   labeled_file_sets = collections.defaultdict(lambda: set())
   for filename_list, label in zip(summary_data, labels):
     labeled_file_sets[label].update(filename_list)
 
-  print 'Summary of', args.summary_data
+  print 'Summary of', summary_data_filename
   PrintHistogram(labeled_file_sets)
