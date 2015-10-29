@@ -27,6 +27,9 @@ SUMMARY_MEMBER_IMAGE_SIZE = 90
 
 
 class ImageComparison(object):
+  """Image data, features, and comparison results for one image of a die face.
+  """
+
   detector = cv2.AKAZE_create()
   matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
 
@@ -45,6 +48,7 @@ class ImageComparison(object):
     self.match_count = 0
 
   def GetMatchCount(self, other, skip_len):
+    """Returns how many features match between this image and the other."""
     raw_matches = ImageComparison.matcher.knnMatch(
         self.descriptors, trainDescriptors=other.descriptors, k=2)
     p1, p2, matching_feature_pairs = FilterMatches(
@@ -58,6 +62,7 @@ class ImageComparison(object):
 
 
 def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
+  """Returns the subset of features which match between the two lists."""
   matching_features_a, matching_features_b = [], []
   for m in raw_matches:
     if len(m) == 2 and m[0].distance < m[1].distance * ratio:
@@ -69,10 +74,18 @@ def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
 
 
 class NoFeaturesError(RuntimeError):
+  """No features are detected in an image, rendering it unusable."""
   pass
 
 
 def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
+  """Reads an image of a die's face and assigns it to a group where it matches.
+
+  The input clusters argument is modified. It stores a list of groups as
+  (representative_image, list_of_matching_images) tuples. Each additional image
+  is either assigned to the first cluster where it matches the representative
+  sufficiently; or it starts a new cluster.
+  """
   image = ImageComparison(in_filename)
   best_match_count = 0
   best_members = None
@@ -93,6 +106,17 @@ def AssignToCluster(in_filename, clusters, match_count_threshold, skip_len):
 
 
 def CombineSmallClusters(clusters, match_count_threshold, skip_len):
+  """Finds small clusters and combines them with existing large clusters.
+
+  In the previous step, the representative images for small clusters were only
+  compared with the large clusters' representative images. Now, compare them
+  against additional members of the large clusters, checking matches as before.
+
+  Typical results have a large cluster (around a hundred members) for each of
+  the faces of the die, and then a long tail of small clusters (1-10 members)
+  of images that didn't get a good match. As a heuristic, small clusters are
+  those with less than half the members of the largest group.
+  """
   clusters_by_len = []
   for representative, members in clusters:
     clusters_by_len.append((len(members), representative, members))
@@ -140,6 +164,7 @@ def CombineSmallClusters(clusters, match_count_threshold, skip_len):
 
 
 def BuildClusterSummaryImage(clusters, skip_len, max_members=None):
+  """Draws a composite image summarizing the clusters."""
   if not clusters:
     return
   large_edge = clusters[0][0].image.size[0]
@@ -173,6 +198,7 @@ def BuildClusterSummaryImage(clusters, skip_len, max_members=None):
 
 def SaveGrouping(
     clusters, summary_data, summary_image, summary_max_members=None):
+  """Writes the summary image and the JSON representation of the groupings."""
   for representative, members in clusters:
     print representative.filename[skip_len:], (1 + len(members))
 
