@@ -48,15 +48,29 @@ class ImageComparison(object):
     self.best_match = None
     self.match_count = 0
 
-  def GetMatchCount(self, other):
+  def GetMatchCount(self, other, verbose=True):
     """Returns how many features match between this image and the other."""
     raw_matches = ImageComparison.matcher.knnMatch(
         self.descriptors, trainDescriptors=other.descriptors, k=2)
     p1, p2, matching_feature_pairs = FilterMatches(
         self.features, other.features, raw_matches)
-    match_count = min(len(p1), len(p2))
-    print '%s match %s = %d' % (
-        self.basename, other.basename, match_count)
+    if len(p1) >= 4:
+      # Status for the homography is a list of 0s and 1s. For each input feature
+      # pair, it represents whether that feature pair is an inlier (better
+      # match, as a 1) or not (0).
+      unused_h, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
+      match_count = numpy.sum(status)
+    else:
+      # Not enough for homography estimation.
+      match_count = 0
+    if verbose:
+      print '%s (%d) match %s (%d) = %d => %s' % (
+          self.basename,
+          len(self.descriptors),
+          other.basename,
+          len(other.descriptors),
+          len(p1),
+          match_count)
     return match_count
 
 
@@ -146,7 +160,7 @@ def CombineSmallClusters(clusters, match_count_threshold):
     for j in range(min_main_members):
       for i in range(len(main_clusters)):
         sample_member = main_clusters[i][1][j]
-        match_count = representative.GetMatchCount(sample_member)
+        match_count = representative.GetMatchCount(sample_member, verbose=False)
         if match_count >= match_count_threshold:
           print 'reparent to', main_clusters[i][0].filename
           main_clusters[i][1].append(representative)
@@ -223,7 +237,7 @@ def BuildArgParser():
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--match-count-threshold', '-m', default=35, type=int,
+      '--match-count-threshold', '-m', default=20, type=int,
       dest='match_count_threshold',
       help='Number of matching features to consider two images a match.')
   parser.add_argument(
