@@ -71,7 +71,7 @@ def GetLabelSequence(labeled_file_sets):
   return [label for _, label in file_to_label]
 
 
-def BuildSequenceGraph(labeled_file_sets):
+def BuildSequenceHeatmap(labeled_file_sets):
   ordered_labels = GetLabelSequence(labeled_file_sets)
   n = len(labeled_file_sets)
 
@@ -104,7 +104,6 @@ def BuildSequenceGraph(labeled_file_sets):
           '%dx' % sequence_matrix[i][j],
           fill=(v, v, v))
 
-  sequence_graph.show()
   return sequence_graph
 
 
@@ -144,5 +143,7 @@ if __name__ == '__main__':
 
   print 'Summary of', summary_data_filename
   PrintHistogram(labeled_file_sets)
-  sequence_graph = BuildSequenceGraph(labeled_file_sets)
-  sequence_graph.save(os.path.join(data_dir, args.sequence_graph))
+  sequence_graph = BuildSequenceHeatmap(labeled_file_sets)
+  sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
+  sequence_graph.save(sequence_graph_file)
+  print 'wrote sequence heatmap to', sequence_graph_file
