@@ -162,6 +162,10 @@ if __name__ == '__main__':
   labeled_file_sets = collections.defaultdict(lambda: set())
   for filename_list, label in zip(summary_data, labels):
     labeled_file_sets[label].update(filename_list)
+  for i in xrange(1, max(labels) + 1):
+    if i not in labeled_file_sets:
+      print 'warning, missing label', i
+      labeled_file_sets[i] = set()
 
   label_counts = {
       label: len(file_set)
