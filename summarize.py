@@ -21,6 +21,7 @@ import collections
 import json
 import numpy
 import os
+import random
 
 import PIL
 import PIL.Image
@@ -28,18 +29,18 @@ import PIL.ImageDraw
 
 
 HISTOGRAM_BASE_LEN = 50
-def PrintHistogram(labeled_file_sets):
-  values = [len(filenames_set) for filenames_set in labeled_file_sets.values()]
+def PrintHistogram(label_counts):
+  values = label_counts.values()
   total = sum(values)
   np_values = numpy.array(values)
   mean = numpy.mean(np_values)
   np_values = np_values / mean
 
   expected_value = 0
-  for label, filename_set in labeled_file_sets.items():
-    normalized_value = len(filename_set) / mean
+  for label, count in label_counts.items():
+    normalized_value = count / mean
     expected_value += label * normalized_value
-  expected_value = expected_value / len(labeled_file_sets)
+  expected_value = expected_value / len(label_counts)
 
   print 'N=%d normalized stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
       total,
@@ -47,8 +48,8 @@ def PrintHistogram(labeled_file_sets):
       min(np_values),
       max(np_values),
       expected_value)
-  for label, filename_set in sorted(labeled_file_sets.items()):
-    v = len(filename_set) / mean
+  for label, count in sorted(label_counts.items()):
+    v = count / mean
     i = int(v * HISTOGRAM_BASE_LEN)
     if i < HISTOGRAM_BASE_LEN:
       bar = '=' * i
@@ -141,8 +142,11 @@ if __name__ == '__main__':
   for filename_list, label in zip(summary_data, labels):
     labeled_file_sets[label].update(filename_list)
 
+  label_counts = {
+      label: len(file_set) for label, file_set in labeled_file_sets.iteritems()}
+
   print 'Summary of', summary_data_filename
-  PrintHistogram(labeled_file_sets)
+  PrintHistogram(label_counts)
   sequence_graph = BuildSequenceHeatmap(labeled_file_sets)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
   sequence_graph.save(sequence_graph_file)
