@@ -47,6 +47,8 @@ class ImageComparison(object):
       raise NoFeaturesError('No features in %s' % self.filename)
     self.best_match = None
     self.match_count = 0
+    # Was this image ever a representative? Used when drawing the summary image.
+    self.is_representative = False
 
   def GetMatchCount(self, other, verbose=True):
     """Returns how many features match between this image and the other."""
@@ -112,8 +114,9 @@ def AssignToCluster(in_filename, clusters, match_count_threshold):
         break
   image.match_count = best_match_count
   if best_members is None or best_match_count < match_count_threshold:
-    print '%s starts new cluster' % image.filename
+    print 'starts new cluster'
     clusters.append((image, []))
+    image.is_representative = True
   else:
     best_members.append(image)
 
@@ -162,15 +165,18 @@ def CombineSmallClusters(clusters, match_count_threshold):
         sample_member = main_clusters[i][1][j]
         match_count = representative.GetMatchCount(sample_member, verbose=False)
         if match_count >= match_count_threshold:
-          print 'reparent to', main_clusters[i][0].filename
+          print 'reparent %s to %s' % (
+              representative.basename, main_clusters[i][0].basename)
           main_clusters[i][1].append(representative)
           main_clusters[i][1].extend(members)
+          representative.match_count = match_count
+          representative.best_match = sample_member
           reparented = True
           break
       if reparented:
         break
     if not reparented:
-      print 'failed to reparent', representative.filename
+      print 'failed to reparent', representative.basename
       not_reparented.append((representative, members))
 
   return main_clusters + not_reparented
@@ -202,10 +208,9 @@ def BuildClusterSummaryImage(clusters, max_members=None):
       draw.text((x, y), member.basename)
       draw.text((x, y + 20), 'features: %d' % len(member.features))
       draw.text((x, y + 40), 'matches: %d' % member.match_count)
+      if member.is_representative and member.best_match:
+        draw.text((x, y + 50), '  %s' % member.best_match.basename)
     draw.text((0, y + 60), 'members: %d' % (len(members) + 1))
-    if representative.best_match:
-      did_not_match = representative.best_match.basename
-      draw.text((0, y + 50), '  %s' % did_not_match)
   return summary_image
 
 
@@ -280,7 +285,7 @@ if __name__ == '__main__':
     for i, cropped_image_filename in enumerate(cropped_image_names):
       if not cropped_image_filename.lower().endswith('jpg'):
         continue
-      print '%d/%d ' % (i, n),
+      print '%d/%d ' % (i, n)
       AssignToCluster(
           os.path.join(crop_dir, cropped_image_filename),
           clusters,
