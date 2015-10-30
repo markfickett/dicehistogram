@@ -21,7 +21,6 @@ import collections
 import json
 import numpy
 import os
-import random
 
 import PIL
 import PIL.Image
@@ -60,7 +59,7 @@ def PrintHistogram(label_counts):
 
 
 def GetLabelSequence(labeled_file_sets):
-  """Transform {label: set(files)} to ordered [labels].
+  """Transforms {label: set(files)} to ordered [labels].
 
   Assumes filenames reflect roll ordering.
   """
@@ -70,6 +69,14 @@ def GetLabelSequence(labeled_file_sets):
       file_to_label.append((file, label))
   file_to_label.sort()
   return [label for _, label in file_to_label]
+
+
+def GetLabelCounts(label_sequence):
+  """Transforms ordered [labels] into {label: count}."""
+  label_counts = collections.defaultdict(lambda: 0)
+  for label in label_sequence:
+    label_counts[label] += 1
+  return label_counts
 
 
 def BuildSequenceHeatmap(labeled_file_sets):
@@ -143,10 +150,11 @@ if __name__ == '__main__':
     labeled_file_sets[label].update(filename_list)
 
   label_counts = {
-      label: len(file_set) for label, file_set in labeled_file_sets.iteritems()}
-
+      label: len(file_set)
+      for label, file_set in labeled_file_sets.iteritems()}
   print 'Summary of', summary_data_filename
   PrintHistogram(label_counts)
+
   sequence_graph = BuildSequenceHeatmap(labeled_file_sets)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
   sequence_graph.save(sequence_graph_file)
