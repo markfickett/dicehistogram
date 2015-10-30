@@ -22,6 +22,10 @@ import json
 import numpy
 import os
 
+import PIL
+import PIL.Image
+import PIL.ImageDraw
+
 
 HISTOGRAM_BASE_LEN = 50
 def PrintHistogram(labeled_file_sets):
@@ -54,6 +58,56 @@ def PrintHistogram(labeled_file_sets):
     print '%4d %4.2f %s' % (label, v, bar)
 
 
+def GetLabelSequence(labeled_file_sets):
+  """Transform {label: set(files)} to ordered [labels].
+
+  Assumes filenames reflect roll ordering.
+  """
+  file_to_label = []
+  for label, files in labeled_file_sets.items():
+    for file in files:
+      file_to_label.append((file, label))
+  file_to_label.sort()
+  return [label for _, label in file_to_label]
+
+
+def BuildSequenceGraph(labeled_file_sets):
+  ordered_labels = GetLabelSequence(labeled_file_sets)
+  n = len(labeled_file_sets)
+
+  sequence_matrix = []
+  for _ in range(n):
+    sequence_matrix.append([0] * n)
+  for i in xrange(len(ordered_labels) - 1):
+    sequence_matrix[ordered_labels[i] - 1][ordered_labels[i + 1] - 1] += 1
+  max_cell = max([max(row) for row in sequence_matrix])
+
+
+  dw = 40
+  w = n * dw
+  sequence_graph = PIL.Image.new('RGB', (w, w))
+  draw = PIL.ImageDraw.Draw(sequence_graph)
+  for i in range(n):
+    for j in range(n):
+      x = dw * i
+      y = dw * j
+      v = sequence_matrix[i][j] * 254 / max_cell
+      draw.rectangle((x, y, x + dw, y + dw), fill=(v, v, v))
+      if v > 100:
+        v -= 40
+      else:
+        v += 40
+      draw.text(
+          (x + dw / 10, y), '%d->%d' % (i + 1, j + 1), fill=(v, v, v))
+      draw.text(
+          (x + dw / 10, y + dw / 2),
+          '%dx' % sequence_matrix[i][j],
+          fill=(v, v, v))
+
+  sequence_graph.show()
+  return sequence_graph
+
+
 if __name__ == '__main__':
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
@@ -64,6 +118,9 @@ if __name__ == '__main__':
       '--summary-data', '-d', dest='summary_data',
       default='summary.json',
       help='File name for the summary data, JSON written from stage 2.')
+  parser.add_argument(
+      '--sequence-graph', dest='sequence_graph', default='sequence.jpg',
+      help='Save the graph of roll sequences to this file within the data dir.')
   args, positional = parser.parse_known_args()
   data_dir = positional[0]
   labels = map(int, positional[1:])
@@ -87,3 +144,5 @@ if __name__ == '__main__':
 
   print 'Summary of', summary_data_filename
   PrintHistogram(labeled_file_sets)
+  sequence_graph = BuildSequenceGraph(labeled_file_sets)
+  sequence_graph.save(os.path.join(data_dir, args.sequence_graph))
