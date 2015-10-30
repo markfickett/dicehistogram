@@ -165,8 +165,11 @@ def CombineSmallClusters(clusters, match_count_threshold):
         sample_member = main_clusters[i][1][j]
         match_count = representative.GetMatchCount(sample_member, verbose=False)
         if match_count >= match_count_threshold:
-          print 'reparent %s to %s' % (
-              representative.basename, main_clusters[i][0].basename)
+          print 'reparent %s to %s via %s match %d' % (
+              representative.basename,
+              main_clusters[i][0].basename,
+              sample_member.basename,
+              match_count)
           main_clusters[i][1].append(representative)
           main_clusters[i][1].extend(members)
           representative.match_count = match_count
