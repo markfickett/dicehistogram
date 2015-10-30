@@ -12,7 +12,6 @@ additional labels will repeat labels for any stragglers.
 
 TODO:
  - Image of histogram?
- - Sequence graph.
  - Heatmap of common polyhedrals.
 """
 
@@ -21,16 +20,32 @@ import collections
 import json
 import numpy
 import os
+import scipy
+import scipy.stats
 
 import PIL
 import PIL.Image
 import PIL.ImageDraw
 
 
+def PrintChiSquared(label_counts):
+  """Prints the p-value from a chi squared test of the data.
+
+  For example, a p-value of 0.72 means there is a 72% chance the observed data
+  is due to randomness. The null hypothesis is that the die is fair and all
+  labels should come up equally often. A p-value of 1.0 means the null
+  hypothesis is likely to be true (the die is probably fair).
+
+  See an explanation at
+  http://blog.minitab.com/blog/adventures-in-statistics/how-to-correctly-interpret-p-values
+  """
+  unused_x_sq, p = scipy.stats.chisquare(numpy.array(label_counts.values()))
+  print 'N = %d p = %f' % (sum(label_counts.values()), p)
+
+
 HISTOGRAM_BASE_LEN = 50
 def PrintHistogram(label_counts):
   values = label_counts.values()
-  total = sum(values)
   np_values = numpy.array(values)
   mean = numpy.mean(np_values)
   np_values = np_values / mean
@@ -41,8 +56,7 @@ def PrintHistogram(label_counts):
     expected_value += label * normalized_value
   expected_value = expected_value / len(label_counts)
 
-  print 'N=%d normalized stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
-      total,
+  print 'normalized: stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
       numpy.std(np_values),
       min(np_values),
       max(np_values),
@@ -55,7 +69,7 @@ def PrintHistogram(label_counts):
     else:
       bar = ('=' * (HISTOGRAM_BASE_LEN - 1)) + '*' + (
           '=' * (i - HISTOGRAM_BASE_LEN))
-    print '%4d %4.2f %s' % (label, v, bar)
+    print '%2d %4.2f %s' % (label, v, bar)
 
 
 def GetLabelSequence(labeled_file_sets):
@@ -153,6 +167,7 @@ if __name__ == '__main__':
       label: len(file_set)
       for label, file_set in labeled_file_sets.iteritems()}
   print 'Summary of', summary_data_filename
+  PrintChiSquared(label_counts)
   PrintHistogram(label_counts)
 
   sequence_graph = BuildSequenceHeatmap(labeled_file_sets)
