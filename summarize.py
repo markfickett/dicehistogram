@@ -40,7 +40,8 @@ def PrintChiSquared(label_counts):
   http://blog.minitab.com/blog/adventures-in-statistics/how-to-correctly-interpret-p-values
   """
   unused_x_sq, p = scipy.stats.chisquare(numpy.array(label_counts.values()))
-  print 'N = %d p = %f' % (sum(label_counts.values()), p)
+  print 'N=%d p=%f (%d%% chance the data is from a random source)' % (
+      sum(label_counts.values()), p, int(100 * p))
 
 
 HISTOGRAM_BASE_LEN = 50
