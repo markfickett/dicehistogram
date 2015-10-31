@@ -26,10 +26,17 @@ import sys
 SUMMARY_MEMBER_IMAGE_SIZE = 90
 
 
+ORIGIN = numpy.array([0, 0, 1])
+DX = numpy.array([1, 0, 1])
+DY = numpy.array([0, 1, 1])
 class ImageComparison(object):
   """Image data, features, and comparison results for one image of a die face.
   """
 
+  # Feature type selection:
+  # Brisk: faster, some false positive matches
+  # Orb: faster, less accurate (inlier count less precise a threshold)
+  # Akaze: slower, better threshold on inlier count v. match and not
   detector = cv2.AKAZE_create()
   matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
 
@@ -46,7 +53,8 @@ class ImageComparison(object):
     if self.descriptors is None or not len(self.descriptors):
       raise NoFeaturesError('No features in %s' % self.filename)
     self.best_match = None
-    self.match_count = 0
+    self.best_match_count = 0
+    self.best_scale = float('Inf')
     # Was this image ever a representative? Used when drawing the summary image.
     self.is_representative = False
 
@@ -56,24 +64,31 @@ class ImageComparison(object):
         self.descriptors, trainDescriptors=other.descriptors, k=2)
     p1, p2, matching_feature_pairs = FilterMatches(
         self.features, other.features, raw_matches)
-    if len(p1) >= 4:
-      # Status for the homography is a list of 0s and 1s. For each input feature
-      # pair, it represents whether that feature pair is an inlier (better
-      # match, as a 1) or not (0).
-      unused_h, status = cv2.findHomography(p1, p2, cv2.RANSAC, 5.0)
-      match_count = numpy.sum(status)
-    else:
-      # Not enough for homography estimation.
-      match_count = 0
+    match_count = 0
+    scale_amount = float('Inf')
+    if len(p1) >= 4:  # Otherwise not enough for homography estimation.
+      homography_mat, inlier_pt_mask = cv2.findHomography(
+          p1, p2, cv2.RANSAC, 5.0)
+      if homography_mat is not None:
+        match_count = numpy.sum(inlier_pt_mask)
+        # Sometimes matching faces are visible but the die is rotated. That is,
+        # this die has 5 on top but 19 visible to the side, and the other die
+        # has 19 on top but 5 visible. OpenCV may find a match, but the match
+        # will not be pure translation/rotation, and will distort scale.
+        h = homography_mat
+        scale_amount = sum([abs(
+            1.0 - numpy.linalg.norm(h.dot(dv) - h.dot(ORIGIN)))
+            for dv in (DX, DY)])
     if verbose:
-      print '%s (%d) match %s (%d) = %d => %s' % (
+      print '%s (%d) match %s (%d) = %d match => %s inl / %.2f sh' % (
           self.basename,
           len(self.descriptors),
           other.basename,
           len(other.descriptors),
           len(p1),
-          match_count)
-    return match_count
+          match_count,
+          scale_amount)
+    return match_count, scale_amount
 
 
 def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
@@ -93,7 +108,7 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
-def AssignToCluster(in_filename, clusters, match_count_threshold):
+def AssignToCluster(in_filename, clusters, match_threshold, scale_threshold):
   """Reads an image of a die's face and assigns it to a group where it matches.
 
   The input clusters argument is modified. It stores a list of groups as
@@ -102,18 +117,19 @@ def AssignToCluster(in_filename, clusters, match_count_threshold):
   sufficiently; or it starts a new cluster.
   """
   image = ImageComparison(in_filename)
-  best_match_count = 0
   best_members = None
   for representative, members in clusters:
-    match_count = image.GetMatchCount(representative)
-    if match_count > best_match_count:
-      best_match_count = match_count
+    match_count, scale_amount = image.GetMatchCount(representative)
+    if match_count > image.best_match_count:
       best_members = members
       image.best_match = representative
-      if match_count >= match_count_threshold:
+      image.best_match_count = match_count
+      image.best_scale = scale_amount
+      if match_count >= match_threshold and scale_amount <= scale_threshold:
         break
-  image.match_count = best_match_count
-  if best_members is None or best_match_count < match_count_threshold:
+  if (best_members is None or
+      image.best_match_count < match_threshold or
+      scale_amount > scale_threshold):
     print 'starts new cluster'
     clusters.append((image, []))
     image.is_representative = True
@@ -121,7 +137,7 @@ def AssignToCluster(in_filename, clusters, match_count_threshold):
     best_members.append(image)
 
 
-def CombineSmallClusters(clusters, match_count_threshold):
+def CombineSmallClusters(clusters, match_threshold, scale_threshold):
   """Finds small clusters and combines them with existing large clusters.
 
   In the previous step, the representative images for small clusters were only
@@ -140,40 +156,44 @@ def CombineSmallClusters(clusters, match_count_threshold):
   cluster_sizes = [c[0] for c in clusters_by_len]
 
   for first_small_index in range(1, len(clusters_by_len)):
-    if cluster_sizes[first_small_index] < cluster_sizes[0] / 2:
+    if cluster_sizes[first_small_index] < cluster_sizes[0] / 4:
       break
   print 'splitting: %s %s' % (
       cluster_sizes[:first_small_index], cluster_sizes[first_small_index:])
 
   main_clusters, tail_clusters = [], []
-  min_main_members = float('Inf')
+  # Usually reparenting works in the first few retries if at all.
+  min_main_members = 10
   for i, (unused_n, representative, members) in enumerate(clusters_by_len):
     if i < first_small_index:
       main_clusters.append(
-          (representative, sorted(members, key=lambda m: m.match_count)))
+          (representative, sorted(members, key=lambda m: m.best_match_count)))
       min_main_members = min(min_main_members, len(members))
     else:
       tail_clusters.append((representative, members))
 
-  print 'reparent %d small clusters to %d large clusters (try %d members)' % (
-      len(tail_clusters), len(main_clusters), min_main_members)
+  print 'reparent: %d large clusters, %d small clusters (try %d members)' % (
+      len(main_clusters), len(tail_clusters), min_main_members)
   not_reparented = []
   for representative, members in tail_clusters:
     reparented = False
     for j in range(min_main_members):
       for i in range(len(main_clusters)):
         sample_member = main_clusters[i][1][j]
-        match_count = representative.GetMatchCount(sample_member, verbose=False)
-        if match_count >= match_count_threshold:
-          print 'reparent %s to %s via %s match %d' % (
+        match_count, scale_amount = representative.GetMatchCount(
+            sample_member, verbose=False)
+        if match_count >= match_threshold and scale_amount <= scale_threshold:
+          print 'reparent %s to %s via %s => %d inl / %.2f scale' % (
               representative.basename,
               main_clusters[i][0].basename,
               sample_member.basename,
-              match_count)
+              match_count,
+              scale_amount)
           main_clusters[i][1].append(representative)
           main_clusters[i][1].extend(members)
-          representative.match_count = match_count
           representative.best_match = sample_member
+          representative.best_match_count = match_count
+          representative.best_scale = scale_amount
           reparented = True
           break
       if reparented:
@@ -209,11 +229,12 @@ def BuildClusterSummaryImage(clusters, max_members=None):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.basename)
-      draw.text((x, y + 20), 'features: %d' % len(member.features))
-      draw.text((x, y + 40), 'matches: %d' % member.match_count)
+      draw.text((x, y + 10), 'features: %d' % len(member.features))
+      draw.text((x, y + 60), 'matches: %d' % member.best_match_count)
+      draw.text((x, y + 70), '  sh: %f' % member.best_scale)
       if member.is_representative and member.best_match:
-        draw.text((x, y + 50), '  %s' % member.best_match.basename)
-    draw.text((0, y + 60), 'members: %d' % (len(members) + 1))
+        draw.text((x, y + 80), '  %s' % member.best_match.basename)
+    draw.text((0, y + 20), 'members: %d' % (len(members) + 1))
   return summary_image
 
 
@@ -245,9 +266,14 @@ def BuildArgParser():
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--match-count-threshold', '-m', default=20, type=int,
-      dest='match_count_threshold',
+      '--match-count-threshold', '-m', default=28, type=int,
+      dest='match_threshold',
       help='Number of matching features to consider two images a match.')
+  parser.add_argument(
+      '--scale-threshold', default=0.3, type=float,
+      dest='scale_threshold',
+      help='Amount of scaling above which two images are not considered a '
+           + 'match.')
   parser.add_argument(
       '--crop-dir', default='crop', dest='crop_dir',
       help='Subdirectory within the data directory of cropped images from '
@@ -275,6 +301,8 @@ if __name__ == '__main__':
     parser.error('A single argument for the data directory is required.')
   data_dir = positional[0]
   crop_dir = os.path.join(data_dir, args.crop_dir)
+  summary_max_members = (
+      args.summary_max_members if args.summary_max_members > 0 else None)
 
   # List of (representative image, [member images]) tuples, which associates
   # one ImageComparison with all the other ImageComparisons (in a list) that
@@ -292,7 +320,8 @@ if __name__ == '__main__':
       AssignToCluster(
           os.path.join(crop_dir, cropped_image_filename),
           clusters,
-          args.match_count_threshold)
+          args.match_threshold,
+          args.scale_threshold)
   except (NoFeaturesError, cv2.error), e:
     print e
     failed_files.append(cropped_image_filename)
@@ -300,7 +329,8 @@ if __name__ == '__main__':
     print 'got ^C, early stop for categorization'
 
   try:
-    clusters = CombineSmallClusters(clusters, args.match_count_threshold)
+    clusters = CombineSmallClusters(
+      clusters, args.match_threshold, args.scale_threshold)
   except KeyboardInterrupt, e:
     print 'got ^C, cancelling combining clusters'
 
@@ -313,4 +343,4 @@ if __name__ == '__main__':
       clusters,
       os.path.join(data_dir, args.summary_data),
       os.path.join(data_dir, args.summary_image),
-      args.summary_max_members if args.summary_max_members > 0 else None)
+      summary_max_members)
