@@ -8,6 +8,8 @@ from stage 1.
 
 Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
+
+Send SIGHUP to render an intermediate summary image and show it.
 """
 
 import cv2
@@ -20,7 +22,9 @@ import PIL.ImageDraw
 import argparse
 import json
 import os
+import signal
 import sys
+
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 90
@@ -259,6 +263,13 @@ def SaveGrouping(
     json.dump(data_summary, data_file)
 
 
+global summary_requested
+summary_requested = False
+def RequestSummary(signal_num, stack_frame):
+  global summary_requested
+  summary_requested = True
+
+
 def BuildArgParser():
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
@@ -304,6 +315,10 @@ if __name__ == '__main__':
   summary_max_members = (
       args.summary_max_members if args.summary_max_members > 0 else None)
 
+  global summary_requested
+  signal.signal(signal.SIGHUP, RequestSummary)
+  print 'Send SIGHUP (kill -HUP %d) for current summary image.' % os.getpid()
+
   # List of (representative image, [member images]) tuples, which associates
   # one ImageComparison with all the other ImageComparisons (in a list) that
   # matched it.
@@ -322,6 +337,11 @@ if __name__ == '__main__':
           clusters,
           args.match_threshold,
           args.scale_threshold)
+      if summary_requested:
+        print 'Rendering intermediate summary.'
+        summary_requested = False
+        BuildClusterSummaryImage(
+            clusters, max_members=summary_max_members).show()
   except (NoFeaturesError, cv2.error), e:
     print e
     failed_files.append(cropped_image_filename)
