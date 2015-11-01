@@ -277,7 +277,7 @@ def BuildArgParser():
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--match-count-threshold', '-m', default=28, type=int,
+      '--match-count-threshold', '-m', default=32, type=int,
       dest='match_threshold',
       help='Number of matching features to consider two images a match.')
   parser.add_argument(
