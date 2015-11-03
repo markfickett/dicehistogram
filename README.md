@@ -34,11 +34,28 @@ N=2397 normalized stddev=0.16 min=0.73 max=1.29 expected=10.30
 
 ## How To Use these Scripts
 
-TODO
-mkdir
-crop (adjust scan distance)
-group (adjust threshold)
-summarize (label)
+For example, processing an opaque purple Chessex d6, you might do:
+
+```shell
+DATA=data/chessexopaquepurple
+mkdir -p $DATA
+mkdir -p $DATA/capture
+cp path/to/camera/*.JPG $DATA/capture
+./crop.py $DATA  # produces $DATA/crop
+./group.py $DATA  # processes from $DATA/crop, writes $DATA/summary.(jpg|json)
+```
+
+Often the default thresholds won't be exactly right. The `group.py` script prints its PID for convenience; you can `kill -HUP $PID` to get an intermediate summary image, or type `^C` to stop processing and write partial results. If there miscategorized images in a row, adjust the threshold to be above those images' match count. If there are too many groups, look at the representative image (far left in the summary image) and adjust the threshold below its match count.
+
+```shell
+./group.py $DATA --match-count-threshold 36
+```
+
+Finally, provide labels (reading the numbers on the die images down the left edge of the summary image) to generate a summary. For this example, the first row in the summary image (or the first sub-list in `summary.json`) is from images of the 5 on the die, the next is of 6s, and so on (with 1 and 6 seeing some repeated rows due to poor matches).
+
+```shell
+./summarize.py $DATA 5 6 4 1 2 1 1 3 1 1 6 1
+```
 
 ## Dependencies
 
