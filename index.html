@@ -10,7 +10,7 @@ TODO
 
 <h2>Hardware Setup (Die Roller and Camera)</h2>
 
-[video TODO]
+<iframe width="640" height="360" src="https://www.youtube.com/embed/UdA5ydENTHY?rel=0" frameborder="0" allowfullscreen></iframe>
 
 <p>A microcontroller runs a servo motor to shake a small tub, and triggers a camera to take pictures. More details: <a href="TODO">Arduino sketch and hardware parts list</a>.
 
@@ -22,7 +22,7 @@ TODO
 
 <p>Plastic wrap with a rubber-band provides a cover. This prevents the die from rolling out when the carton tips down for each roll. With the LEDs on and the room lights off, there is negligable glare.</p>
 
-<p>The camera is a Nikon D90, using a long (55-200mm) lens for low perspective distortion across the visual field. It is triggered via wired remote (though the GPS/remote port was defective and <a href="TODO">required repair</a>); and powered via its AC adapter port (using <a href="TODO">a 3D-printed plug</a>).</p>
+<p>The camera is a Nikon D90, using a long (55-200mm) lens for low perspective distortion across the visual field. It is triggered via wired remote (though the GPS/remote port was defective and <a href="TODO">required repair</a>); and powered via its AC adapter port (using <a href="http://www.thingiverse.com/thing:1107374">a 3D-printed plug</a>).</p>
 
 </h3>Performance</h3>
 
@@ -46,12 +46,36 @@ There are two computer-vision tasks in this process: finding the die within the 
 
 <p>A photo of the rolled die is diffed against a reference image.</p>
 
+<img src="arduino/151102dicehistogramreference.jpg" />
+<img src="arduino/151102dicehistogramdie.jpg" />
+
 <p>The result is scanned for areas of high difference to find the die. The die is flood-filled to find its area; the then image of the die is cropped out and saved.</p>
+
+<img src="arduino/151102dicehistogramdiffwithscan.jpg" />
+
+<p>The above image was obtained from running `crop.py` with `--debug`. The base (mostly black) image is the diff of the image with the die and the reference image. The blue lines are where the image was scanned, the red highlighted line segments are where a large difference was detected. The green dotted box was the detected bounds of the die.</p>
+
+<p>Scanning is done on a scaled down version of the images, but the cropped image of the die is saved at full resolution for better feature detection.</p>
+
+<img src="arduino/151102dicehistogramcrop.jpg" />
 
 <h3>Clustering</h3>
 
 <p>Images of the die are compared using features, detected and matched using OpenCV.</p>
 
+<img src="arduino/151102dicehistogramfeaturematchgood.jpg" />
+
+<p>These screenshots from the <code>find_obj.py</code> OpenCV demo show good (above) and bad (below) matches. The white rectangles on the right side are the homography: the area of the right image that matches up with the left image. Good matches not only have a high number of matching points, but a simple (translation and rotation only) homography with low distortion.</p>
+
+<img src="arduino/151102dicehistogramfeaturematchbad.jpg" />
+<img src="arduino/151102dicehistogramfeaturematchskew.jpg" />
+
 <p>The first step builds a list of dissimilar representative images, against which all other images get compared. Each representative gets a list of matching members (the images showing the same face of the die).</p>
 
 <p>This tends to result in big groups for each of the sides of the die, and a bunch of small groups (1-10 each) of images that didn't match any of the representatives well. So a second step takes the small groups and compares them to members of the larger groups (not just their representative images) to find a match.</p>
+
+<a href="arduino/151102dicehistograminprogress.jpg"><img src="arduino/151102dicehistograminprogress20p.jpg" /></a>
+
+<p>From a partial run on a d8, the work-in-progress with a number of small disconnected groups (above), and the consolidated groups (below).
+
+<a href="arduino/151102dicehistogramreparented.jpg"><img src="arduino/151102dicehistogramreparented20p.jpg" /></a>
