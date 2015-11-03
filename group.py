@@ -315,7 +315,6 @@ if __name__ == '__main__':
   summary_max_members = (
       args.summary_max_members if args.summary_max_members > 0 else None)
 
-  global summary_requested
   signal.signal(signal.SIGHUP, RequestSummary)
   print 'Send SIGHUP (kill -HUP %d) for current summary image.' % os.getpid()
 
