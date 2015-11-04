@@ -2,7 +2,7 @@
 
 Scripts for extracting the image of just the die from automatically taken images; clustering the images of the die by which face is shown; and analyzing the results.
 
-[Full project details, algorithm overview, and results](TODO).
+[Full project details, algorithm overview, and results](http://www.markfickett.com/stuff/artPage.php?id=389).
 
 ## Example Results
 
