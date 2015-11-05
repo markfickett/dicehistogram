@@ -1,3 +1,4 @@
-data/
+data/*/capture
+data/*/crop
 arduino
 .DS_Store
