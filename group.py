@@ -10,6 +10,8 @@ Based on OpenCV's find_obj.py example, as in:
     find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
 
 Send SIGHUP to render an intermediate summary image and show it.
+
+TODO: Use multiprocessing.
 """
 
 import cv2

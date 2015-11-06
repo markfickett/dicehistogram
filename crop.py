@@ -20,6 +20,8 @@ The camera should be on full manual, including:
  - focus
  - white balance
  - rotation (do not auto-rotate images)
+
+TODO: Use multiprocessing.
 """
 
 import argparse
