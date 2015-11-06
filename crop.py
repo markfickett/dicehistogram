@@ -131,6 +131,9 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > diff_threshold:
             region.add((i, j))
+            if len(region) / scan_distance**2 > 10:
+              raise NoDieFoundError(
+                  'Too much differing area to find die: %d' % len(region))
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -232,6 +235,9 @@ def BuildArgParser():
       '--force', '-f', action='store_true',
       help='Overwrite existing crops.')
   parser.add_argument(
+      '--number', '-n', type=int, default=0,
+      help='Number of images to process (for example when debugging).')
+  parser.add_argument(
       '--debug', action='store_true',
       help='Show debug images during processing')
   return parser
@@ -247,6 +253,7 @@ if __name__ == '__main__':
   crop_dir = os.path.join(data_dir, args.crop_dir)
   if not os.path.isdir(crop_dir):
     os.makedirs(crop_dir)
+  num_to_process = args.number if args.number > 0 else None
 
   raw_image_names = os.listdir(capture_dir)
   n = len(raw_image_names)
@@ -254,6 +261,8 @@ if __name__ == '__main__':
   no_die_found_in = []
   try:
     for i, raw_image_filename in enumerate(raw_image_names):
+      if num_to_process is not None and c > num_to_process:
+        break
       if not raw_image_filename.lower().endswith('jpg'):
         continue
       try:
