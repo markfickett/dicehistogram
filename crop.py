@@ -266,7 +266,7 @@ if __name__ == '__main__':
   no_die_found_in = []
   try:
     for i, raw_image_filename in enumerate(raw_image_names):
-      if num_to_process is not None and c > num_to_process:
+      if num_to_process is not None and c >= num_to_process:
         break
       if not raw_image_filename.lower().endswith('jpg'):
         continue
