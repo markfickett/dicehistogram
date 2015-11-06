@@ -76,6 +76,8 @@ def ExtractSubject(
   w, h = orig_image.size
   rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
   image = orig_image.resize((rw, rh))
+  if diff_threshold is None or diff_threshold < 1:
+    raise ValueError('Bad diff_threshold: %r' % diff_threshold)
 
   reference = GetResizedReference(reference_filename, (w, h), (rw, rh))
 
@@ -135,7 +137,8 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
             region.add((i, j))
             if len(region) / scan_distance**2 > 10:
               raise NoDieFoundError(
-                  'Too much differing area to find die: %d' % len(region))
+                  'Too much differing area (%d) to find die with threshold %s.'
+                  % (len(region), diff_threshold))
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -224,7 +227,7 @@ def BuildArgParser():
       help='Size (length in pixels of either edge) to crop from the original '
            + 'image, which should contain the die fully. Exported for stage 2.')
   parser.add_argument(
-      '--diff-threshold', '-t', dest='diff_threshold', type=int,
+      '--diff-threshold', '-t', dest='diff_threshold', type=int, default=150,
       help='Pixels with a difference (summed across RGB) greater than this '
            + 'value will be considered as potentially part of the die. '
            + 'Comparison is against the reference image.')
@@ -283,7 +286,7 @@ if __name__ == '__main__':
             args.diff_threshold,
             debug=args.debug)
       except NoDieFoundError, e:
-        print 'No die found in %s' % raw_image_filename
+        print 'No die found in %s %s' % (raw_image_filename, e.message or '')
         no_die_found_in.append(raw_image_filename)
   except KeyboardInterrupt, e:
     print 'got ^C, early exit for crop'
