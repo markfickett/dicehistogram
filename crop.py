@@ -33,12 +33,6 @@ import PIL.ImageChops
 import PIL.ImageDraw
 
 
-# Pixels with a difference (summed across RGB) greater than this value will be
-# considered as potentially part of the die. Comparison is against the
-# reference image.
-DIFF_THRESHOLD = 150
-
-
 def _Summarize(name, image):
   print name, image.mode, image.size, image.format
 
@@ -68,6 +62,7 @@ def ExtractSubject(
     scan_distance,
     edge_cropped,
     analysis_resize_factor,
+    diff_threshold,
     debug=False):
   """Finds the die in an image by comparing to a reference.
 
@@ -88,7 +83,7 @@ def ExtractSubject(
   diff = PIL.ImageChops.difference(reference, image)
 
   analysis_bound = FindLargeDiffBound(
-      diff, scan_distance / analysis_resize_factor, debug=debug)
+      diff, scan_distance / analysis_resize_factor, diff_threshold, debug=debug)
 
   bound = [analysis_resize_factor * b for b in analysis_bound]
   bound = MakeSquare(bound, orig_image.size, edge_cropped)
@@ -98,7 +93,7 @@ def ExtractSubject(
   out_image.save(out_filename)
 
 
-def FindLargeDiffBound(diff, scan_distance, debug=False):
+def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
   """Scans the image in horizontal lines at scan_distance intervals. When
   we find a stripe that's all above threshold about scan_distance/2 long,
   flood-fill it. If the total area is >= scan_distance**2, return its bounds.
@@ -111,14 +106,14 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
   for y in xrange(scan_distance / 2, h, scan_distance):
     for x in xrange(w):
       r, g, b = diff.getpixel((x, y))
-      if sum((r, g, b)) > DIFF_THRESHOLD:
+      if sum((r, g, b)) > diff_threshold:
         if debug:
           diff.putpixel((x, y), (254, g, b))
         sliding_window.append((x, y))
         recent_found_num += 1
       else:
         if debug:
-          diff.putpixel((x, y), (0, 0, DIFF_THRESHOLD - 1))
+          diff.putpixel((x, y), (0, 0, diff_threshold - 1))
         sliding_window.append(None)
       if len(sliding_window) > scan_distance * 2:
         if sliding_window.pop(0) is not None:
@@ -134,7 +129,7 @@ def FindLargeDiffBound(diff, scan_distance, debug=False):
           (i, j) = active.pop()
           visited.add((i, j))
           r, g, b = diff.getpixel((i, j))
-          if sum((r, g, b)) > DIFF_THRESHOLD:
+          if sum((r, g, b)) > diff_threshold:
             region.add((i, j))
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
@@ -224,6 +219,11 @@ def BuildArgParser():
       help='Size (length in pixels of either edge) to crop from the original '
            + 'image, which should contain the die fully. Exported for stage 2.')
   parser.add_argument(
+      '--diff-threshold', '-t', dest='diff_threshold', type=int,
+      help='Pixels with a difference (summed across RGB) greater than this '
+           + 'value will be considered as potentially part of the die. '
+           + 'Comparison is against the reference image.')
+  parser.add_argument(
       '--analysis-resize-factor', '-a', dest='analysis_resize_factor',
       default=6, type=int,
       help='Divisor for the image size. Source and reference will be resized '
@@ -269,6 +269,7 @@ if __name__ == '__main__':
             args.scan_distance,
             args.crop_size,
             args.analysis_resize_factor,
+            args.diff_threshold,
             debug=args.debug)
       except NoDieFoundError, e:
         print 'No die found in %s' % raw_image_filename
