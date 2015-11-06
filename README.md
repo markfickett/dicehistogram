@@ -45,7 +45,7 @@ cp path/to/camera/*.JPG $DATA/capture
 ./group.py $DATA  # processes from $DATA/crop, writes $DATA/summary.(jpg|json)
 ```
 
-Often the default thresholds won't be exactly right. The `group.py` script prints its PID for convenience; you can `kill -HUP $PID` to get an intermediate summary image, or type `^C` to stop processing and write partial results. If there miscategorized images in a row, adjust the threshold to be above those images' match count. If there are too many groups, look at the representative image (far left in the summary image) and adjust the threshold below its match count.
+Often the default threshold won't be exactly right. The `group.py` script prints its PID for convenience; you can `kill -HUP $PID` to get an intermediate summary image, or type `^C` to stop processing and write partial results. If there are too many groups, look at the representative image (far left in the summary image) and adjust the threshold below its match count, for example `--match-count 22`. If there miscategorized images in a row, adjust the threshold to be above those images' match count. (1s and 7s are often adjacent on the die and get matched erroneously when the threshold is too low.)
 
 ```shell
 ./group.py $DATA --match-count-threshold 36
