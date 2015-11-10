@@ -310,18 +310,17 @@ if __name__ == '__main__':
   crop_dir = os.path.join(data_dir, args.crop_dir)
   if not os.path.isdir(crop_dir):
     os.makedirs(crop_dir)
-  num_to_process = args.number if args.number > 0 else None
 
-  raw_image_names = os.listdir(capture_dir)
+  raw_image_names = [
+      f for f in os.listdir(capture_dir) if f.lower().endswith('jpg')]
   n = len(raw_image_names)
+  num_to_process = args.number if args.number > 0 else n
   processed = 0
   skipped = 0
   no_die_found_in = []
   try:
     filename_queue = multiprocessing.Queue()
-    for raw_image_filename in raw_image_names:
-      if not raw_image_filename.lower().endswith('jpg'):
-        continue
+    for raw_image_filename in raw_image_names[:num_to_process]:
       filename_queue.put(raw_image_filename)
 
     result_queue = multiprocessing.Queue()
@@ -353,10 +352,6 @@ if __name__ == '__main__':
               processed, n, r.filename, r.not_found_message or '')
           if r.not_found_message is not None:
             no_die_found_in.append(r.filename)
-      if num_to_process is not None and (processed - skipped) >= num_to_process:
-        for worker in pool:
-          worker.terminate()
-        break
   except KeyboardInterrupt, e:
     print 'got ^C, early exit for crop'
 
