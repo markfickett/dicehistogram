@@ -42,6 +42,79 @@ class NoDieFoundError(RuntimeError):
   pass
 
 
+class DiffArea(object):
+  """A contiguous set of pixels which may represent the die."""
+  def __init__(self, diff, target_area):
+    self.region = set()
+    self.x_min = float('Inf')
+    self.x_max = float('-Inf')
+    self.y_min = float('Inf')
+    self.y_max = float('-Inf')
+    self.target_area = target_area
+
+    self.diff = diff
+
+  def Add(self, x, y):
+    self.region.add((x, y))
+
+    self.x_min = min(self.x_min, x)
+    self.x_max = max(self.x_max, x)
+    self.y_min = min(self.y_min, y)
+    self.y_max = max(self.y_max, y)
+
+  def CheckAbort(self):
+    """Checks for unrecoverable errors and raises NoDieFoundError."""
+    if float(len(self.region)) / self.target_area > 5.0:
+      raise NoDieFoundError(
+          'Too much differing area (%d) to find die.'
+          % len(self.region))
+
+  def Check(self):
+    """Checks validity of the area. When this fails, try another region."""
+    return self.eccentricity < 2.0 and self.area < (5.0 * self.target_area)
+
+  def DrawAreaOnDiff(self):
+    """Draws the pixels and their bound on the image, for debugging."""
+    if not self.region:
+      return
+
+    for (x, y) in self.region:
+      r, g, b = self.diff.getpixel((x, y))
+      self.diff.putpixel((x, y), (r + 40, g - 20, b - 20))
+    for x in xrange(self.x_min, self.x_max + 1, 2):
+      self.diff.putpixel((x, self.y_min), (0, 254, 0))
+      self.diff.putpixel((x, self.y_max), (0, 254, 0))
+    for y in xrange(self.y_min + 1, self.y_max, 2):
+      self.diff.putpixel((self.x_min, y), (0, 254, 0))
+      self.diff.putpixel((self.x_max, y), (0, 254, 0))
+
+  @property
+  def eccentricity(self):
+    denom = float(self.y_max - self.y_min)
+    if denom == 0:
+      return float('Inf')
+    e = (self.x_max - self.x_min) / denom
+    return e if e > 1.0 else (1.0 / e)
+
+  @property
+  def area(self):
+    return (self.x_max - self.x_min) * (self.y_max - self.y_min)
+
+  @property
+  def bound(self):
+    return (self.x_min, self.y_min, self.x_max, self.y_max)
+
+  def __str__(self):
+    if not self.region:
+      return 'empty'
+    return 'area %d px (%d%% target) %d bounds (%d%%) e=%.2f' % (
+        len(self.region),
+        int(100 * len(self.region) / self.target_area),
+        self.area,
+        int(100 * self.area / self.target_area),
+        self.eccentricity)
+
+
 def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
   """Scans the image in horizontal lines at scan_distance intervals. When
   we find a stripe that's all above threshold about scan_distance/2 long,
@@ -67,23 +140,21 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
       if len(sliding_window) > scan_distance * 2:
         if sliding_window.pop(0) is not None:
           recent_found_num -= 1
+
       if recent_found_num > scan_distance / 2:
         visited = set()
-        region = set()
         active = set(filter(bool, sliding_window[:scan_distance]))
         if debug:
           for ax, ay in active:
             diff.putpixel((ax, ay), (0, 254, 0))
+        diff_area = DiffArea(diff, scan_distance**2)
         while active:
           (i, j) = active.pop()
           visited.add((i, j))
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > diff_threshold:
-            region.add((i, j))
-            if float(len(region)) / scan_distance**2 > 4.0:
-              raise NoDieFoundError(
-                  'Too much differing area (%d) to find die with threshold %s.'
-                  % (len(region), diff_threshold))
+            diff_area.Add(i, j)
+            diff_area.CheckAbort()
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -91,43 +162,22 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
                     and nx >= 0 and nx < w and ny >= 0 and ny < h
                     and (nx, ny) not in visited):
                   active.add((nx, ny))
+
+        region_valid = diff_area.Check()
         if debug:
-          print 'region at (%d, %d) area %d (%d%% target)' % (
-              x, y, len(region), int(100 * len(region) / scan_distance**2))
+          print '%svalid region at (%d, %d) %s' % (
+              '' if region_valid else 'in', x, y, diff_area)
+          diff_area.DrawAreaOnDiff()
+        if region_valid:
+          if debug:
+            diff_area.diff.show()
+          return diff_area.bound
+
         recent_found_num = 0
         sliding_window = []
-        if len(region) > scan_distance**2:
-          return GetPixelSetBoundWithinImage(region, diff, debug=debug)
   if debug:
     diff.show()
   raise NoDieFoundError()
-
-
-def GetPixelSetBoundWithinImage(region, diff, debug=False):
-  """Returns the bounds of a list of pixel coordinates.
-
-  If debug is true, draws the pixels and their bound on the image.
-  """
-  x_max = y_max = 0
-  x_min = diff.size[0] - 1
-  y_min = diff.size[1] - 1
-  for (x, y) in region:
-    x_min = min(x_min, x)
-    x_max = max(x_max, x)
-    y_min = min(y_min, y)
-    y_max = max(y_max, y)
-    if debug:
-      r, g, b = diff.getpixel((x, y))
-      diff.putpixel((x, y), (r + 40, g - 20, b - 20))
-  if debug:
-    for x in xrange(x_min, x_max + 1, 2):
-      diff.putpixel((x, y_min), (0, 254, 0))
-      diff.putpixel((x, y_max), (0, 254, 0))
-    for y in xrange(y_min + 1, y_max, 2):
-      diff.putpixel((x_min, y), (0, 254, 0))
-      diff.putpixel((x_max, y), (0, 254, 0))
-    diff.show()
-  return (x_min, y_min, x_max, y_max)
 
 
 def MakeSquare((x_min_in, y_min_in, x_max_in, y_max_in), (w, h), length):
@@ -146,12 +196,13 @@ def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
   return x_min, x_max
 
 
-def CheckBoundSquarenessOrRaise(x_min, y_min, x_max, y_max):
+def CheckBoundSquareness(x_min, y_min, x_max, y_max):
   eccentricity = float(x_max - x_min) / (y_max - y_min)
   if eccentricity < 1.0:
     eccentricity = 1.0 / eccentricity
   if eccentricity > 2.0:
-    raise NoDieFoundError('Bound too eccentric: %.2f' % eccentricity)
+    return False
+  return True
 
 
 class CropWorker(multiprocessing.Process):
@@ -233,7 +284,6 @@ class CropWorker(multiprocessing.Process):
         self._scan_distance / self._analysis_resize_factor,
         self._diff_threshold,
         debug=self._debug)
-    CheckBoundSquarenessOrRaise(*analysis_bound)
 
     bound = [self._analysis_resize_factor * b for b in analysis_bound]
     regular_bound = MakeSquare(bound, orig_image.size, self._crop_size)
