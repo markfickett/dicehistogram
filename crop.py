@@ -20,13 +20,12 @@ The camera should be on full manual, including:
  - focus
  - white balance
  - rotation (do not auto-rotate images)
-
-TODO: Use multiprocessing.
 """
 
 import argparse
 import collections
 import json
+import multiprocessing
 import os
 
 import PIL
@@ -41,60 +40,6 @@ def _Summarize(name, image):
 
 class NoDieFoundError(RuntimeError):
   pass
-
-
-global reference
-reference = None
-def GetResizedReference(reference_filename, orig_size, target_size):
-  global reference
-  if not reference:
-    reference = PIL.Image.open(reference_filename)
-    if reference.size != orig_size:
-      raise RuntimeError(
-          'reference size %s does not match image size %s'
-          % (reference.size, orig_size))
-    reference = reference.resize(target_size)
-  return reference
-
-
-def ExtractSubject(
-    in_filename,
-    out_filename,
-    reference_filename,
-    scan_distance,
-    edge_cropped,
-    analysis_resize_factor,
-    diff_threshold,
-    debug=False):
-  """Finds the die in an image by comparing to a reference.
-
-  Scales the images down while performing the diff, then crops out the full
-  size image of the die from the original image and saves it.
-  """
-  print in_filename, out_filename
-  orig_image = PIL.Image.open(in_filename)
-  w, h = orig_image.size
-  rw, rh = w / analysis_resize_factor, h / analysis_resize_factor
-  image = orig_image.resize((rw, rh))
-  if diff_threshold is None or diff_threshold < 1:
-    raise ValueError('Bad diff_threshold: %r' % diff_threshold)
-
-  reference = GetResizedReference(reference_filename, (w, h), (rw, rh))
-
-  if debug:
-    _Summarize('analysis input', image)
-    _Summarize('analysis ref', reference)
-  diff = PIL.ImageChops.difference(reference, image)
-
-  analysis_bound = FindLargeDiffBound(
-      diff, scan_distance / analysis_resize_factor, diff_threshold, debug=debug)
-
-  bound = [analysis_resize_factor * b for b in analysis_bound]
-  bound = MakeSquare(bound, orig_image.size, edge_cropped)
-  out_image = orig_image.crop(bound)
-  if debug:
-    _Summarize('output', out_image)
-  out_image.save(out_filename)
 
 
 def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
@@ -248,6 +193,100 @@ def BuildArgParser():
   return parser
 
 
+class CropWorker(multiprocessing.Process):
+  def __init__(self,
+      filename_queue,
+      result_queue,
+      capture_dir,
+      crop_dir,
+      reference_filename,
+      scan_distance,
+      crop_size,
+      analysis_resize_factor,
+      diff_threshold,
+      debug):
+    multiprocessing.Process.__init__(self)
+    self.daemon = True
+    self._filename_queue = filename_queue
+    self._result_queue = result_queue
+
+    self._capture_dir = capture_dir
+    self._crop_dir = crop_dir
+    self._scan_distance = scan_distance
+    self._crop_size = crop_size
+    self._analysis_resize_factor = analysis_resize_factor
+    if diff_threshold is None or diff_threshold < 1:
+      raise ValueError('Bad diff_threshold: %r' % diff_threshold)
+    self._diff_threshold = diff_threshold
+    self._debug = debug
+    self._reference_filename = reference_filename
+
+  def run(self):
+    try:
+      self._Run()
+    except KeyboardInterrupt, e:
+      pass  # Exit but leat the controlling process clean up.
+
+  def _Run(self):
+    reference = PIL.Image.open(
+        os.path.join(self._capture_dir, self._reference_filename))
+    self._w, self._h = reference.size
+    self._rw = self._w / self._analysis_resize_factor
+    self._rh = self._h / self._analysis_resize_factor
+    resized_reference = reference.resize((self._rw, self._rh))
+
+    while not self._filename_queue.empty():
+      raw_image_filename = self._filename_queue.get(timeout=5.0)
+      cropped_file_path = os.path.join(crop_dir, raw_image_filename)
+      if not args.force and os.path.isfile(cropped_file_path):
+        self._result_queue.put(
+            CropResult(raw_image_filename, None, skipped=True))
+        continue
+      try:
+        self.ExtractSubject(raw_image_filename, resized_reference)
+        self._result_queue.put(CropResult(raw_image_filename, None, False))
+      except NoDieFoundError, e:
+        self._result_queue.put(
+            CropResult(raw_image_filename, e.message or '', False))
+
+  def ExtractSubject(self, raw_image_filename, resized_reference):
+    """Finds the die in an image by comparing to a reference.
+
+    Scales the images down while performing the diff, then crops out the full
+    size image of the die from the original image and saves it.
+    """
+    orig_image = PIL.Image.open(
+        os.path.join(self._capture_dir, raw_image_filename))
+    if (self._w, self._h) != orig_image.size:
+      raise RuntimeError(
+          '%s is %s but should be %s.' %
+          (raw_image_filename, orig_image.size, (self._w, self._h)))
+    image = orig_image.resize((self._rw, self._rh))
+
+    if self._debug:
+      _Summarize('analysis input', image)
+      _Summarize('analysis ref', resized_reference)
+    diff = PIL.ImageChops.difference(resized_reference, image)
+
+    analysis_bound = FindLargeDiffBound(
+        diff,
+        self._scan_distance / self._analysis_resize_factor,
+        self._diff_threshold,
+        debug=self._debug)
+
+    bound = [self._analysis_resize_factor * b for b in analysis_bound]
+    bound = MakeSquare(bound, orig_image.size, self._crop_size)
+    out_image = orig_image.crop(bound)
+    if self._debug:
+      _Summarize('output', out_image)
+    out_image.save(os.path.join(self._crop_dir, raw_image_filename))
+
+
+CropResult = collections.namedtuple(
+    'CropResult',
+    ('filename', 'not_found_message', 'skipped'))
+
+
 if __name__ == '__main__':
   parser = BuildArgParser()
   args, positional = parser.parse_known_args()
@@ -262,33 +301,51 @@ if __name__ == '__main__':
 
   raw_image_names = os.listdir(capture_dir)
   n = len(raw_image_names)
-  c = 0
+  processed = 0
+  skipped = 0
   no_die_found_in = []
   try:
-    for i, raw_image_filename in enumerate(raw_image_names):
-      if num_to_process is not None and c >= num_to_process:
-        break
+    filename_queue = multiprocessing.Queue()
+    for raw_image_filename in raw_image_names:
       if not raw_image_filename.lower().endswith('jpg'):
         continue
-      try:
-        cropped_file_path = os.path.join(crop_dir, raw_image_filename)
-        if not args.force and os.path.isfile(cropped_file_path):
-          continue
-        print '%d/%d ' % (i, n),
-        c += 1
-        ExtractSubject(
-            os.path.join(capture_dir, raw_image_filename),
-            cropped_file_path,
-            os.path.join(capture_dir, args.reference),
-            args.scan_distance,
-            args.crop_size,
-            args.analysis_resize_factor,
-            args.diff_threshold,
-            debug=args.debug)
-      except NoDieFoundError, e:
-        print 'No die found in %s %s' % (raw_image_filename, e.message or '')
-        no_die_found_in.append(raw_image_filename)
+      filename_queue.put(raw_image_filename)
+
+    result_queue = multiprocessing.Queue()
+    pool = []
+    for _ in xrange(multiprocessing.cpu_count()):
+      pool.append(CropWorker(
+          filename_queue,
+          result_queue,
+          capture_dir,
+          crop_dir,
+          args.reference,
+          args.scan_distance,
+          args.crop_size,
+          args.analysis_resize_factor,
+          args.diff_threshold,
+          args.debug))
+    for worker in pool:
+      worker.start()
+
+    filename_queue.close()  # no more data to be sent from this process
+    while any([worker.is_alive() for worker in pool]):
+      if not result_queue.empty():
+        processed += 1
+        r = result_queue.get_nowait()
+        if r.skipped:
+          skipped += 1
+        else:
+          print '%d/%d %s %s' % (
+              processed, n, r.filename, r.not_found_message or '')
+          if r.not_found_message is not None:
+            no_die_found_in.append(r.filename)
+      if num_to_process is not None and (processed - skipped) >= num_to_process:
+        for worker in pool:
+          worker.terminate()
+        break
   except KeyboardInterrupt, e:
     print 'got ^C, early exit for crop'
-  print 'Processed %d images, die not found in %d. %s' % (
-      c, len(no_die_found_in), no_die_found_in or '')
+
+  print 'Processed %d images, skipped %d, die not found in %d. %s' % (
+      processed, skipped, len(no_die_found_in), no_die_found_in or '')
