@@ -333,19 +333,20 @@ if __name__ == '__main__':
       if not cropped_image_filename.lower().endswith('jpg'):
         continue
       print '%d/%d ' % (i, n)
-      AssignToCluster(
-          os.path.join(crop_dir, cropped_image_filename),
-          clusters,
-          args.match_threshold,
-          args.scale_threshold)
+      try:
+        AssignToCluster(
+            os.path.join(crop_dir, cropped_image_filename),
+            clusters,
+            args.match_threshold,
+            args.scale_threshold)
+      except (NoFeaturesError, cv2.error), e:
+        print e
+        failed_files.append(cropped_image_filename)
       if summary_requested:
         print 'Rendering intermediate summary.'
         summary_requested = False
         BuildClusterSummaryImage(
             clusters, max_members=summary_max_members).show()
-  except (NoFeaturesError, cv2.error), e:
-    print e
-    failed_files.append(cropped_image_filename)
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
