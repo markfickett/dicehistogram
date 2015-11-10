@@ -202,16 +202,12 @@ class CropWorker(multiprocessing.Process):
     while not self._filename_queue.empty():
       raw_image_filename = self._filename_queue.get(timeout=5.0)
       cropped_file_path = os.path.join(crop_dir, raw_image_filename)
-      if not args.force and os.path.isfile(cropped_file_path):
-        self._result_queue.put(
-            CropResult(raw_image_filename, None, skipped=True))
-        continue
       try:
         self.ExtractSubject(raw_image_filename, resized_reference)
-        self._result_queue.put(CropResult(raw_image_filename, None, False))
+        self._result_queue.put(CropResult(raw_image_filename, None))
       except NoDieFoundError, e:
         self._result_queue.put(
-            CropResult(raw_image_filename, e.message or '', False))
+            CropResult(raw_image_filename, e.message or ''))
 
   def ExtractSubject(self, raw_image_filename, resized_reference):
     """Finds the die in an image by comparing to a reference.
@@ -249,7 +245,7 @@ class CropWorker(multiprocessing.Process):
 
 CropResult = collections.namedtuple(
     'CropResult',
-    ('filename', 'not_found_message', 'skipped'))
+    ('filename', 'not_found_message'))
 
 
 def BuildArgParser():
@@ -311,47 +307,54 @@ if __name__ == '__main__':
   if not os.path.isdir(crop_dir):
     os.makedirs(crop_dir)
 
-  raw_image_names = [
-      f for f in os.listdir(capture_dir) if f.lower().endswith('jpg')]
+  raw_image_names = os.listdir(capture_dir)
   n = len(raw_image_names)
   num_to_process = args.number if args.number > 0 else n
   processed = 0
   skipped = 0
   no_die_found_in = []
+
+  filename_queue = multiprocessing.Queue()
+  enqueued = 0
+  for raw_image_name in raw_image_names:
+    if raw_image_name.lower().endswith('jpg'):
+      if os.path.isfile(os.path.join(crop_dir, raw_image_name)):
+        if not args.force:
+          processed += 1
+          skipped += 1
+          continue
+      filename_queue.put(raw_image_name)
+      enqueued += 1
+    if enqueued >= num_to_process:
+      break
+
+  result_queue = multiprocessing.Queue()
+  pool = []
+  for _ in xrange(multiprocessing.cpu_count()):
+    pool.append(CropWorker(
+        filename_queue,
+        result_queue,
+        capture_dir,
+        crop_dir,
+        args.reference,
+        args.scan_distance,
+        args.crop_size,
+        args.analysis_resize_factor,
+        args.diff_threshold,
+        args.debug))
+  for worker in pool:
+    worker.start()
+
+  filename_queue.close()  # no more data to be sent from this process
   try:
-    filename_queue = multiprocessing.Queue()
-    for raw_image_filename in raw_image_names[:num_to_process]:
-      filename_queue.put(raw_image_filename)
-
-    result_queue = multiprocessing.Queue()
-    pool = []
-    for _ in xrange(multiprocessing.cpu_count()):
-      pool.append(CropWorker(
-          filename_queue,
-          result_queue,
-          capture_dir,
-          crop_dir,
-          args.reference,
-          args.scan_distance,
-          args.crop_size,
-          args.analysis_resize_factor,
-          args.diff_threshold,
-          args.debug))
-    for worker in pool:
-      worker.start()
-
-    filename_queue.close()  # no more data to be sent from this process
     while any([worker.is_alive() for worker in pool]):
       if not result_queue.empty():
         processed += 1
         r = result_queue.get_nowait()
-        if r.skipped:
-          skipped += 1
-        else:
-          print '%d/%d %s %s' % (
-              processed, n, r.filename, r.not_found_message or '')
-          if r.not_found_message is not None:
-            no_die_found_in.append(r.filename)
+        print '%d/%d %s %s' % (
+            processed, n, r.filename, r.not_found_message or '')
+        if r.not_found_message is not None:
+          no_die_found_in.append(r.filename)
   except KeyboardInterrupt, e:
     print 'got ^C, early exit for crop'
 
