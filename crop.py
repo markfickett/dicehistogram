@@ -203,11 +203,11 @@ class CropWorker(multiprocessing.Process):
       raw_image_filename = self._filename_queue.get(timeout=5.0)
       cropped_file_path = os.path.join(crop_dir, raw_image_filename)
       try:
-        self.ExtractSubject(raw_image_filename, resized_reference)
-        self._result_queue.put(CropResult(raw_image_filename, None))
+        bounds = self.ExtractSubject(raw_image_filename, resized_reference)
+        self._result_queue.put(CropResult(raw_image_filename, None, bounds))
       except NoDieFoundError, e:
         self._result_queue.put(
-            CropResult(raw_image_filename, e.message or ''))
+            CropResult(raw_image_filename, e.message or '', None))
 
   def ExtractSubject(self, raw_image_filename, resized_reference):
     """Finds the die in an image by comparing to a reference.
@@ -236,16 +236,28 @@ class CropWorker(multiprocessing.Process):
     CheckBoundSquarenessOrRaise(*analysis_bound)
 
     bound = [self._analysis_resize_factor * b for b in analysis_bound]
-    bound = MakeSquare(bound, orig_image.size, self._crop_size)
-    out_image = orig_image.crop(bound)
+    regular_bound = MakeSquare(bound, orig_image.size, self._crop_size)
+    out_image = orig_image.crop(regular_bound)
     if self._debug:
       _Summarize('output', out_image)
     out_image.save(os.path.join(self._crop_dir, raw_image_filename))
+    return bound
 
 
 CropResult = collections.namedtuple(
     'CropResult',
-    ('filename', 'not_found_message'))
+    ('filename', 'not_found_message', 'crop_bounds'))
+
+
+def SummarizeBounds(reference_filename, bounds_list, crop_summary_filename):
+  reference = PIL.Image.open(reference_filename)
+  background = PIL.ImageChops.blend(
+      reference, PIL.Image.new('RGB', reference.size, 'white'), 0.75)
+  draw = PIL.ImageDraw.Draw(background, 'RGBA')
+  for bound in bounds_list:
+    draw.ellipse(bound, fill=None, outline=(0, 0, 0, 40))
+  background.save(crop_summary_filename)
+  background.show()
 
 
 def BuildArgParser():
@@ -347,6 +359,7 @@ if __name__ == '__main__':
     worker.start()
 
   filename_queue.close()  # no more data to be sent from this process
+  crop_bounds = []
   try:
     while any([worker.is_alive() for worker in pool]):
       if not result_queue.empty():
@@ -356,8 +369,15 @@ if __name__ == '__main__':
             processed, n, r.filename, r.not_found_message or '')
         if r.not_found_message is not None:
           no_die_found_in.append(r.filename)
+        else:
+          crop_bounds.append(r.crop_bounds)
   except KeyboardInterrupt, e:
     print 'got ^C, early exit for crop'
 
   print 'Processed %d images, skipped %d, die not found in %d. %s' % (
       processed, skipped, len(no_die_found_in), no_die_found_in or '')
+  if len(crop_bounds) > 10:
+    SummarizeBounds(
+        os.path.join(capture_dir, args.reference),
+        crop_bounds,
+        os.path.join(data_dir, 'cropsummary.jpg'))
