@@ -91,8 +91,9 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
                     and nx >= 0 and nx < w and ny >= 0 and ny < h
                     and (nx, ny) not in visited):
                   active.add((nx, ny))
-        print 'region at (%d, %d) area %d (%d%% target)' % (
-            x, y, len(region), int(100 * len(region) / scan_distance**2))
+        if debug:
+          print 'region at (%d, %d) area %d (%d%% target)' % (
+              x, y, len(region), int(100 * len(region) / scan_distance**2))
         recent_found_num = 0
         sliding_window = []
         if len(region) > scan_distance**2:
