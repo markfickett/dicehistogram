@@ -179,6 +179,9 @@ class CropWorker(multiprocessing.Process):
       self._Run()
     except KeyboardInterrupt, e:
       pass  # Exit but leat the controlling process clean up.
+    except multiprocessing.queues.Empty, e:
+      print 'worker', self.pid, 'queue empty'
+      pass
 
   def _Run(self):
     reference = PIL.Image.open(
