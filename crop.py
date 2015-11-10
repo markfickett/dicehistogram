@@ -80,7 +80,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > diff_threshold:
             region.add((i, j))
-            if len(region) / scan_distance**2 > 10:
+            if float(len(region)) / scan_distance**2 > 4.0:
               raise NoDieFoundError(
                   'Too much differing area (%d) to find die with threshold %s.'
                   % (len(region), diff_threshold))
@@ -144,6 +144,14 @@ def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
     x_max = min(x_exclusive_bound - 1, x_max + 1)
   x_max += length - (x_max - x_min)
   return x_min, x_max
+
+
+def CheckBoundSquarenessOrRaise(x_min, y_min, x_max, y_max):
+  eccentricity = float(x_max - x_min) / (y_max - y_min)
+  if eccentricity < 1.0:
+    eccentricity = 1.0 / eccentricity
+  if eccentricity > 2.0:
+    raise NoDieFoundError('Bound too eccentric: %.2f' % eccentricity)
 
 
 class CropWorker(multiprocessing.Process):
@@ -229,6 +237,7 @@ class CropWorker(multiprocessing.Process):
         self._scan_distance / self._analysis_resize_factor,
         self._diff_threshold,
         debug=self._debug)
+    CheckBoundSquarenessOrRaise(*analysis_bound)
 
     bound = [self._analysis_resize_factor * b for b in analysis_bound]
     bound = MakeSquare(bound, orig_image.size, self._crop_size)
