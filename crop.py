@@ -146,54 +146,6 @@ def AdjustBound(x_min_in, x_max_in, x_exclusive_bound, length):
   return x_min, x_max
 
 
-def BuildArgParser():
-  summary_line, _, main_doc = __doc__.partition('\n\n')
-  parser = argparse.ArgumentParser(
-      description=summary_line,
-      epilog=main_doc,
-      formatter_class=argparse.RawDescriptionHelpFormatter)
-  parser.add_argument(
-      '--scan-distance', '-d', dest='scan_distance', type=int, default=300,
-      help='Distance between scan lines when searching the image for the die. '
-           + 'This should be roughly the apparent radius of the die.')
-  parser.add_argument(
-      '--capture-dir', default='capture', dest='capture_dir',
-      help='Subdirectory within the data directory containing raw input images '
-           + 'as well as the reference image.')
-  parser.add_argument(
-      '--crop-dir', default='crop', dest='crop_dir',
-      help='Subdirectory within the data directory which cropped images will '
-           + 'be written into.')
-  parser.add_argument(
-      '--reference', '-r', default='reference.JPG',
-      help='Filename (within the input directory) of the reference image. This '
-           + 'is an image like the others but with no die present.')
-  parser.add_argument(
-      '--crop-size', '-c', dest='crop_size', default=660, type=int,
-      help='Size (length in pixels of either edge) to crop from the original '
-           + 'image, which should contain the die fully. Exported for stage 2.')
-  parser.add_argument(
-      '--diff-threshold', '-t', dest='diff_threshold', type=int, default=150,
-      help='Pixels with a difference (summed across RGB) greater than this '
-           + 'value will be considered as potentially part of the die. '
-           + 'Comparison is against the reference image.')
-  parser.add_argument(
-      '--analysis-resize-factor', '-a', dest='analysis_resize_factor',
-      default=6, type=int,
-      help='Divisor for the image size. Source and reference will be resized '
-           + 'during analysis/searching. (Output is crop-size.)')
-  parser.add_argument(
-      '--force', '-f', action='store_true',
-      help='Overwrite existing crops.')
-  parser.add_argument(
-      '--number', '-n', type=int, default=0,
-      help='Number of images to process (for example when debugging).')
-  parser.add_argument(
-      '--debug', action='store_true',
-      help='Show debug images during processing')
-  return parser
-
-
 class CropWorker(multiprocessing.Process):
   def __init__(self,
       filename_queue,
@@ -286,6 +238,54 @@ class CropWorker(multiprocessing.Process):
 CropResult = collections.namedtuple(
     'CropResult',
     ('filename', 'not_found_message', 'skipped'))
+
+
+def BuildArgParser():
+  summary_line, _, main_doc = __doc__.partition('\n\n')
+  parser = argparse.ArgumentParser(
+      description=summary_line,
+      epilog=main_doc,
+      formatter_class=argparse.RawDescriptionHelpFormatter)
+  parser.add_argument(
+      '--scan-distance', '-d', dest='scan_distance', type=int, default=300,
+      help='Distance between scan lines when searching the image for the die. '
+           + 'This should be roughly the apparent radius of the die.')
+  parser.add_argument(
+      '--capture-dir', default='capture', dest='capture_dir',
+      help='Subdirectory within the data directory containing raw input images '
+           + 'as well as the reference image.')
+  parser.add_argument(
+      '--crop-dir', default='crop', dest='crop_dir',
+      help='Subdirectory within the data directory which cropped images will '
+           + 'be written into.')
+  parser.add_argument(
+      '--reference', '-r', default='reference.JPG',
+      help='Filename (within the input directory) of the reference image. This '
+           + 'is an image like the others but with no die present.')
+  parser.add_argument(
+      '--crop-size', '-c', dest='crop_size', default=660, type=int,
+      help='Size (length in pixels of either edge) to crop from the original '
+           + 'image, which should contain the die fully. Exported for stage 2.')
+  parser.add_argument(
+      '--diff-threshold', '-t', dest='diff_threshold', type=int, default=150,
+      help='Pixels with a difference (summed across RGB) greater than this '
+           + 'value will be considered as potentially part of the die. '
+           + 'Comparison is against the reference image.')
+  parser.add_argument(
+      '--analysis-resize-factor', '-a', dest='analysis_resize_factor',
+      default=6, type=int,
+      help='Divisor for the image size. Source and reference will be resized '
+           + 'during analysis/searching. (Output is crop-size.)')
+  parser.add_argument(
+      '--force', '-f', action='store_true',
+      help='Overwrite existing crops.')
+  parser.add_argument(
+      '--number', '-n', type=int, default=0,
+      help='Number of images to process (for example when debugging).')
+  parser.add_argument(
+      '--debug', action='store_true',
+      help='Show debug images during processing')
+  return parser
 
 
 if __name__ == '__main__':
