@@ -78,7 +78,7 @@ class DiffArea(object):
         self.eccentricity < 2.0 and
         self.area < (6.0 * self.target_area) and
         self.area >= (2.0 * self.target_area) and
-        len(self.region) >= (2.0 * self.target_area))
+        len(self.region) >= (1.5 * self.target_area))
 
   def DrawAreaOnDiff(self):
     """Draws the pixels and their bound on the image, for debugging."""
