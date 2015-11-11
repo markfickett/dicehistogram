@@ -20,6 +20,7 @@ The camera should be on full manual, including:
  - focus
  - white balance
  - rotation (do not auto-rotate images)
+On a 2.4GHz i5 MacBook Pro, this takes about 10 minutes for 3k images.
 """
 
 import argparse
