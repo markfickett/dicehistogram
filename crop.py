@@ -152,7 +152,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
           recent_found_num -= 1
 
       if recent_found_num > scan_distance / 2:
-        active = set(filter(bool, sliding_window[:scan_distance]))
+        active = set(filter(bool, sliding_window[scan_distance:]))
         if debug:
           for ax, ay in active:
             diff.putpixel((ax, ay), (0, 254, 0))
