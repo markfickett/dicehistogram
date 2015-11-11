@@ -8,6 +8,7 @@
 # from Chessex bag of 6 assorted d20s purchased 2015 Nov
 ../summarize.py 151109d20chessexpurplegray 17 3 10 4 12 11 16 5 9 18 6 15 14 2 1 13 7 20 8 19 4 1 20 4 6 20
 ../summarize.py 151111d20chessexredorange 18 4 6 17 10 5 3 15 11 16 12 20 14 9 2 19 8 1 13 7
+../summarize.py 151111d20chessexyellow 18 12 11 6 15 3 10 8 9 14 2 16 5 20 4 19 13 7 17 1 2 18 1 20 7
 # purchased 201x probably Chessex
 ../summarize.py 151103d20chessexgreenmarbled 5 4 11 14 17 15 6 16 20 9 19 8 18 12 10 3 2 13 7 1 2 7 7 7 1 7 1 7 1 9 7 7 9 1 16 7 20 14 1
 
