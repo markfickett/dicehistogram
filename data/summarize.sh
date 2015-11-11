@@ -22,3 +22,4 @@
 
 # GameScience d20 pair purchased 2015 Nov; black die before and after trimming
 ../summarize.py 151109d20gamescienceblackgold 3 11 19 16 2 5 7 4 18 20 10 15 12 6 8 1 13 9 17 14 1 17 17 18 14 19 18 5 13 8 3 10 7 16
+../summarize.py 151109d20gamescienceblackgoldtrimmed 13 18 2 1 17 16 3 5 6 10 20 7 14 19 12 11 15 9 4 8 4 8 4 4 11 17 8 15
