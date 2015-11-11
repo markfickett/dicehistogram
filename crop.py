@@ -326,12 +326,12 @@ def BuildArgParser():
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--diff-threshold', '-t', dest='diff_threshold', type=int, default=150,
+      '--diff-threshold', '-t', dest='diff_threshold', type=int, default=180,
       help='Pixels with a difference (summed across RGB) greater than this '
            + 'value will be considered as potentially part of the die. '
            + 'Comparison is against the reference image.')
   parser.add_argument(
-      '--scan-distance', '-d', dest='scan_distance', type=int, default=300,
+      '--scan-distance', '-d', dest='scan_distance', type=int, default=320,
       help='Distance between scan lines when searching the image for the die. '
            + 'This should be roughly the apparent radius of the die.')
   parser.add_argument(
