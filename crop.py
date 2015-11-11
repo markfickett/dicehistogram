@@ -34,6 +34,9 @@ import PIL.ImageChops
 import PIL.ImageDraw
 
 
+EPSILON = 1e-3  # for float comparison
+
+
 def _Summarize(name, image):
   print name, image.mode, image.size, image.format
 
@@ -64,14 +67,18 @@ class DiffArea(object):
 
   def CheckAbort(self):
     """Checks for unrecoverable errors and raises NoDieFoundError."""
-    if float(len(self.region)) / self.target_area > 5.0:
+    if len(self.region) > 5.0 * self.target_area:
       raise NoDieFoundError(
           'Too much differing area (%d) to find die.'
           % len(self.region))
 
   def Check(self):
     """Checks validity of the area. When this fails, try another region."""
-    return self.eccentricity < 2.0 and self.area < (5.0 * self.target_area)
+    return (
+        self.eccentricity < 2.0 and
+        self.area < (6.0 * self.target_area) and
+        self.area >= (2.0 * self.target_area) and
+        len(self.region) >= (2.0 * self.target_area))
 
   def DrawAreaOnDiff(self):
     """Draws the pixels and their bound on the image, for debugging."""
@@ -91,9 +98,11 @@ class DiffArea(object):
   @property
   def eccentricity(self):
     denom = float(self.y_max - self.y_min)
-    if denom == 0:
+    if denom < EPSILON:
       return float('Inf')
     e = (self.x_max - self.x_min) / denom
+    if e < EPSILON:
+      return float('Inf')
     return e if e > 1.0 else (1.0 / e)
 
   @property
