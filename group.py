@@ -11,6 +11,7 @@ Based on OpenCV's find_obj.py example, as in:
 
 Send SIGHUP to render an intermediate summary image and show it.
 
+On a 2.4GHz i5 MacBook Pro, this takes about 20 minutes for 3k images.
 TODO: Use multiprocessing.
 """
 
