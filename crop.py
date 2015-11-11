@@ -125,6 +125,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
   w, h = diff.size
   recent_found_num = 0
   sliding_window = []
+  visited = set()
   for y in xrange(scan_distance / 2, h, scan_distance):
     for x in xrange(w):
       r, g, b = diff.getpixel((x, y))
@@ -142,7 +143,6 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
           recent_found_num -= 1
 
       if recent_found_num > scan_distance / 2:
-        visited = set()
         active = set(filter(bool, sliding_window[:scan_distance]))
         if debug:
           for ax, ay in active:
