@@ -5,6 +5,13 @@
 # TODO d10 / d100 (first imagery)
 ../summarize.py 151027d12chessexgeminicoppersteel 9 7 12 1 4 10 8 5 11 3 6 2 4 4 7 6 8 4 # TODO new/more data
 ../summarize.py 151023d20chessexgeminicoppersteel 2 1 9 18 20 13 11 14 3 10 15 7 6 5 19 17 8 16 12 4 7 1 4 1 7 8 7 11 4 3
+# from Chessex bag of 6 assorted d20s purchased 2015 Nov
+../summarize.py 151109d20chessexpurplegray 17 3 10 4 12 11 16 5 9 18 6 15 14 2 1 13 7 20 8 19 4 1 20 4 6 20
+# purchased 201x probably Chessex
+../summarize.py 151103d20chessexgreenmarbled 5 4 11 14 17 15 6 16 20 9 19 8 18 12 10 3 2 13 7 1 2 7 7 7 1 7 1 7 1 9 7 7 9 1 16 7 20 14 1
+
+# purchased 199x, manufacturer unknown
+../summarize.py 151104d20red199x/ 11 6 12 9 16 4 5 18 10 15 17 13 8 2 1 19 14 7 20 3 3 10 16
 
 # from highcitybooks 35-pack of Wiz Dice purchased 2015
 #../summarize.py 151028d20wizdiceopaquepurple 6 9 4 17 3 12 18 5 20 10 19 8 2 13 15 11 14 1 7 16 13  # N = 2606
@@ -14,11 +21,6 @@
 ../summarize.py 151105d20wizdiceyellow/ 18 2 8 3 14 15 6 1 12 19 7 9 16 10 11 20 5 4 13 17 1 11 20 9 8 12 12 1 10
 ../summarize.py 151105d20wizdiceblue 18 17 4 6 3 15 19 7 9 8 14 11 10 12 1 5 2 16 20 13 13 1 1 16 7 19 1 4 9 17 3 1
 ../summarize.py 151106d20wizdicetranslucentblue 20 14 18 2 7 4 19 8 13 15 6 9 12 5 16 10 11 3 17 1 1 7 7 4 19
-
-# blue-green: purchased 201x probably Chessex
-../summarize.py 151103d20chessexgreenmarbled 5 4 11 14 17 15 6 16 20 9 19 8 18 12 10 3 2 13 7 1 2 7 7 7 1 7 1 7 1 9 7 7 9 1 16 7 20 14 1
-# red: purchased 199x, manufacturer unknown
-../summarize.py 151104d20red199x/ 11 6 12 9 16 4 5 18 10 15 17 13 8 2 1 19 14 7 20 3 3 10 16
 
 # GameScience d20 pair purchased 2015 Nov; black die before and after trimming
 ../summarize.py 151109d20gamescienceblackgold 3 11 19 16 2 5 7 4 18 20 10 15 12 6 8 1 13 9 17 14 1 17 17 18 14 19 18 5 13 8 3 10 7 16
