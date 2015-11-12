@@ -168,14 +168,15 @@ if __name__ == '__main__':
       print 'warning, missing label', i
       labeled_file_sets[i] = set()
 
-  label_counts = {
-      label: len(file_set)
-      for label, file_set in labeled_file_sets.iteritems()}
   print 'Summary of', summary_data_filename
-  PrintChiSquared(label_counts)
-  PrintHistogram(label_counts)
 
   sequence_graph = BuildSequenceHeatmap(labeled_file_sets)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
   sequence_graph.save(sequence_graph_file)
   print 'wrote sequence heatmap to', sequence_graph_file
+
+  label_counts = {
+      label: len(file_set)
+      for label, file_set in labeled_file_sets.iteritems()}
+  PrintChiSquared(label_counts)
+  PrintHistogram(label_counts)
