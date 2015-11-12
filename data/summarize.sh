@@ -30,3 +30,4 @@
 
 # Crystal Caste purchased 2015 Nov
 ../summarize.py 151111d20crystalcasteclearblack 8 1 20 19 7 2 14 12 3 13 18 5 6 4 9 11 15 10 16 17 17 17 17 17 7 17 17 17 11 19 17 17 6 17 17 15 17
+../summarize.py 151111d8crystalcasteclearblack 5 4 2 6 8 7 3 --repeat 1
