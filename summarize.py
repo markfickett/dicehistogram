@@ -143,6 +143,11 @@ if __name__ == '__main__':
   parser.add_argument(
       '--sequence-graph', dest='sequence_graph', default='sequence.jpg',
       help='Save the graph of roll sequences to this file within the data dir.')
+  parser.add_argument(
+      '--repeat', type=int,
+      help='Repeat this value as the label for all remaining file sets. '
+           + 'Useful when one face does not have many features and does not '
+           + 'get matched well.')
   args, positional = parser.parse_known_args()
   data_dir = positional[0]
   labels = map(int, positional[1:])
@@ -150,6 +155,9 @@ if __name__ == '__main__':
   summary_data_filename = os.path.join(data_dir, args.summary_data)
   with open(summary_data_filename) as data_file:
     summary_data = json.load(data_file)
+
+  if args.repeat is not None and len(summary_data) > len(labels):
+    labels += [args.repeat] * (len(summary_data) - len(labels))
 
   if len(labels) != len(summary_data):
     print labels
