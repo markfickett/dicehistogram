@@ -32,3 +32,6 @@
 ../summarize.py 151111d20crystalcasteclearblack 8 1 20 19 7 2 14 12 3 13 18 5 6 4 9 11 15 10 16 17 17 17 17 17 7 17 17 17 11 19 17 17 6 17 17 15 17
 ../summarize.py 151112d20crystalcastetranslucentorange 2 20 8 19 13 12 15 16 6 1 4 11 18 9 14 7 3 5 1 7 14 3 8 19 17 10 10 17 17 17 10 10 10 10 17 10 17 17 17 7 17 17 15 17 7 17 17 17 10 17 17 10 4 17 20 2
 ../summarize.py 151111d8crystalcasteclearblack 5 4 2 6 8 7 3 --repeat 1
+
+# Koplow, from set of 10 d20s purchased 2015 Nov
+../summarize.py 151113d20koplowblue 11 20 18 9 14 5 15 4 17 10 1 16 8 13 12 19 3 2 7 6 6 9 1 11
