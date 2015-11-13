@@ -107,7 +107,9 @@ def GetHistogramWithSubsamples(labeled_file_sets):
   csv = collections.defaultdict(lambda: list())
   seq = GetLabelSequence(labeled_file_sets)
   headers = ['N']
-  for max_n in (100, 1000, 2000, 4000, 8000):
+  max_n = 8
+  while True:
+    max_n *= 2
     if max_n > len(seq):
       n = len(seq)
     else:
