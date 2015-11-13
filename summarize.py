@@ -17,9 +17,11 @@ TODO:
 
 import argparse
 import collections
+import csv
 import json
 import numpy
 import os
+import random
 import scipy
 import scipy.stats
 
@@ -44,26 +46,33 @@ def PrintChiSquared(label_counts):
       sum(label_counts.values()), p, int(100 * p))
 
 
-HISTOGRAM_BASE_LEN = 50
-def PrintHistogram(label_counts):
+def GetNormalizedHistogram(label_counts):
   values = label_counts.values()
   np_values = numpy.array(values)
   mean = numpy.mean(np_values)
   np_values = np_values / mean
 
-  expected_value = 0
-  for label, count in label_counts.items():
-    normalized_value = count / mean
-    expected_value += label * normalized_value
-  expected_value = expected_value / len(label_counts)
-
-  print 'normalized: stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
-      numpy.std(np_values),
-      min(np_values),
-      max(np_values),
-      expected_value)
+  normalized_counts = {}
   for label, count in sorted(label_counts.items()):
     v = count / mean
+    normalized_counts[label] = v
+  return normalized_counts
+
+
+HISTOGRAM_BASE_LEN = 50
+def PrintHistogram(normalized_counts):
+  expected_value = 0
+  for label, v in normalized_counts.iteritems():
+    expected_value += label * v
+  expected_value = expected_value / len(normalized_counts)
+
+  print 'normalized: stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
+      numpy.std(normalized_counts.values()),
+      min(normalized_counts.values()),
+      max(normalized_counts.values()),
+      expected_value)
+
+  for label, v in normalized_counts.iteritems():
     i = int(v * HISTOGRAM_BASE_LEN)
     if i < HISTOGRAM_BASE_LEN:
       bar = '=' * i
@@ -92,6 +101,25 @@ def GetLabelCounts(label_sequence):
   for label in label_sequence:
     label_counts[label] += 1
   return label_counts
+
+
+def GetHistogramWithSubsamples(labeled_file_sets):
+  csv = collections.defaultdict(lambda: list())
+  seq = GetLabelSequence(labeled_file_sets)
+  headers = ['N']
+  for max_n in (100, 1000, 2000, 4000, 8000):
+    if max_n > len(seq):
+      n = len(seq)
+    else:
+      n = max_n
+    headers.append(n)
+    label_counts = GetLabelCounts(random.sample(seq, n))
+    normalized = GetNormalizedHistogram(label_counts)
+    for label, c in normalized.iteritems():
+      csv[label].append(c)
+    if n != max_n:
+      break
+  return [headers] + sorted([k] + v for k, v in csv.items())
 
 
 def BuildSequenceHeatmap(labeled_file_sets):
@@ -148,6 +176,12 @@ if __name__ == '__main__':
       help='Repeat this value as the label for all remaining file sets. '
            + 'Useful when one face does not have many features and does not '
            + 'get matched well.')
+  parser.add_argument(
+      '--csv',
+      help='Name of a file to write CSV histogram data. Values will include '
+           + 'normalized  frequencies for each label, and will have a column '
+           + 'for the full dataset as well as random subsamples of varying '
+           + 'size.')
   args, positional = parser.parse_known_args()
   data_dir = positional[0]
   labels = map(int, positional[1:])
@@ -183,8 +217,16 @@ if __name__ == '__main__':
   sequence_graph.save(sequence_graph_file)
   print 'wrote sequence heatmap to', sequence_graph_file
 
+  if args.csv:
+    csv_path = os.path.join(data_dir, args.csv)
+    with open(csv_path, 'w') as csv_output_file:
+      csv_file = csv.writer(csv_output_file)
+      for row in GetHistogramWithSubsamples(labeled_file_sets):
+        csv_file.writerow(row)
+      print 'wrote', csv_path
+
   label_counts = {
       label: len(file_set)
       for label, file_set in labeled_file_sets.iteritems()}
   PrintChiSquared(label_counts)
-  PrintHistogram(label_counts)
+  PrintHistogram(GetNormalizedHistogram(label_counts))
