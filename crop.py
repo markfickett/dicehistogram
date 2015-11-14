@@ -36,6 +36,9 @@ import PIL.ImageDraw
 
 
 EPSILON = 1e-3  # for float comparison
+# How far from square may bounds of a die be, and still be considered valid?
+# Increase this value for lozenge-shaped dice.
+ECCENTRICITY_MAX = 2.0
 
 
 def _Summarize(name, image):
@@ -76,7 +79,7 @@ class DiffArea(object):
   def Check(self):
     """Checks validity of the area. When this fails, try another region."""
     return (
-        self.eccentricity < 2.0 and
+        self.eccentricity < ECCENTRICITY_MAX and
         self.area < (6.0 * self.target_area) and
         self.area >= (2.0 * self.target_area) and
         len(self.region) >= (1.5 * self.target_area))
@@ -187,7 +190,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
         sliding_window = []
   if debug:
     diff.show()
-  raise NoDieFoundError()
+  raise NoDieFoundError('No valid diff found.')
 
 
 def MakeSquare((x_min_in, y_min_in, x_max_in, y_max_in), (w, h), length):
@@ -210,7 +213,7 @@ def CheckBoundSquareness(x_min, y_min, x_max, y_max):
   eccentricity = float(x_max - x_min) / (y_max - y_min)
   if eccentricity < 1.0:
     eccentricity = 1.0 / eccentricity
-  if eccentricity > 2.0:
+  if eccentricity > ECCENTRICITY_MAX:
     return False
   return True
 
@@ -268,7 +271,7 @@ class CropWorker(multiprocessing.Process):
         self._result_queue.put(CropResult(raw_image_filename, None, bounds))
       except NoDieFoundError, e:
         self._result_queue.put(
-            CropResult(raw_image_filename, e.message or '', None))
+            CropResult(raw_image_filename, e.message or 'not found', None))
 
   def ExtractSubject(self, raw_image_filename, resized_reference):
     """Finds the die in an image by comparing to a reference.
