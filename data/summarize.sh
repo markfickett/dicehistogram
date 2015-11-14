@@ -18,6 +18,7 @@
 # from highcitybooks 35-pack of Wiz Dice purchased 2015
 #../summarize.py 151028d20wizdiceopaquepurple 6 9 4 17 3 12 18 5 20 10 19 8 2 13 15 11 14 1 7 16 13  # N = 2606
 ../summarize.py 151031d20wizdiceopaquepurple/ 3 17 12 18 6 4 19 9 2 14 11 8 15 7 10 5 1 16 20 13 17 4  # N = 8300
+../summarize.py 151113d6wizdiceopaquepurple 3 6 2 5 4 4 5 6 1 1 1 1 1 1 3 1 2 2  --csv subsamples.csv --repeat 1
 ../summarize.py 151029d20wizdicetranslucentblue/ 8 11 2 13 5 6 14 12 19 9 16 15 4 18 1 7 20 10 20 3 17 17 17 19 3 13 7 3 17 16 3 17
 # borrowed wiz dice
 ../summarize.py 151105d20wizdiceyellow/ 18 2 8 3 14 15 6 1 12 19 7 9 16 10 11 20 5 4 13 17 1 11 20 9 8 12 12 1 10
