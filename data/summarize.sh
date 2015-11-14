@@ -35,3 +35,4 @@
 
 # Koplow, from set of 10 d20s purchased 2015 Nov
 ../summarize.py 151113d20koplowblue 11 20 18 9 14 5 15 4 17 10 1 16 8 13 12 19 3 2 7 6 6 9 1 11
+../summarize.py 151113d20koplowgreen 16 18 14 4 10 17 11 5 20 2 12 13 6 1 3 19 15 8 7 9 9 7 4 10 4 2 2 7 3 16 6 10 3
