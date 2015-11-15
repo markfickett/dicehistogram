@@ -20,6 +20,7 @@
 ../summarize.py 151031d20wizdiceopaquepurple/ 3 17 12 18 6 4 19 9 2 14 11 8 15 7 10 5 1 16 20 13 17 4  # N = 8300
 ../summarize.py 151113d6wizdiceopaquepurple 3 6 2 5 4 4 5 6 1 1 1 1 1 1 3 1 2 2  --csv subsamples.csv --repeat 1
 ../summarize.py 151029d20wizdicetranslucentblue/ 8 11 2 13 5 6 14 12 19 9 16 15 4 18 1 7 20 10 20 3 17 17 17 19 3 13 7 3 17 16 3 17
+../summarize.py 151114d6wizdicetranslucentblue 5 6 3 4 2 6 --repeat 1
 # borrowed wiz dice
 ../summarize.py 151105d20wizdiceyellow/ 18 2 8 3 14 15 6 1 12 19 7 9 16 10 11 20 5 4 13 17 1 11 20 9 8 12 12 1 10
 ../summarize.py 151105d20wizdiceblue 18 17 4 6 3 15 19 7 9 8 14 11 10 12 1 5 2 16 20 13 13 1 1 16 7 19 1 4 9 17 3 1
@@ -39,3 +40,4 @@
 # Koplow, from set of 10 d20s purchased 2015 Nov
 ../summarize.py 151113d20koplowblue 11 20 18 9 14 5 15 4 17 10 1 16 8 13 12 19 3 2 7 6 6 9 1 11
 ../summarize.py 151113d20koplowgreen 16 18 14 4 10 17 11 5 20 2 12 13 6 1 3 19 15 8 7 9 9 7 4 10 4 2 2 7 3 16 6 10 3
+../summarize.py 151115d20koplowgreenother 14 3 20 8 11 12 19 1 15 18 5 4 9 16 7 2 13 17 10 6 10 6 2
