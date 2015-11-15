@@ -1,6 +1,6 @@
 # from Chessex small-box set purchased 2015
 ../summarize.py 151026d4chessexgeminicoppersteel 4 1 2 3 2 2 3 2 2 3 2 2 3 2 2 3 2 2 2 2
-../summarize.py 151026d6chessexgeminicoppersteel 5 6 4 1 2 1 1 3 1 2 1 6 1 1 5 1 1 # TODO new/more data
+../summarize.py 151114d6chessexgeminicoppersteel 3 4 5 2 6 1 5 6 1 1 1
 ../summarize.py 151026d8chessexgeminicoppersteel 3 8 1 6 5 7 4 2 7 1 4 7 2 3 1 4 3 4 1 1 4 1 1
 # TODO d10 / d100 (first imagery)
 ../summarize.py 151027d12chessexgeminicoppersteel 9 7 12 1 4 10 8 5 11 3 6 2 4 4 7 6 8 4 # TODO new/more data
