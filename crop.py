@@ -39,6 +39,10 @@ EPSILON = 1e-3  # for float comparison
 # How far from square may bounds of a die be, and still be considered valid?
 # Increase this value for lozenge-shaped dice.
 ECCENTRICITY_MAX = 2.0
+BOUNDS_AREA_MAX = 6.0
+BOUNDS_AREA_MIN = 2.0
+PIXEL_AREA_MIN = 1.5
+PIXEL_AREA_ABORT_MAX = 5.0
 
 
 def _Summarize(name, image):
@@ -71,7 +75,7 @@ class DiffArea(object):
 
   def CheckAbort(self):
     """Checks for unrecoverable errors and raises NoDieFoundError."""
-    if len(self.region) > 5.0 * self.target_area:
+    if len(self.region) > PIXEL_AREA_ABORT_MAX * self.target_area:
       raise NoDieFoundError(
           'Too much differing area (%d) to find die.'
           % len(self.region))
@@ -80,9 +84,9 @@ class DiffArea(object):
     """Checks validity of the area. When this fails, try another region."""
     return (
         self.eccentricity < ECCENTRICITY_MAX and
-        self.area < (6.0 * self.target_area) and
-        self.area >= (2.0 * self.target_area) and
-        len(self.region) >= (1.5 * self.target_area))
+        self.area < (BOUNDS_AREA_MAX * self.target_area) and
+        self.area >= (BOUNDS_AREA_MIN * self.target_area) and
+        len(self.region) >= (PIXEL_AREA_MIN * self.target_area))
 
   def DrawAreaOnDiff(self):
     """Draws the pixels and their bound on the image, for debugging."""
