@@ -29,6 +29,7 @@
 # GameScience d20 pair purchased 2015 Nov; black die before and after trimming
 ../summarize.py 151109d20gamescienceblackgold 3 11 19 16 2 5 7 4 18 20 10 15 12 6 8 1 13 9 17 14 1 17 17 18 14 19 18 5 13 8 3 10 7 16
 ../summarize.py 151109d20gamescienceblackgoldtrimmed 13 18 2 1 17 16 3 5 6 10 20 7 14 19 12 11 15 9 4 8 4 8 4 4 11 17 8 15
+../summarize.py 151119d20gamesciencewhite 16 1 15 11 20 17 18 5 9 12 2 14 7 6 4 13 10 19 8 3 10 7
 
 # Crystal Caste purchased 2015 Nov
 ../summarize.py 151111d20crystalcasteclearblack 8 1 20 19 7 2 14 12 3 13 18 5 6 4 9 11 15 10 16 17 17 17 17 17 7 17 17 17 11 19 17 17 6 17 17 15 17
