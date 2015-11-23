@@ -28,7 +28,9 @@
 
 <img src="arduino/151031d20wizdiceopaquepurplesubsamples.png" alt="histogram showing frequency of each side after different numbers of rolls" />
 
-<p>The different datasets are from random subsamples of the actual rolled sequence. So the blue series labeled "100" is from taking 100 random rolls from the set of 8000, and charting the relative frequency of each side within that subsample; similarly for the other sample counts.</p>
+<p>The different datasets are from random subsamples of the actual rolled sequence. So the blue series labeled "100" is from taking 100 random rolls from the set of 8000, and charting the relative normalized frequency of each side within that subsample; similarly for the other sample counts.</p>
+
+<p>"Normalized Frequency" is used so Y values on different histograms / for different dice can be compared easily. For example, an ideal fair d20 rolled 3000 times would show each face 150 times. So if a 20 actually comes up 102 times, the normalized frequency is 0.68. That is, in the example 20s showed up 68% of the times you would expect from a fair die. And frequencies of 1.0 correspond to what would be expected of a fair die.</p>
 
 <p>The relative side frequencies for 1000 rolls or (especially) 100 rolls are fairly different from the frequencies at 8000 rolls. But anything from 2000 up looks fairly close. Thus I conclude that 3000 rolls should give a reasonable picture of the die's behavior (and actually 2000 is probably sufficient).</p>
 
