@@ -1,0 +1,29 @@
+friendly,name,sides,stddev,expected
+Chessex Gemini Copper-Steel d4,151026d4chessexgeminicoppersteel,4,0.05,2.54
+Chessex Gemini Copper-Steel d6,151114d6chessexgeminicoppersteel,6,0.10,3.52
+Chessex Gemini Copper-Steel d8,151026d8chessexgeminicoppersteel,8,0.10,4.39
+Chessex Gemini Copper-Steel d12,151027d12chessexgeminicoppersteel,12,0.07,6.66
+Chessex Gemini Copper-Steel,151023d20chessexgeminicoppersteel,20,0.16,10.30
+Chessex Purple/Gray,151109d20chessexpurplegray,20,0.17,10.33
+Chessex Red/Orange,151111d20chessexredorange,20,0.16,10.60
+Chessex Yellow,151111d20chessexyellow,20,0.17,10.52
+Chessex Marbled Green,151103d20chessexgreenmarbled,20,0.09,10.38
+Red (Unknown, 1990s),151104d20red199x,20,0.25,10.39
+Wiz Dice Opaque Purple,151031d20wizdiceopaquepurple,20,0.14,10.42
+Wiz Dice Opaque Purple d6,151113d6wizdiceopaquepurple,6,0.03,3.52
+Wiz Dice Translucent Blue,151029d20wizdicetranslucentblue,20,0.28,10.36
+Wiz Dice Translucent Blue d6,151114d6wizdicetranslucentblue,6,0.10,3.49
+Wiz Dice Yellow,151105d20wizdiceyellow,20,0.16,10.23
+Wiz Dice Blue,151105d20wizdiceblue,20,0.10,10.45
+Wiz Dice Translucent Blue (alternate),151106d20wizdicetranslucentblue,20,0.20,10.47
+Game Science Black,151109d20gamescienceblackgold,20,0.12,10.38
+Game Science Black Trimmed,151109d20gamescienceblackgoldtrimmed,20,0.07,10.37
+Game Science White,151119d20gamesciencewhite,20,0.12,10.67
+Crystal Caste Clear Black,151111d20crystalcasteclearblack,20,0.33,10.18
+Crystal Caste Translucent Orange,151112d20crystalcastetranslucentorange,20,0.30,10.24
+Crystal Caste Clear Black d8,151111d8crystalcasteclearblack,8,0.09,4.49
+Crystal Caste Translucent Orange Lozenge d6,151114d6crystalcastetranslucentorange,6,0.25,3.56
+Crystal Caste Clear Black d6,151114d6crystalcasteclearblack,6,0.05,3.52
+Koplow Blue,151113d20koplowblue,20,0.14,10.67
+Koplow Green,151113d20koplowgreen,20,0.12,10.47
+Koplow Green (alternate),151115d20koplowgreenother,20,0.14,10.40
