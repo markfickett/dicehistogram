@@ -75,6 +75,12 @@ TODO
 
 TODO
 
+<h3>Geometric Analysis</h3>
+
+<p>Except in extreme cases, measuring diameters of the dice did not predict fairness.</p>
+
+TODO
+
 <h2 id="hardware">Hardware Setup (Die Roller and Camera)</h2>
 
 <iframe width="640" height="360" src="https://www.youtube.com/embed/UdA5ydENTHY?rel=0" frameborder="0" allowfullscreen></iframe>
@@ -107,6 +113,18 @@ TODO
 <li>Turbulence. The smaller dice (d4 and d6) slide down the tub's side when it tilts down, rather than rolling; this can lead to repeatedly rolling the same number. Bumpy sides on the container, or tilting further down, might help.</li>
 <li>Strength. This setup is not tough enough for <a href="http://q-workshop.com/p/279/2850/metal-dwarven-dice-set-7--metal-dice.html">metal dice</a>.</li>
 </ul>
+
+<h3>Repetition in Roll Sequence</h3>
+
+<p>One concern in designing the rolling machine is that it wouldn't sufficiently shake the dice, resulting in the same side getting rolled repeated, or one side always being followed by some other side predictably.</p>
+
+<p>The below are plots of which side (horizontal axis) was followed by which other side (vertical axis), showing the number of times that two-roll sequence occurred (grayscale value and text). Data is from a Wiz Dice translucent blue d20 (stddev=0.2, moderate/bad) and a Chessex Gemini d6 (stddev=0.1, moderate for d6s tested).</p>
+
+<img src="arduino/151106dicehistogramwizdicetranslucentblued20sequence.jpg" alt="sequence heatmap for Wiz Dice d20" />
+
+<img src="arduino/151026geminicoppersteeld6sequence.jpg" alt="sequence heatmap for Chessex Gemini d6" />
+
+<p>If the same side were rolled many times in a row, there would be a hot line on the diagonal, but there isn't for either die. The d20 does show for example a dark row/column for 17 (which was rolled infrequently), but did not reveal clear biases. The github repository has sequence graphs for the other dice.</p>
 
 <h2 id="software">Software Explanation</h2>
 
