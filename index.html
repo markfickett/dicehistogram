@@ -17,7 +17,7 @@
 
 <h3 id="overview">Overview</h3>
 
-<img src="arduino/151123dicehistogramsummary.png" alt="summary of all dice, with standard deviation and expected value" />
+<img src="arduino/dicehistogram/151123dicehistogramsummary.png" alt="summary of all dice, with standard deviation and expected value" />
 
 <p>Smaller standard deviation is better, and expected values closer to 10&frac12; are better (meaning "fairer" in both cases).</p>
 
@@ -35,7 +35,7 @@
 
 <p>The below data is from an opaque purple Wiz Dice d20, rolled 8000 times.</p>
 
-<img src="arduino/151031d20wizdiceopaquepurplesubsamples.png" alt="histogram showing frequency of each side after different numbers of rolls" />
+<img src="arduino/dicehistogram/151031d20wizdiceopaquepurplesubsamples.png" alt="histogram showing frequency of each side after different numbers of rolls" />
 
 <p>The different datasets are from random subsamples of the actual rolled sequence. So the blue series labeled "100" is from taking 100 random rolls from the set of 8000, and charting the relative normalized frequency of each side within that subsample; similarly for the other sample counts.</p>
 
@@ -45,7 +45,7 @@
 
 <p>For a Crystal Caste clear black d8, rolled 3000 times:</p>
 
-<img src="arduino/151111d8crystalcasteclearblacksubsamples.png" alt="histogram of subsamples for a d8" />
+<img src="arduino/dicehistogram/151111d8crystalcasteclearblacksubsamples.png" alt="histogram of subsamples for a d8" />
 
 <p>In this case, with 512 samples the frequencies look somewhat different from those at 3000 samples, but with 1024 it's fairly close.</p>
 
@@ -53,9 +53,15 @@
 
 <h3 id="chessex">Chessex</h3>
 
+<img src="arduino/dicehistogram/151023d20chessexgeminicoppersteel200.jpg" alt="" />
+<img src="arduino/dicehistogram/151111d20chessexredorange200.jpg" alt="" />
+<img src="arduino/dicehistogram/151111d20chessexyellow200.jpg" alt="" />
+<img src="arduino/dicehistogram/151109d20chessexpurplegray200.jpg" alt="" />
+<img src="arduino/dicehistogram/151103d20chessexgreenmarbled200.jpg" alt="" />
+
 <p>The <a href="http://www.chessex.com/Dice/Dice_Home.htm">Chessex dice</a> I tested: I bought a 7-die Copper-Steel Gemini set and a <a href="http://www.amazon.com/gp/product/B00132G3SC">bag of 6 d20s</a> (from which I tested a red, yellow and purple/gray die), and borrowed another d20 (green, probably 1990s purchase date).</p>
 
-<img src="arduino/151123dicehistogramsummary-chessex.png" alt="histogram of Chessex d20 side frequencies" />
+<img src="arduino/dicehistogram/151123chessexsummary.png" alt="histogram of Chessex d20 side frequencies" />
 
 <p>The Chessex d20s are all mid-range fairness. The older borrowed green die (probably 1990s) proving fairer. (The rest were all purchased in 2015.) They seem to roughly favor and avoid the same numbers which, on the dice, are arranged like the two sewn <a href="https://www.google.com/search?q=baseball&tbm=isch">halves of a baseball</a>.</p>
 
@@ -65,20 +71,24 @@
 
 <p>The Wiz dice I tested: Dice from two sets out of a <a href="http://highcitybooks.com/dice/index.php?route=product/category&path=59">highcitybooks.com</a> 35-die set; and three borrowed dice. (Note that highcitybooks is as of 2015 November selling Chessex, but historically sells bulk dice from multiple brands.)</p>
 
-<img src="arduino/151123dicehistogramwizdiced20hcbopaquepurple.png" alt="histogram: HCB opaque purple" />
-<img src="arduino/151123dicehistogramwizdiced20hcbtranslucentblue.png" alt="histogram: HCB translucent blue" />
+<img src="arduino/dicehistogram/151123dicehistogramwizdiced20hcbopaquepurple.png" alt="histogram: HCB opaque purple" />
+<img src="arduino/dicehistogram/151123dicehistogramwizdiced20hcbtranslucentblue.png" alt="histogram: HCB translucent blue" />
 
-<img src="arduino/151123dicehistogramwizdiced20solidblue.png" alt="histogram: borrowed blue" />
-<img src="arduino/151123dicehistogramwizdiced20translucentblue.png" alt="histogram: borrowed translucent blue" />
-<img src="arduino/151123dicehistogramwizdiced20yellow.png" alt="histogram: borrowed yellow" />
+<img src="arduino/dicehistogram/151123dicehistogramwizdiced20solidblue.png" alt="histogram: borrowed blue" />
+<img src="arduino/dicehistogram/151123dicehistogramwizdiced20translucentblue.png" alt="histogram: borrowed translucent blue" />
+<img src="arduino/dicehistogram/151123dicehistogramwizdiced20yellow.png" alt="histogram: borrowed yellow" />
 
 <p>These Wiz Dice were highly variable, but do tend to have symmetrical distributions around 10&frac12; (like Chessex). In this small sample, the translucent dice were less fair than the opaques.</p>
 
 <h3 id="gamescience">Game Science</h3>
 
+<img src="arduino/dicehistogram/151109d20gamescienceblackgold200.jpg" alt="" />
+<img src="arduino/dicehistogram/151109d20gamescienceblackgoldtrimmed200.jpg" alt="" />
+<img src="arduino/dicehistogram/151119d20gamesciencewhite200.jpg" alt="" />
+
 <p>The <a href="http://www.gamesciencedice.com/">Game Science</a> dice I tested: two individual d20s; one black with gold numerals, and one white with black. Game Science promotes its dice as especially fair.</p>
 
-<img src="arduino/151123dicehistogramsummary-gamescience.png" alt="Game Science d20s histogram" />
+<img src="arduino/dicehistogram/151123dicehistogramsummary-gamescience.png" alt="Game Science d20s histogram" />
 
 <p>The dice require trimming after they arrive. The two dice did both arrive with visible bumps. I tested the black die before and after trimming it, and saw a significant improvement in fairness, in fact leaving the black Game Science d20 as the fairest d20 tested (with a standard deviation of 0.07, up from 0.12, and a Chi Squared value of 0.76). But the black die's expected value was 10.38 before trimming and 10.37 afterwards (compared to 10.5 for an ideal fair d20). However the white d20 after trimming was only run-of-the-mill (standard deviation of 0.12).</p>
 
@@ -90,11 +100,11 @@
 
 <p>The <a href="http://crystalcaste.com/">Crystal Caste</a> dice I tested: <a href="http://www.amazon.com/gp/product/B002KHAH6S">hybrid translucent orange</a> and <a href="http://www.amazon.com/gp/product/B002YUIOLQ">black/white translucent</a>.</p>
 
-<img src="arduino/151123dicehistogram-crystalcaste-d20.png" alt="Crystal Caste d20 histogram" />
+<img src="arduino/dicehistogram/151123crystalcasted20summary.png" alt="Crystal Caste d20 histogram" />
 
 <p>Crystal Caste's d20s were by far the least fair tested. The orange d20 was visibly egg-shaped (longest diameter 19.77mm between 4 and 17, shortest 18.98mm between 1 and 20). The two d20s do follow a similar distribution (and both have slightly low expected values, 10.18 and 10.24).</p>
 
-<img src="arduino/151123dicehistogram-crystalcaste-d6.png" alt="Crystal Caste d6 histogram" />
+<img src="arduino/dicehistogram/151123crystalcasted6summary.png" alt="Crystal Caste d6 histogram" />
 
 <p><a href="http://crystalcaste.com/mm5/merchant.mvc?Screen=CTGY&Store_Code=CC&Category_Code=CD">Crystal Caste says</a> the "Cyrstal Dice" are "A totally new shape for RPG polyhedral dice: geometric cyrstals with sides of exactly the same size, guaranteeing random numbers." However their "crystal" d6 compared very poorly to their own cube d6 from another set (standard deviations of 0.25 and 0.05 respectively). (Their standard-shaped d8 also performed fairly well with a standard deviation of 0.09.)</p>
 
@@ -102,7 +112,7 @@
 
 <p>The <a href="http://www.koplowgames.com/page87.html">Koplow dice</a> I tested: three dice from a <a href="http://www.amazon.com/gp/product/B00F3AZEPS">set of 10 d20s</a>.</p>
 
-<img src="arduino/151123dicehistogram-koplow.png" alt="Koplow d20 histogram" />
+<img src="arduino/dicehistogram/151123koplowsummary.png" alt="Koplow d20 histogram" />
 
 <p>Unlike the other d20s, the opposing sides on Koplow d20s do not all sum to 21. The pairs are: 1/20 2/12 3/17 4/16 5/19 6/14 7/13 8/18 9/15 10/11.</p>
 
@@ -151,9 +161,9 @@
 
 <p>The below are plots of which side (horizontal axis) was followed by which other side (vertical axis), showing the number of times that two-roll sequence occurred (grayscale value and text). Data is from a Wiz Dice translucent blue d20 (stddev=0.2, moderate/bad) and a Chessex Gemini d6 (stddev=0.1, moderate for d6s tested).</p>
 
-<img src="arduino/151106dicehistogramwizdicetranslucentblued20sequence.jpg" alt="sequence heatmap for Wiz Dice d20" />
+<img src="arduino/dicehistogram/151106dicehistogramwizdicetranslucentblued20sequence.jpg" alt="sequence heatmap for Wiz Dice d20" />
 
-<img src="arduino/151026geminicoppersteeld6sequence.jpg" alt="sequence heatmap for Chessex Gemini d6" />
+<img src="arduino/dicehistogram/151026geminicoppersteeld6sequence.jpg" alt="sequence heatmap for Chessex Gemini d6" />
 
 <p>If the same side were rolled many times in a row, there would be a hot line on the diagonal, but there isn't for either die. The d20 does show for example a dark row/column for 17 (which was rolled infrequently), but did not reveal clear biases. The github repository has sequence graphs for the other dice.</p>
 
@@ -165,39 +175,39 @@
 
 <p>A photo of the rolled die is diffed against a reference image.</p>
 
-<img src="arduino/151102dicehistogramreference.jpg" />
-<img src="arduino/151102dicehistogramdie.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramreference.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramdie.jpg" />
 
 <p>The result is scanned for areas of high difference to find the die. The die is flood-filled to find its area; the then image of the die is cropped out and saved.</p>
 
-<img src="arduino/151102dicehistogramdiffwithscan.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramdiffwithscan.jpg" />
 
 <p>The above image was obtained from running <code>crop.py</code> with <code>--debug</code>. The base (mostly black) image is the diff of the image with the die and the reference image. The blue lines are where the image was scanned, the red highlighted line segments are where a large difference was detected. The green dotted box was the detected bounds of the die.</p>
 
 <p>Scanning is done on a scaled down version of the images, but the cropped image of the die is saved at full resolution for better feature detection.</p>
 
-<img src="arduino/151102dicehistogramcrop.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramcrop.jpg" />
 
 <h3 id="clustering">Clustering</h3>
 
 <p>Images of the die are compared using features, detected and matched using <a href="http://opencv.org/">OpenCV</a>.</p>
 
-<img src="arduino/151102dicehistogramfeaturematchgood.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramfeaturematchgood.jpg" />
 
 <p>These screenshots from the <code>find_obj.py</code> OpenCV demo show good (above) and bad (below) matches. The white rectangles on the right side are the homography: the area of the right image that matches up with the left image. Good matches not only have a high number of matching points, but a simple (translation and rotation only) homography with low distortion.</p>
 
-<img src="arduino/151102dicehistogramfeaturematchbad.jpg" />
-<img src="arduino/151102dicehistogramfeaturematchskew.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramfeaturematchbad.jpg" />
+<img src="arduino/dicehistogram/151102dicehistogramfeaturematchskew.jpg" />
 
 <p>The first step builds a list of dissimilar representative images, against which all other images get compared. Each representative gets a list of matching members (the images showing the same face of the die).</p>
 
 <p>This tends to result in big groups for each of the sides of the die, and a bunch of small groups (1-10 each) of images that didn't match any of the representatives well. So a second step takes the small groups and compares them to members of the larger groups (not just their representative images) to find a match.</p>
 
-<a href="arduino/151102dicehistograminprogress.jpg"><img src="arduino/151102dicehistograminprogress20p.jpg" /></a>
+<a href="arduino/dicehistogram/151102dicehistograminprogress.jpg"><img src="arduino/dicehistogram/151102dicehistograminprogress20p.jpg" /></a>
 
 <p>From a partial run on a d8, the work-in-progress with a number of small disconnected groups (above), and the consolidated groups (below).
 
-<a href="arduino/151102dicehistogramreparented.jpg"><img src="arduino/151102dicehistogramreparented20p.jpg" /></a>
+<a href="arduino/dicehistogram/151102dicehistogramreparented.jpg"><img src="arduino/dicehistogram/151102dicehistogramreparented20p.jpg" /></a>
 
 <h2 id="license">License</h2>
 
