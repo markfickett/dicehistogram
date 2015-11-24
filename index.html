@@ -4,7 +4,13 @@
 
 <p>I was inspired in part by the <a href="http://www.awesomedice.com/blog/353/d20-dice-randomness-test-chessex-vs-gamescience/">Awesome Dice Blog's 2012 post</a> comparing d20 fairness between two manufacturers. (<a href="http://blog.codeoptimism.com/most-d20-dice-are-notably-imbalanced/">Christopher Galpin in 2014</a> links to a number of other interesting analyses; <a href="http://www.amstat.org/publications/jse/v14n3/datasets.kern.html">John Kern in 2006</a> does Bayesian analysis for Pass the Pigs.) They rolled and tallied by hand.</p>
 
-<h2>Results</h2>
+<p>Skip to:</p>
+<ul>
+  <li><a href="#hardware">Hardware: Die Rolling Machine</a></li>
+  <li><a href="#software">Software: Computer Vision</a></li>
+</ul>
+
+<h2 id="results">Results</h2>
 
 <h3>Overview</h3>
 
@@ -62,7 +68,7 @@ TODO
 
 TODO
 
-<h2>Hardware Setup (Die Roller and Camera)</h2>
+<h2 id="hardware">Hardware Setup (Die Roller and Camera)</h2>
 
 <iframe width="640" height="360" src="https://www.youtube.com/embed/UdA5ydENTHY?rel=0" frameborder="0" allowfullscreen></iframe>
 
@@ -92,7 +98,7 @@ TODO
 <li>Turbulence. The smaller dice (d4 and d6) slide down the tub's side when it tilts down, rather than rolling; this can lead to repeatedly rolling the same number. Bumpy sides on the container, or tilting further down, might help.</li>
 </ul>
 
-<h2>Software Explanation</h2>
+<h2 id="software">Software Explanation</h2>
 
 There are two computer-vision tasks in this process: finding the die within the larger photo of the die-rolling area; and figuring out which picture is of which face of the die.
 
