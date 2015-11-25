@@ -129,9 +129,21 @@
 
 <h3 id="geometry">Geometric Analysis</h3>
 
-<p>Following the example of <a href="http://www.1000d4.com/2013/02/14/how-true-are-your-d20s/">1000d4.com</a>, I measured the distances between opposite sides of several d20s using digital calipers. (Detailed data is in the github repository.)</p>
+<p>Following the example of <a href="http://www.1000d4.com/2013/02/14/how-true-are-your-d20s/">1000d4.com</a>, I measured the distances between opposite sides of several d20s using digital calipers. Below is a comparison of those measurements and observed rolls.</p>
 
-<p>Except in extreme cases, measuring diameters of the dice did not predict fairness. That is, Crystal Caste's very uneven shape matched the very uneven rolls; but comparing physical variation among other brands did not predict which die would be more or less fair. Nor did diameters reliably predict which sides would come up more or less frequently.</p>
+<img src="arduino/dicehistogram/151112d20crystalcastetranslucentorangediameters.png" alt="frequency histogram versus diameters: Crystal caste" />
+
+<p>The Crystal Caste (above) and Koplow (below) d20s clearly have some correlation between diameters and observed frequencies.</p>
+
+<p>As an example, take sides 7 and 14, which are opposite each other on the Crystal Caste translucent orange d20 (graph above). The mean diameter of the die (the average distance from the center of one face to the center of its opposite face) is 19.43mm. The distance between 7 and 14 is 19.20mm, 0.23mm shorter than average (rendered as positive on the graph for easy comparison with roll frequencies). And in this case the compressed dimension correlates with both of those sides coming up more often than average (1.39 and 1.13 respectively).</p>
+
+<img src="arduino/dicehistogram/151113d20koplowgreendiameters.png" alt="frequency histogram versus diameters: Koplow" />
+
+<img src="arduino/dicehistogram/151106d20wizdicetranslucentbluediameters.png" alt="frequency histogram versus diameters: Wiz Dice" />
+
+<p>The Wiz Dice (above) and Game Science (below) d20s have some correlation between diameters and frequencies, but (especially for the fairer Game Science die) not to the extent that diameters are a reliable predictor of observed rolls.</p>
+
+<img src="arduino/dicehistogram/151109d20gamescienceblackgoldtrimmeddiameters.png" alt="frequency histogram versus diameters: Game Science" />
 
 <h2 id="hardware">Hardware Setup (Die Roller and Camera)</h2>
 
