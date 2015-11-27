@@ -211,7 +211,7 @@
 
 <p>There are two computer-vision tasks in this process: finding the die within the larger photo of the die-rolling area; and figuring out which picture is of which face of the die. The code described is <a href="TODO">on github</a>.</p>
 
-<h3 id="cropping">Cropping</h3>
+<h3 id="cropping">Cropping (Finding the Die)</h3>
 
 <p>A photo of the rolled die is diffed against a reference image.</p>
 
@@ -228,7 +228,7 @@
 
 <img src="arduino/dicehistogram/151102dicehistogramcrop.jpg" />
 
-<h3 id="clustering">Clustering</h3>
+<h3 id="clustering">Clustering (Which Images Are The Same?)</h3>
 
 <p>Images of the die are compared using features, detected and matched using <a href="http://opencv.org/">OpenCV</a>.</p>
 
