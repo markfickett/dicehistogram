@@ -191,17 +191,21 @@
 <li>Strength: This setup is not tough enough for <a href="http://q-workshop.com/p/279/2850/metal-dwarven-dice-set-7--metal-dice.html">metal dice</a>.</li>
 </ul>
 
-<h3 id="sequenceheatmaps">Repetition in Roll Sequence</h3>
+<h3 id="rollerrandomness">Roller Randomness</h3>
 
 <p>One concern in designing the rolling machine is that it wouldn't sufficiently shake the dice, resulting in the same side getting rolled repeated, or one side always being followed by some other side predictably.</p>
 
-<p>The below are plots of which side (horizontal axis) was followed by which other side (vertical axis), showing the number of times that two-roll sequence occurred (grayscale value and text). Data is from a Wiz Dice translucent blue d20 (stddev=0.2, moderate/bad) and a Chessex Gemini d6 (stddev=0.1, moderate for d6s tested).</p>
+<p>The below are sequence heatmaps, plots of which die side (horizontal axis) was followed by which other side (vertical axis), showing the number of times that two-roll sequence occurred (grayscale value and text). Data is from a Wiz Dice translucent blue d20 (stddev=0.2, moderate/bad) and a Chessex Gemini d6 (stddev=0.1, moderate for d6s tested).</p>
 
 <img src="arduino/dicehistogram/151106dicehistogramwizdicetranslucentblued20sequence.jpg" alt="sequence heatmap for Wiz Dice d20" />
 
 <img src="arduino/dicehistogram/151026geminicoppersteeld6sequence.jpg" alt="sequence heatmap for Chessex Gemini d6" />
 
 <p>If the same side were rolled many times in a row, there would be a hot line on the diagonal, but there isn't for either die. The d20 does show for example a dark row/column for 17 (which was rolled infrequently), but did not reveal clear biases. The github repository has sequence graphs for the other dice.</p>
+
+<p>Another concern was whether the machine was shaking the dice around enough. Below is an image with a light gray circle at each location where the die landed. (In this case, for the green Koplow d20.) It appears the die landed in many locations within the tub.</p>
+
+<img src="arduino/dicehistogram/151113d20koplowgreencropsummary.jpg" alt="die locations within tub" />
 
 <h2 id="software">Software Explanation</h2>
 
