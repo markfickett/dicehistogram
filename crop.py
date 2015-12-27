@@ -198,6 +198,12 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
 
 
 def MakeSquare((x_min_in, y_min_in, x_max_in, y_max_in), (w, h), length):
+  """Returns an adjusted version of the input bound which is length x length.
+
+  Args:
+    (w, h): The overall image size. The returned bound must not be outside it.
+    length: The side length of the target, square size.
+  """
   x_min, x_max = AdjustBound(x_min_in, x_max_in, w, length)
   y_min, y_max = AdjustBound(y_min_in, y_max_in, h, length)
   return (x_min, y_min, x_max, y_max)
@@ -397,7 +403,8 @@ if __name__ == '__main__':
   filename_queue = multiprocessing.Queue()
   enqueued = 0
   for raw_image_name in raw_image_names:
-    if raw_image_name.lower().endswith('jpg'):
+    if (raw_image_name.lower().endswith('jpg') and
+        raw_image_name.lower() != args.reference.lower()):
       if os.path.isfile(os.path.join(crop_dir, raw_image_name)):
         if not args.force:
           processed += 1
