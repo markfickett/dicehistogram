@@ -66,7 +66,14 @@ class ImageComparison(object):
     self.is_representative = False
 
   def GetMatchCount(self, other, verbose=True):
-    """Returns how many features match between this image and the other."""
+    """Returns how many features match between this image and the other.
+
+    Returns:
+      (match_count, scale_amount) as a tuple. The match count is the number of
+      matching features in the homography; that is, not only matching
+      individually but as a group. The scale amount is >= 1.0, and measures
+      how much the match is distorted as opposed to simply translated/rotated.
+    """
     raw_matches = ImageComparison.matcher.knnMatch(
         self.descriptors, trainDescriptors=other.descriptors, k=2)
     p1, p2, matching_feature_pairs = FilterMatches(
@@ -86,6 +93,9 @@ class ImageComparison(object):
         scale_amount = sum([abs(
             1.0 - numpy.linalg.norm(h.dot(dv) - h.dot(ORIGIN)))
             for dv in (DX, DY)])
+        if scale_amount < 1.0:
+          scale_amount = (
+              1.0 / scale_amount if scale_amount > 0 else float('Inf'))
     if verbose:
       print '%s (%d) match %s (%d) = %d match => %s inl / %.2f sh' % (
           self.basename,
