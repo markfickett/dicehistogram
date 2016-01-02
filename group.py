@@ -31,6 +31,7 @@ import sys
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 90
+DETAIL_COLOR = (0, 254, 0)
 
 
 ORIGIN = numpy.array([0, 0, 1])
@@ -134,24 +135,25 @@ def AssignToCluster(in_filename, clusters, match_threshold, scale_threshold):
   sufficiently; or it starts a new cluster.
   """
   image = ImageComparison(in_filename)
-  best_members = None
+  match_members = None
   for representative, members in clusters:
     match_count, scale_amount = image.GetMatchCount(representative)
-    if match_count > image.best_match_count:
-      best_members = members
+    is_best = match_count > image.best_match_count
+    is_complete = (
+        match_count >= match_threshold and scale_amount <= scale_threshold)
+    if is_complete or is_best:
       image.best_match = representative
       image.best_match_count = match_count
       image.best_scale = scale_amount
-      if match_count >= match_threshold and scale_amount <= scale_threshold:
+      if is_complete:
+        match_members = members
         break
-  if (best_members is None or
-      image.best_match_count < match_threshold or
-      scale_amount > scale_threshold):
+  if match_members is None:
     print 'starts new cluster'
     clusters.append((image, []))
     image.is_representative = True
   else:
-    best_members.append(image)
+    match_members.append(image)
 
 
 def CombineSmallClusters(clusters, match_threshold, scale_threshold):
@@ -246,12 +248,15 @@ def BuildClusterSummaryImage(clusters, max_members=None):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
       draw.text((x, y), member.basename)
-      draw.text((x, y + 10), 'features: %d' % len(member.features))
-      draw.text((x, y + 60), 'matches: %d' % member.best_match_count)
-      draw.text((x, y + 70), '  sh: %f' % member.best_scale)
+      draw.text(
+          (x, y + 10), 'features: %d' % len(member.features), DETAIL_COLOR)
+      draw.text(
+          (x, y + 60), 'matches: %d' % member.best_match_count, DETAIL_COLOR)
+      draw.text((x, y + 70), '  sh: %f' % member.best_scale, DETAIL_COLOR)
       if member.is_representative and member.best_match:
-        draw.text((x, y + 80), '  %s' % member.best_match.basename)
-    draw.text((0, y + 20), 'members: %d' % (len(members) + 1))
+        draw.text(
+            (x, y + 80), '  %s' % member.best_match.basename, DETAIL_COLOR)
+    draw.text((0, y + 20), 'members: %d' % (len(members) + 1), DETAIL_COLOR)
   return summary_image
 
 
