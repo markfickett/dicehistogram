@@ -31,7 +31,7 @@ import sys
 
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 90
-DETAIL_COLOR = (0, 254, 0)
+DETAIL_COLOR = (254, 0, 0)
 
 
 ORIGIN = numpy.array([0, 0, 1])
@@ -299,10 +299,11 @@ def BuildArgParser():
       dest='match_threshold',
       help='Number of matching features to consider two images a match.')
   parser.add_argument(
-      '--scale-threshold', default=0.3, type=float,
+      '--scale-threshold', default=float('Inf'), type=float,
       dest='scale_threshold',
       help='Amount of scaling above which two images are not considered a '
-           + 'match.')
+           + 'match. Default is infinity (no threshold). Set to a lower value '
+           + 'if adjacent sides on a die are being confused.')
   parser.add_argument(
       '--crop-dir', default='crop', dest='crop_dir',
       help='Subdirectory within the data directory of cropped images from '
