@@ -73,11 +73,9 @@ class DiffArea(object):
     self.y_min = min(self.y_min, y)
     self.y_max = max(self.y_max, y)
 
-  def CheckAbort(self, debug=False):
+  def CheckAbort(self):
     """Checks for unrecoverable errors and raises NoDieFoundError."""
     if len(self.region) > PIXEL_AREA_ABORT_MAX * self.target_area:
-      if debug:
-        self.diff.show()
       raise NoDieFoundError(
           'Too much differing area (%d) to find die.'
           % len(self.region))
@@ -139,7 +137,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
   we find a stripe that's all above threshold about scan_distance/2 long,
   flood-fill it. If the total area is >= scan_distance**2, return its bounds.
 
-  If debug is true, show the analyzed diff image (with scan lines and bounds).
+  If debug is true, draw scan lines and bounds on the diff image.
   """
   w, h = diff.size
   recent_found_num = 0
@@ -173,7 +171,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > diff_threshold:
             diff_area.Add(i, j)
-            diff_area.CheckAbort(debug=debug)
+            diff_area.CheckAbort()
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
@@ -188,14 +186,10 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
               '' if region_valid else 'in', x, y, diff_area)
           diff_area.DrawAreaOnDiff()
         if region_valid:
-          if debug:
-            diff_area.diff.show()
           return diff_area.bound
 
         recent_found_num = 0
         sliding_window = []
-  if debug:
-    diff.show()
   raise NoDieFoundError('No valid diff found.')
 
 
@@ -304,11 +298,15 @@ class CropWorker(multiprocessing.Process):
       _Summarize('analysis ref', resized_reference)
     diff = PIL.ImageChops.difference(resized_reference, image)
 
-    analysis_bound = FindLargeDiffBound(
-        diff,
-        self._scan_distance / self._analysis_resize_factor,
-        self._diff_threshold,
-        debug=self._debug)
+    try:
+      analysis_bound = FindLargeDiffBound(
+          diff,
+          self._scan_distance / self._analysis_resize_factor,
+          self._diff_threshold,
+          debug=self._debug)
+    finally:
+      if self._debug:
+        diff.show()  # TODO: Not all of these get shown in Preview / OS X.
 
     bound = [self._analysis_resize_factor * b for b in analysis_bound]
     regular_bound = MakeSquare(bound, orig_image.size, self._crop_size)
