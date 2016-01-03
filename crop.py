@@ -73,9 +73,11 @@ class DiffArea(object):
     self.y_min = min(self.y_min, y)
     self.y_max = max(self.y_max, y)
 
-  def CheckAbort(self):
+  def CheckAbort(self, debug=False):
     """Checks for unrecoverable errors and raises NoDieFoundError."""
     if len(self.region) > PIXEL_AREA_ABORT_MAX * self.target_area:
+      if debug:
+        self.diff.show()
       raise NoDieFoundError(
           'Too much differing area (%d) to find die.'
           % len(self.region))
@@ -171,7 +173,7 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
           r, g, b = diff.getpixel((i, j))
           if sum((r, g, b)) > diff_threshold:
             diff_area.Add(i, j)
-            diff_area.CheckAbort()
+            diff_area.CheckAbort(debug=debug)
             for dx in xrange(-1, 2):
               for dy in xrange(-1, 2):
                 nx, ny = (i + dx, j + dy)
