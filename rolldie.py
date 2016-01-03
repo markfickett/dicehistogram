@@ -27,19 +27,6 @@ import os
 import time
 
 
-def SetUp():
-  if not os.path.exists(GROUP):
-    os.makedirs(GROUP)
-  GPIO.setmode(GPIO.BCM)
-  GPIO.setup(PIN_LEDS, GPIO.OUT)
-  GPIO.setup(PIN_SERVO, GPIO.OUT)
-
-  # http://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/
-  pwm = GPIO.PWM(PIN_SERVO, 100)  # 100 Hz.
-  pwm.start(0.0)  # Initial duty cycle of 0 (always off).
-  return pwm
-
-
 def RollDie(pwm):
   MoveServo(pwm, ANGLE_SHAKE)
   time.sleep(0.5)
@@ -68,7 +55,7 @@ def TakePicture(group_name, picture_local_name):
     camera.resolution = (2592, 1944)
     #camera.resolution = (1296, 972)
     camera.zoom = (0.0, 0.0, 1.0, 1.0)  # x, y, w, h
-    camera.framerate = 1.0 / SHUTTER_SEC  # controls the allowable shutter speeds
+    camera.framerate = 1.0 / SHUTTER_SEC  # controls allowable shutter speeds
     camera.awb_mode = 'off'
     camera.awb_gains = (1.52, 1.43)
     camera.iso = ISO  # ISO does nothing if set after shutter.
@@ -79,7 +66,15 @@ def TakePicture(group_name, picture_local_name):
 
 
 if __name__ == '__main__':
-  pwm = SetUp()
+  if not os.path.exists(GROUP):
+    os.makedirs(GROUP)
+  GPIO.setmode(GPIO.BCM)
+  GPIO.setup((PIN_LEDS, PIN_SERVO), GPIO.OUT)
+
+  # http://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/
+  pwm = GPIO.PWM(PIN_SERVO, 100)  # 100 Hz.
+  pwm.start(0.0)  # Initial duty cycle of 0 (always off).
+
   try:
     if START_NUM <= 0:
       RollDie(pwm)
@@ -99,4 +94,6 @@ if __name__ == '__main__':
         errors += 1
   except KeyboardInterrupt, e:
     print 'stopping'
+
   pwm.stop()
+  GPIO.cleanup()
