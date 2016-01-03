@@ -39,7 +39,7 @@ EPSILON = 1e-3  # for float comparison
 # How far from square may bounds of a die be, and still be considered valid?
 # Increase this value for lozenge-shaped dice.
 ECCENTRICITY_MAX = 2.0
-BOUNDS_AREA_MAX = 6.0
+BOUNDS_AREA_MAX = 6.5
 BOUNDS_AREA_MIN = 2.0
 PIXEL_AREA_MIN = 1.5
 PIXEL_AREA_ABORT_MAX = 5.0
