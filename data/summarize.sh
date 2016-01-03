@@ -43,3 +43,6 @@
 ../summarize.py 151113d20koplowblue 11 20 18 9 14 5 15 4 17 10 1 16 8 13 12 19 3 2 7 6 6 9 1 11
 ../summarize.py 151113d20koplowgreen 16 18 14 4 10 17 11 5 20 2 12 13 6 1 3 19 15 8 7 9 9 7 4 10 4 2 2 7 3 16 6 10 3
 ../summarize.py 151115d20koplowgreenother 14 3 20 8 11 12 19 1 15 18 5 4 9 16 7 2 13 17 10 6 10 6 2
+
+# Dice Lab, donated 2015 Dec
+../summarize.py data/160101skewd12reflected/ 9 3 8 11 5 10 4 6 2 12 1 7 7 7 7 7 7 7 1 7 7 7 7 7 7 1 7 7 7 7 8 11 7 7 1 7 1 10 7 2 7 2 10 1 8 7 2 1 7 7 7 7 8 9 7 1 7 8 11 4 1 7 11 1 2 7 1 4 8 1 7 7 4 7 2 10
