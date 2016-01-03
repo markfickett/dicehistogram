@@ -232,7 +232,6 @@ class CropWorker(multiprocessing.Process):
       capture_dir,
       crop_dir,
       reference_filename,
-      scan_distance,
       crop_size,
       analysis_resize_factor,
       diff_threshold,
@@ -244,8 +243,8 @@ class CropWorker(multiprocessing.Process):
 
     self._capture_dir = capture_dir
     self._crop_dir = crop_dir
-    self._scan_distance = scan_distance
     self._crop_size = crop_size
+    self._scan_distance = 2 * crop_size / 5
     self._analysis_resize_factor = analysis_resize_factor
     if diff_threshold is None or diff_threshold < 1:
       raise ValueError('Bad diff_threshold: %r' % diff_threshold)
@@ -346,10 +345,6 @@ def BuildArgParser():
            + 'value will be considered as potentially part of the die. '
            + 'Comparison is against the reference image.')
   parser.add_argument(
-      '--scan-distance', '-d', dest='scan_distance', type=int, default=320,
-      help='Distance between scan lines when searching the image for the die. '
-           + 'This should be roughly the apparent radius of the die.')
-  parser.add_argument(
       '--force', '-f', action='store_true',
       help='Overwrite existing crops.')
   parser.add_argument(
@@ -374,7 +369,9 @@ def BuildArgParser():
   parser.add_argument(
       '--crop-size', '-c', dest='crop_size', default=660, type=int,
       help='Size (length in pixels of either edge) to crop from the original '
-           + 'image, which should contain the die fully. Exported for stage 2.')
+           + 'image, which should contain the die fully. Exported for stage 2. '
+           + 'This also determines the scan distance (slightly less than half '
+           + 'the crop size).')
   parser.add_argument(
       '--analysis-resize-factor', '-a', dest='analysis_resize_factor',
       default=6, type=int,
@@ -425,7 +422,6 @@ if __name__ == '__main__':
         capture_dir,
         crop_dir,
         args.reference,
-        args.scan_distance,
         args.crop_size,
         args.analysis_resize_factor,
         args.diff_threshold,
