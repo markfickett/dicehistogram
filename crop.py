@@ -145,15 +145,16 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
   visited = set()
   for y in xrange(scan_distance / 2, h, scan_distance):
     for x in xrange(w):
-      r, g, b = diff.getpixel((x, y))
-      if sum((r, g, b)) > diff_threshold:
+      xy = (x, y)
+      r, g, b = diff.getpixel(xy)
+      if sum((r, g, b)) > diff_threshold and xy not in visited:
         if debug:
-          diff.putpixel((x, y), (254, g, b))
-        sliding_window.append((x, y))
+          diff.putpixel(xy, (254, g, b))
+        sliding_window.append(xy)
         recent_found_num += 1
       else:
         if debug:
-          diff.putpixel((x, y), (0, 0, diff_threshold - 1))
+          diff.putpixel(xy, (0, 0, diff_threshold - 1))
         sliding_window.append(None)
       if len(sliding_window) > scan_distance * 2:
         if sliding_window.pop(0) is not None:
