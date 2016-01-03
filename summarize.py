@@ -104,22 +104,23 @@ def GetLabelCounts(label_sequence):
 
 
 def GetHistogramWithSubsamples(labeled_file_sets):
-  csv = collections.defaultdict(lambda: list())
+  csv = collections.defaultdict(list)
   seq = GetLabelSequence(labeled_file_sets)
+  all_labels = set(seq)
   headers = ['N']
-  max_n = 8
+  max_num_subsamples = 8
   while True:
-    max_n *= 2
-    if max_n > len(seq):
-      n = len(seq)
+    max_num_subsamples *= 2
+    if max_num_subsamples > len(seq):
+      num_subsamples = len(seq)
     else:
-      n = max_n
-    headers.append(n)
-    label_counts = GetLabelCounts(random.sample(seq, n))
+      num_subsamples = max_num_subsamples
+    headers.append(num_subsamples)
+    label_counts = GetLabelCounts(random.sample(seq, num_subsamples))
     normalized = GetNormalizedHistogram(label_counts)
-    for label, c in normalized.iteritems():
-      csv[label].append(c)
-    if n != max_n:
+    for label in all_labels:
+      csv[label].append(normalized.get(label, 0.0))
+    if num_subsamples != max_num_subsamples:
       break
   return [headers] + sorted([k] + v for k, v in csv.items())
 
