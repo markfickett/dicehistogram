@@ -49,23 +49,24 @@ class ImageComparison(object):
   matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
 
   def __init__(self, in_filename):
-    self.filename = in_filename
     self.basename = os.path.basename(in_filename)
     self.image = PIL.Image.open(in_filename).resize(
         (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
-    cv_image = cv2.imread(in_filename, 0)
-    if cv_image is None:
-      raise RuntimeError('OpenCV could not open %s' % in_filename)
-    self.features, self.descriptors = self.detector.detectAndCompute(
-        cv_image, None)
-    if self.descriptors is None or not len(self.descriptors):
-      raise NoFeaturesError('No features in %s' % self.filename)
-    self.best_match = None
-    self.best_match_count = 0
-    self.best_scale = float('Inf')
+
     # Was this image ever a representative? Used when drawing the summary image.
     self.is_representative = False
     self.members = []
+
+    cv_image = cv2.imread(in_filename, 0)
+    if cv_image is None:
+      raise RuntimeError('OpenCV could not open %s' % in_filename)
+    self._features, self._descriptors = self.detector.detectAndCompute(
+        cv_image, None)
+    if self._descriptors is None or not len(self._descriptors):
+      raise NoFeaturesError('No features in %s' % in_filename)
+    self._best_match = None
+    self._best_match_count = 0
+    self._best_scale = float('Inf')
 
   def GetMatchCount(self, other, verbose=True):
     """Returns how many features match between this image and the other.
@@ -77,9 +78,9 @@ class ImageComparison(object):
       how much the match is distorted as opposed to simply translated/rotated.
     """
     raw_matches = ImageComparison.matcher.knnMatch(
-        self.descriptors, trainDescriptors=other.descriptors, k=2)
+        self._descriptors, trainDescriptors=other._descriptors, k=2)
     p1, p2, matching_feature_pairs = FilterMatches(
-        self.features, other.features, raw_matches)
+        self._features, other._features, raw_matches)
     match_count = 0
     scale_amount = float('Inf')
     if len(p1) >= 4:  # Otherwise not enough for homography estimation.
@@ -101,9 +102,9 @@ class ImageComparison(object):
     if verbose:
       print '%s (%d) match %s (%d) = %d match => %s inl / %.2f sh' % (
           self.basename,
-          len(self.descriptors),
+          len(self._descriptors),
           other.basename,
-          len(other.descriptors),
+          len(other._descriptors),
           len(p1),
           match_count,
           scale_amount)
@@ -114,17 +115,18 @@ class ImageComparison(object):
     potential_matches = [self]
     if try_members:
       # Usually reparenting works within the first few tries if at all.
+      self.members.sort(key=lambda m: m._best_match_count)
       potential_matches.extend(self.members[:10])
     for potential_match in potential_matches:
       match_count, scale_amount = image.GetMatchCount(
           potential_match, verbose=not try_members)
-      is_best = match_count > image.best_match_count
+      is_best = match_count > image._best_match_count
       is_complete = (
           match_count >= match_threshold and scale_amount <= scale_threshold)
       if is_complete or is_best:
-        image.best_match = potential_match
-        image.best_match_count = match_count
-        image.best_scale = scale_amount
+        image._best_match = potential_match
+        image._best_match_count = match_count
+        image._best_scale = scale_amount
         if is_complete:
           self.members.append(image)
           if image.members:
@@ -139,6 +141,17 @@ class ImageComparison(object):
               scale_amount)
           return True
     return False
+
+  def DrawOnSummary(self, draw, (x, y)):
+    draw.text((x, y), self.basename)
+    draw.text(
+        (x, y + 10), 'features: %d' % len(self._features), DETAIL_COLOR)
+    draw.text(
+        (x, y + 60), 'matches: %d' % self._best_match_count, DETAIL_COLOR)
+    draw.text((x, y + 70), '  sh: %f' % self._best_scale, DETAIL_COLOR)
+    if self.is_representative and self._best_match:
+      draw.text(
+          (x, y + 80), '  %s' % self._best_match.basename, DETAIL_COLOR)
 
 
 def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
@@ -203,7 +216,6 @@ def CombineSmallClusters(representatives, match_threshold, scale_threshold):
   for i, (unused_n, representative) in enumerate(representatives_by_len):
     if i < first_small_index:
       main_clusters.append(representative)
-      representative.members.sort(key=lambda m: m.best_match_count)
     else:
       tail_clusters.append(representative)
 
@@ -250,15 +262,7 @@ def BuildClusterSummaryImage(representatives, max_members=None):
     for j, member in enumerate(all_members):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
-      draw.text((x, y), member.basename)
-      draw.text(
-          (x, y + 10), 'features: %d' % len(member.features), DETAIL_COLOR)
-      draw.text(
-          (x, y + 60), 'matches: %d' % member.best_match_count, DETAIL_COLOR)
-      draw.text((x, y + 70), '  sh: %f' % member.best_scale, DETAIL_COLOR)
-      if member.is_representative and member.best_match:
-        draw.text(
-            (x, y + 80), '  %s' % member.best_match.basename, DETAIL_COLOR)
+      member.DrawOnSummary(draw, (x, y))
     draw.text(
         (0, y + 20),
         'members: %d' % (len(representative.members) + 1), DETAIL_COLOR)
