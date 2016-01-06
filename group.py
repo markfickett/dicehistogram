@@ -109,6 +109,37 @@ class ImageComparison(object):
           scale_amount)
     return match_count, scale_amount
 
+  def TakeImageIfMatch(
+      self, image, match_threshold, scale_threshold, try_members=False):
+    potential_matches = [self]
+    if try_members:
+      # Usually reparenting works within the first few tries if at all.
+      potential_matches.extend(self.members[:10])
+    for potential_match in potential_matches:
+      match_count, scale_amount = image.GetMatchCount(
+          potential_match, verbose=not try_members)
+      is_best = match_count > image.best_match_count
+      is_complete = (
+          match_count >= match_threshold and scale_amount <= scale_threshold)
+      if is_complete or is_best:
+        image.best_match = potential_match
+        image.best_match_count = match_count
+        image.best_scale = scale_amount
+        if is_complete:
+          self.members.append(image)
+          if image.members:
+            self.members.extend(image.members)
+            image.members = []
+          print '%s matches %s%s => %d inl / %.2f scale' % (
+              image.basename,
+              self.basename,
+              '' if potential_match is self
+              else 'via ' + potential_match.basename,
+              match_count,
+              scale_amount)
+          return True
+    return False
+
 
 def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
   """Returns the subset of features which match between the two lists."""
@@ -137,20 +168,11 @@ def AssignToCluster(
   """
   image = ImageComparison(in_filename)
   for representative in representatives:
-    match_count, scale_amount = image.GetMatchCount(representative)
-    is_best = match_count > image.best_match_count
-    is_complete = (
-        match_count >= match_threshold and scale_amount <= scale_threshold)
-    if is_complete or is_best:
-      image.best_match = representative
-      image.best_match_count = match_count
-      image.best_scale = scale_amount
-      if is_complete:
-        representative.members.append(image)
-        return
+    if representative.TakeImageIfMatch(image, match_threshold, scale_threshold):
+      return
   print 'starts new cluster'
-  representatives.append(image)
   image.is_representative = True
+  representatives.append(image)
 
 
 def CombineSmallClusters(representatives, match_threshold, scale_threshold):
@@ -178,46 +200,29 @@ def CombineSmallClusters(representatives, match_threshold, scale_threshold):
       cluster_sizes[:first_small_index], cluster_sizes[first_small_index:])
 
   main_clusters, tail_clusters = [], []
-  # Usually reparenting works in the first few retries if at all.
-  min_main_members = 10
   for i, (unused_n, representative) in enumerate(representatives_by_len):
     if i < first_small_index:
       main_clusters.append(representative)
       representative.members.sort(key=lambda m: m.best_match_count)
-      min_main_members = min(min_main_members, len(representative.members))
     else:
       tail_clusters.append(representative)
 
-  print 'reparent: %d large clusters, %d small clusters (try %d members)' % (
-      len(main_clusters), len(tail_clusters), min_main_members)
+  print 'reparent: %d large clusters, %d small clusters' % (
+      len(main_clusters), len(tail_clusters))
   not_reparented = []
-  for representative in tail_clusters:
+  for tail_representative in tail_clusters:
     reparented = False
-    for j in range(min_main_members):
-      for i in range(len(main_clusters)):
-        sample_member = main_clusters[i].members[j]
-        match_count, scale_amount = representative.GetMatchCount(
-            sample_member, verbose=False)
-        if match_count >= match_threshold and scale_amount <= scale_threshold:
-          print 'reparent %s to %s via %s => %d inl / %.2f scale' % (
-              representative.basename,
-              main_clusters[i].basename,
-              sample_member.basename,
-              match_count,
-              scale_amount)
-          main_clusters[i].members.append(representative)
-          main_clusters[i].members.extend(representative.members)
-          representative.members = []
-          representative.best_match = sample_member
-          representative.best_match_count = match_count
-          representative.best_scale = scale_amount
-          reparented = True
-          break
-      if reparented:
+    for main_representative in main_clusters:
+      if main_representative.TakeImageIfMatch(
+          tail_representative,
+          match_threshold,
+          scale_threshold,
+          try_members=True):
+        reparented = True
         break
     if not reparented:
-      print 'failed to reparent', representative.basename
-      not_reparented.append(representative)
+      print 'failed to reparent', tail_representative.basename
+      not_reparented.append(tail_representative)
 
   return main_clusters + not_reparented
 
