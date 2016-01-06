@@ -182,11 +182,33 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
+PIP_THRESHOLD_ADJUST = -35
 class PipCounter(_BaseImageComparison):
   def __init__(self, in_filename):
     super(PipCounter, self).__init__(in_filename)
-    self._num_pips = random.randint(1, 6)
-    print '%s randomly assigned %d' % (self.basename, self._num_pips)
+
+    img = cv2.imread(in_filename)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Use Otsu thresholding to find a base threshold, then adjust down to
+    # favor the white die face.
+    # http://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
+    otsu_threshold_value, _ = cv2.threshold(
+        gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    _, thresh = cv2.threshold(
+        gray,
+        otsu_threshold_value + PIP_THRESHOLD_ADJUST,
+        255,
+        cv2.THRESH_BINARY_INV)
+
+    noise_removal_kernel = numpy.ones((3, 3), numpy.uint8)
+    opening = cv2.morphologyEx(
+        thresh, cv2.MORPH_OPEN, noise_removal_kernel, iterations=8)
+
+    num_components, unused_labels = cv2.connectedComponents(
+        numpy.uint8(opening))
+    self._num_pips = num_components - 2
+
+    print '%s = %d' % (self.basename, self._num_pips)
 
   def TakeImageIfMatch(
       self,
