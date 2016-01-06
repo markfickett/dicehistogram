@@ -65,6 +65,7 @@ class ImageComparison(object):
     self.best_scale = float('Inf')
     # Was this image ever a representative? Used when drawing the summary image.
     self.is_representative = False
+    self.members = []
 
   def GetMatchCount(self, other, verbose=True):
     """Returns how many features match between this image and the other.
@@ -126,17 +127,16 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
-def AssignToCluster(in_filename, clusters, match_threshold, scale_threshold):
+def AssignToCluster(
+    in_filename, representatives, match_threshold, scale_threshold):
   """Reads an image of a die's face and assigns it to a group where it matches.
 
-  The input clusters argument is modified. It stores a list of groups as
-  (representative_image, list_of_matching_images) tuples. Each additional image
-  is either assigned to the first cluster where it matches the representative
-  sufficiently; or it starts a new cluster.
+  The input representatives list is modified. It stores a list of representative
+  images. Each additional image is either added as a member of the first
+  representative where it matches the sufficiently; or it starts a new cluster.
   """
   image = ImageComparison(in_filename)
-  match_members = None
-  for representative, members in clusters:
+  for representative in representatives:
     match_count, scale_amount = image.GetMatchCount(representative)
     is_best = match_count > image.best_match_count
     is_complete = (
@@ -146,17 +146,14 @@ def AssignToCluster(in_filename, clusters, match_threshold, scale_threshold):
       image.best_match_count = match_count
       image.best_scale = scale_amount
       if is_complete:
-        match_members = members
-        break
-  if match_members is None:
-    print 'starts new cluster'
-    clusters.append((image, []))
-    image.is_representative = True
-  else:
-    match_members.append(image)
+        representative.members.append(image)
+        return
+  print 'starts new cluster'
+  representatives.append(image)
+  image.is_representative = True
 
 
-def CombineSmallClusters(clusters, match_threshold, scale_threshold):
+def CombineSmallClusters(representatives, match_threshold, scale_threshold):
   """Finds small clusters and combines them with existing large clusters.
 
   In the previous step, the representative images for small clusters were only
@@ -168,13 +165,13 @@ def CombineSmallClusters(clusters, match_threshold, scale_threshold):
   of images that didn't get a good match. As a heuristic, small clusters are
   those with less than half the members of the largest group.
   """
-  clusters_by_len = []
-  for representative, members in clusters:
-    clusters_by_len.append((len(members), representative, members))
-  clusters_by_len.sort(reverse=True)
-  cluster_sizes = [c[0] for c in clusters_by_len]
+  representatives_by_len = []
+  for r in representatives:
+    representatives_by_len.append((len(r.members), r, ))
+  representatives_by_len.sort(reverse=True)
+  cluster_sizes = [n for n, r in representatives_by_len]
 
-  for first_small_index in range(1, len(clusters_by_len)):
+  for first_small_index in range(1, len(representatives_by_len)):
     if cluster_sizes[first_small_index] < cluster_sizes[0] / 4:
       break
   print 'splitting: %s %s' % (
@@ -183,33 +180,34 @@ def CombineSmallClusters(clusters, match_threshold, scale_threshold):
   main_clusters, tail_clusters = [], []
   # Usually reparenting works in the first few retries if at all.
   min_main_members = 10
-  for i, (unused_n, representative, members) in enumerate(clusters_by_len):
+  for i, (unused_n, representative) in enumerate(representatives_by_len):
     if i < first_small_index:
-      main_clusters.append(
-          (representative, sorted(members, key=lambda m: m.best_match_count)))
-      min_main_members = min(min_main_members, len(members))
+      main_clusters.append(representative)
+      representative.members.sort(key=lambda m: m.best_match_count)
+      min_main_members = min(min_main_members, len(representative.members))
     else:
-      tail_clusters.append((representative, members))
+      tail_clusters.append(representative)
 
   print 'reparent: %d large clusters, %d small clusters (try %d members)' % (
       len(main_clusters), len(tail_clusters), min_main_members)
   not_reparented = []
-  for representative, members in tail_clusters:
+  for representative in tail_clusters:
     reparented = False
     for j in range(min_main_members):
       for i in range(len(main_clusters)):
-        sample_member = main_clusters[i][1][j]
+        sample_member = main_clusters[i].members[j]
         match_count, scale_amount = representative.GetMatchCount(
             sample_member, verbose=False)
         if match_count >= match_threshold and scale_amount <= scale_threshold:
           print 'reparent %s to %s via %s => %d inl / %.2f scale' % (
               representative.basename,
-              main_clusters[i][0].basename,
+              main_clusters[i].basename,
               sample_member.basename,
               match_count,
               scale_amount)
-          main_clusters[i][1].append(representative)
-          main_clusters[i][1].extend(members)
+          main_clusters[i].members.append(representative)
+          main_clusters[i].members.extend(representative.members)
+          representative.members = []
           representative.best_match = sample_member
           representative.best_match_count = match_count
           representative.best_scale = scale_amount
@@ -219,31 +217,31 @@ def CombineSmallClusters(clusters, match_threshold, scale_threshold):
         break
     if not reparented:
       print 'failed to reparent', representative.basename
-      not_reparented.append((representative, members))
+      not_reparented.append(representative)
 
   return main_clusters + not_reparented
 
 
-def BuildClusterSummaryImage(clusters, max_members=None):
+def BuildClusterSummaryImage(representatives, max_members=None):
   """Draws a composite image summarizing the clusters."""
-  if not clusters:
+  if not representatives:
     return
-  large_edge = clusters[0][0].image.size[0]
-  h = large_edge * len(clusters)
+  large_edge = representatives[0].image.size[0]
+  h = large_edge * len(representatives)
   w = 0
-  for _, members in clusters:
-    w = max(w, 1 + len(members))
+  for representative in representatives:
+    w = max(w, 1 + len(representative.members))
   if max_members is not None:
     w = min(max_members, w)
   w *= large_edge
   summary_image = PIL.Image.new('RGB', (w, h))
   draw = PIL.ImageDraw.Draw(summary_image)
-  for i, (representative, members) in enumerate(clusters):
+  for i, representative in enumerate(representatives):
     y = i * large_edge
     if max_members is None:
-      all_members = [representative] + members
+      all_members = [representative] + representative.members
     else:
-      all_members = [representative] + members[:max_members - 1]
+      all_members = [representative] + representative.members[:max_members - 1]
     for j, member in enumerate(all_members):
       x = j * large_edge
       summary_image.paste(member.image, (x, y))
@@ -256,27 +254,29 @@ def BuildClusterSummaryImage(clusters, max_members=None):
       if member.is_representative and member.best_match:
         draw.text(
             (x, y + 80), '  %s' % member.best_match.basename, DETAIL_COLOR)
-    draw.text((0, y + 20), 'members: %d' % (len(members) + 1), DETAIL_COLOR)
+    draw.text(
+        (0, y + 20),
+        'members: %d' % (len(representative.members) + 1), DETAIL_COLOR)
   return summary_image
 
 
 def SaveGrouping(
-    clusters, summary_data, summary_image, summary_max_members=None):
+    representatives, summary_data, summary_image, summary_max_members=None):
   """Writes the summary image and the JSON representation of the groupings."""
-  for representative, members in clusters:
-    print representative.basename, (1 + len(members))
+  for representative in representatives:
+    print representative.basename, (1 + len(representative.members))
 
-  summary = BuildClusterSummaryImage(clusters, summary_max_members)
+  summary = BuildClusterSummaryImage(representatives, summary_max_members)
   summary.save(summary_image)
   print 'summary image saved to', summary_image
   summary.show()
 
   print 'saving summary data to', summary_data
   data_summary = []
-  for representative, members in clusters:
+  for representative in representatives:
     data_summary.append(
         [representative.basename]
-         + [m.basename for m in members])
+         + [m.basename for m in representative.members])
   with open(summary_data, 'w') as data_file:
     json.dump(data_summary, data_file)
 
@@ -337,10 +337,10 @@ if __name__ == '__main__':
   signal.signal(signal.SIGHUP, RequestSummary)
   print 'Send SIGHUP (kill -HUP %d) for current summary image.' % os.getpid()
 
-  # List of (representative image, [member images]) tuples, which associates
+  # List of representative images (with their member lists), which associates
   # one ImageComparison with all the other ImageComparisons (in a list) that
   # matched it.
-  clusters = []
+  representatives = []
 
   cropped_image_names = os.listdir(crop_dir)
   n = len(cropped_image_names)
@@ -353,7 +353,7 @@ if __name__ == '__main__':
       try:
         AssignToCluster(
             os.path.join(crop_dir, cropped_image_filename),
-            clusters,
+            representatives,
             args.match_threshold,
             args.scale_threshold)
       except (NoFeaturesError, cv2.error), e:
@@ -363,23 +363,23 @@ if __name__ == '__main__':
         print 'Rendering intermediate summary.'
         summary_requested = False
         BuildClusterSummaryImage(
-            clusters, max_members=summary_max_members).show()
+            representatives, max_members=summary_max_members).show()
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
   try:
-    clusters = CombineSmallClusters(
-      clusters, args.match_threshold, args.scale_threshold)
+    representatives = CombineSmallClusters(
+      representatives, args.match_threshold, args.scale_threshold)
   except KeyboardInterrupt, e:
     print 'got ^C, cancelling combining clusters'
 
   print len(failed_files), 'failed files:', failed_files
-  if not clusters:
+  if not representatives:
     print 'No data!'
     sys.exit(1)
 
   SaveGrouping(
-      clusters,
+      representatives,
       os.path.join(data_dir, args.summary_data),
       os.path.join(data_dir, args.summary_image),
       summary_max_members)
