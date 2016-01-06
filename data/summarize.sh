@@ -44,9 +44,11 @@
 ../summarize.py 151113d20koplowgreen 16 18 14 4 10 17 11 5 20 2 12 13 6 1 3 19 15 8 7 9 9 7 4 10 4 2 2 7 3 16 6 10 3
 ../summarize.py 151115d20koplowgreenother 14 3 20 8 11 12 19 1 15 18 5 4 9 16 7 2 13 17 10 6 10 6 2
 
+# Koplow d6s, donated via Dice Lab 2015 Dec
+../summarize.py 160104koplowd6/ 6 2 3 4 1 5 3 6
+
 # Dice Lab, donated 2015 Dec
 ../summarize.py 160101skewd12reflected/ 9 3 8 11 5 10 4 6 2 12 1 7 7 7 7 7 7 7 1 7 7 7 7 7 7 1 7 7 7 7 8 11 7 7 1 7 1 10 7 2 7 2 10 1 8 7 2 1 7 7 7 7 8 9 7 1 7 8 11 4 1 7 11 1 2 7 1 4 8 1 7 7 4 7 2 10
 ../summarize.py 160102skewd12reflected/ 3 9 11 8 10 5 4 6 2 1 7 12 7
 ../summarize.py 160103skewd12/ 3 11 9 8 10 6 7 5 2 4 12 1 7 7 1 7
 ../summarize.py 160104skewd12/ 9 3 8 11 5 10 6 4 2 7 12 1 2
-
