@@ -37,7 +37,7 @@ DETAIL_COLOR = (254, 0, 0)
 ORIGIN = numpy.array([0, 0, 1])
 DX = numpy.array([1, 0, 1])
 DY = numpy.array([0, 1, 1])
-class ImageComparison(object):
+class FeatureComparison(object):
   """Image data, features, and comparison results for one image of a die face.
   """
 
@@ -45,8 +45,8 @@ class ImageComparison(object):
   # Brisk: faster, some false positive matches
   # Orb: faster, less accurate (inlier count less precise a threshold)
   # Akaze: slower, better threshold on inlier count v. match and not
-  detector = cv2.AKAZE_create()
-  matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
+  _detector = cv2.AKAZE_create()
+  _matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
 
   def __init__(self, in_filename):
     self.basename = os.path.basename(in_filename)
@@ -55,13 +55,14 @@ class ImageComparison(object):
 
     # Was this image ever a representative? Used when drawing the summary image.
     self.is_representative = False
+    # All the other images that match this one.
     self.members = []
 
     cv_image = cv2.imread(in_filename, 0)
     if cv_image is None:
       raise RuntimeError('OpenCV could not open %s' % in_filename)
-    self._features, self._descriptors = self.detector.detectAndCompute(
-        cv_image, None)
+    self._features, self._descriptors = (
+        FeatureComparison._detector.detectAndCompute(cv_image, None))
     if self._descriptors is None or not len(self._descriptors):
       raise NoFeaturesError('No features in %s' % in_filename)
     self._best_match = None
@@ -77,7 +78,7 @@ class ImageComparison(object):
       individually but as a group. The scale amount is >= 1.0, and measures
       how much the match is distorted as opposed to simply translated/rotated.
     """
-    raw_matches = ImageComparison.matcher.knnMatch(
+    raw_matches = FeatureComparison._matcher.knnMatch(
         self._descriptors, trainDescriptors=other._descriptors, k=2)
     p1, p2, matching_feature_pairs = self._FilterMatches(
         self._features, other._features, raw_matches)
@@ -179,7 +180,7 @@ def AssignToCluster(
   images. Each additional image is either added as a member of the first
   representative where it matches the sufficiently; or it starts a new cluster.
   """
-  image = ImageComparison(in_filename)
+  image = FeatureComparison(in_filename)
   for representative in representatives:
     if representative.TakeImageIfMatch(image, match_threshold, scale_threshold):
       return
@@ -346,9 +347,7 @@ if __name__ == '__main__':
   signal.signal(signal.SIGHUP, RequestSummary)
   print 'Send SIGHUP (kill -HUP %d) for current summary image.' % os.getpid()
 
-  # List of representative images (with their member lists), which associates
-  # one ImageComparison with all the other ImageComparisons (in a list) that
-  # matched it.
+  # List of representative images (with their member lists).
   representatives = []
 
   cropped_image_names = os.listdir(crop_dir)
