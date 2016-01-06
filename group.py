@@ -25,6 +25,7 @@ import PIL.ImageDraw
 import argparse
 import json
 import os
+import random
 import signal
 import sys
 
@@ -34,10 +35,29 @@ SUMMARY_MEMBER_IMAGE_SIZE = 90
 DETAIL_COLOR = (254, 0, 0)
 
 
+class _BaseImageComparison(object):
+  def __init__(self, in_filename):
+    self.basename = os.path.basename(in_filename)
+    self.full_image = PIL.Image.open(in_filename)
+    self.image = self.full_image.resize(
+        (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
+
+    # Was this image ever a representative? Used when drawing the summary image.
+    self.is_representative = False
+    # All the other images that match this one.
+    self.members = []
+
+  def _AddMember(self, image):
+    self.members.append(image)
+    if image.members:
+      self.members.extend(image.members)
+      image.members = []
+
+
 ORIGIN = numpy.array([0, 0, 1])
 DX = numpy.array([1, 0, 1])
 DY = numpy.array([0, 1, 1])
-class FeatureComparison(object):
+class FeatureComparison(_BaseImageComparison):
   """Image data, features, and comparison results for one image of a die face.
   """
 
@@ -49,14 +69,7 @@ class FeatureComparison(object):
   _matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
 
   def __init__(self, in_filename):
-    self.basename = os.path.basename(in_filename)
-    self.image = PIL.Image.open(in_filename).resize(
-        (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
-
-    # Was this image ever a representative? Used when drawing the summary image.
-    self.is_representative = False
-    # All the other images that match this one.
-    self.members = []
+    super(FeatureComparison, self).__init__(in_filename)
 
     cv_image = cv2.imread(in_filename, 0)
     if cv_image is None:
@@ -129,10 +142,7 @@ class FeatureComparison(object):
         image._best_match_count = match_count
         image._best_scale = scale_amount
         if is_complete:
-          self.members.append(image)
-          if image.members:
-            self.members.extend(image.members)
-            image.members = []
+          self._AddMember(image)
           print '%s matches %s%s => %d inl / %.2f scale' % (
               image.basename,
               self.basename,
@@ -172,15 +182,40 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
+class PipCounter(_BaseImageComparison):
+  def __init__(self, in_filename):
+    super(PipCounter, self).__init__(in_filename)
+    self._num_pips = random.randint(1, 6)
+    print '%s randomly assigned %d' % (self.basename, self._num_pips)
+
+  def TakeImageIfMatch(
+      self,
+      image,
+      unused_match_threshold,
+      unused_scale_threshold,
+      try_members=False):
+    if self._num_pips == image._num_pips:
+      self._AddMember(image)
+      return True
+    return False
+
+  def DrawOnSummary(self, draw, (x, y)):
+    draw.text((x, y), self.basename)
+    draw.text(
+        (x, y + 10), str(self._num_pips), DETAIL_COLOR)
+
+
 def AssignToCluster(
-    in_filename, representatives, match_threshold, scale_threshold):
+    in_filename, representatives, match_threshold, scale_threshold, count_pips):
   """Reads an image of a die's face and assigns it to a group where it matches.
 
   The input representatives list is modified. It stores a list of representative
   images. Each additional image is either added as a member of the first
   representative where it matches the sufficiently; or it starts a new cluster.
   """
-  image = FeatureComparison(in_filename)
+  image = (
+      PipCounter(in_filename) if count_pips else
+      FeatureComparison(in_filename))
   for representative in representatives:
     if representative.TakeImageIfMatch(image, match_threshold, scale_threshold):
       return
@@ -319,6 +354,10 @@ def BuildArgParser():
       help='Subdirectory within the data directory of cropped images from '
            + 'stage 1.')
   parser.add_argument(
+      '--count-pips', action='store_true', dest='count_pips',
+      help='Search for pips (count spots as on a common six-sided die) instead'
+           + 'of matching features (as for numerals on a d20).')
+  parser.add_argument(
       '--summary-image', '-s', dest='summary_image', default='summary.jpg',
       help='File path for the summary image. If the path is omitted, '
            + 'the summary image is generated and shown but not saved.')
@@ -363,7 +402,8 @@ if __name__ == '__main__':
             os.path.join(crop_dir, cropped_image_filename),
             representatives,
             args.match_threshold,
-            args.scale_threshold)
+            args.scale_threshold,
+            args.count_pips)
       except (NoFeaturesError, cv2.error), e:
         print e
         failed_files.append(cropped_image_filename)
