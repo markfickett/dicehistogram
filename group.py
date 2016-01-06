@@ -68,7 +68,7 @@ class ImageComparison(object):
     self._best_match_count = 0
     self._best_scale = float('Inf')
 
-  def GetMatchCount(self, other, verbose=True):
+  def _GetMatchCount(self, other, verbose=True):
     """Returns how many features match between this image and the other.
 
     Returns:
@@ -79,7 +79,7 @@ class ImageComparison(object):
     """
     raw_matches = ImageComparison.matcher.knnMatch(
         self._descriptors, trainDescriptors=other._descriptors, k=2)
-    p1, p2, matching_feature_pairs = FilterMatches(
+    p1, p2, matching_feature_pairs = self._FilterMatches(
         self._features, other._features, raw_matches)
     match_count = 0
     scale_amount = float('Inf')
@@ -118,7 +118,7 @@ class ImageComparison(object):
       self.members.sort(key=lambda m: m._best_match_count)
       potential_matches.extend(self.members[:10])
     for potential_match in potential_matches:
-      match_count, scale_amount = image.GetMatchCount(
+      match_count, scale_amount = image._GetMatchCount(
           potential_match, verbose=not try_members)
       is_best = match_count > image._best_match_count
       is_complete = (
@@ -153,17 +153,17 @@ class ImageComparison(object):
       draw.text(
           (x, y + 80), '  %s' % self._best_match.basename, DETAIL_COLOR)
 
-
-def FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
-  """Returns the subset of features which match between the two lists."""
-  matching_features_a, matching_features_b = [], []
-  for m in raw_matches:
-    if len(m) == 2 and m[0].distance < m[1].distance * ratio:
-      matching_features_a.append(features_a[m[0].queryIdx])
-      matching_features_b.append(features_b[m[0].trainIdx])
-  p1 = numpy.float32([kp.pt for kp in matching_features_a])
-  p2 = numpy.float32([kp.pt for kp in matching_features_b])
-  return p1, p2, zip(matching_features_a, matching_features_b)
+  @staticmethod
+  def _FilterMatches(features_a, features_b, raw_matches, ratio=0.75):
+    """Returns the subset of features which match between the two lists."""
+    matching_features_a, matching_features_b = [], []
+    for m in raw_matches:
+      if len(m) == 2 and m[0].distance < m[1].distance * ratio:
+        matching_features_a.append(features_a[m[0].queryIdx])
+        matching_features_b.append(features_b[m[0].trainIdx])
+    p1 = numpy.float32([kp.pt for kp in matching_features_a])
+    p2 = numpy.float32([kp.pt for kp in matching_features_b])
+    return p1, p2, zip(matching_features_a, matching_features_b)
 
 
 class NoFeaturesError(RuntimeError):
