@@ -182,7 +182,7 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
-PIP_THRESHOLD_ADJUST = -35
+PIP_THRESHOLD_ADJUST = 10
 class PipCounter(_BaseImageComparison):
   def __init__(self, in_filename):
     super(PipCounter, self).__init__(in_filename)
@@ -204,9 +204,15 @@ class PipCounter(_BaseImageComparison):
     opening = cv2.morphologyEx(
         thresh, cv2.MORPH_OPEN, noise_removal_kernel, iterations=8)
 
-    num_components, unused_labels = cv2.connectedComponents(
+    num_components, labels = cv2.connectedComponents(
         numpy.uint8(opening))
-    self._num_pips = num_components - 2
+    non_pip_labels = set((0,))  # Any that touch edges + 0 (the die face).
+    non_pip_labels.update(labels[0])
+    non_pip_labels.update(labels[-1])
+    for row in labels:
+      non_pip_labels.add(row[0])
+      non_pip_labels.add(row[-1])
+    self._num_pips = num_components - len(non_pip_labels)
 
     print '%s = %d' % (self.basename, self._num_pips)
 
