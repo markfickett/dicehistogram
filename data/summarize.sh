@@ -46,6 +46,7 @@
 
 # Koplow d6s, donated via Dice Lab 2015 Dec
 ../summarize.py 160104koplowd6/ 6 2 3 4 1 5 3 6
+../summarize.py 160110koplowd6/ 6 1 4 3 5 2
 
 # Dice Lab, donated 2015 Dec
 ../summarize.py 160101skewd12reflected/ 9 3 8 11 5 10 4 6 2 12 1 7 7 7 7 7 7 7 1 7 7 7 7 7 7 1 7 7 7 7 8 11 7 7 1 7 1 10 7 2 7 2 10 1 8 7 2 1 7 7 7 7 8 9 7 1 7 8 11 4 1 7 11 1 2 7 1 4 8 1 7 7 4 7 2 10
