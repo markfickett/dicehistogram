@@ -80,6 +80,7 @@ class FeatureComparison(_BaseImageComparison):
       raise NoFeaturesError('No features in %s' % in_filename)
     self._best_match = None
     self._best_match_count = 0
+    self._best_feature_proportion = float('Inf')
     self._best_scale = float('Inf')
 
   def _GetMatchCount(self, other, verbose=True):
@@ -124,30 +125,54 @@ class FeatureComparison(_BaseImageComparison):
           scale_amount)
     return match_count, scale_amount
 
+  def _GetFeatureProportion(self, other):
+    """Returns the proportion of total features in this v. another image.
+
+    This is always >= 1, and is infinity if either image has 0 features.
+    """
+    a = float(len(other._features))
+    b = float(len(self._features))
+    if not (a and b):
+      return float('Inf')
+    feature_proportion = a / b
+    if feature_proportion < 1.0:
+      feature_proportion = 1.0 / feature_proportion
+    return feature_proportion
+
   def TakeImageIfMatch(
-      self, image, match_threshold, scale_threshold, try_members=False):
-    potential_matches = [self]
+      self,
+      image,
+      match_threshold,
+      scale_threshold,
+      feature_threshold,
+      try_members=False):
+    self_potential_matches = [self]
     if try_members:
       # Usually reparenting works within the first few tries if at all.
       self.members.sort(key=lambda m: m._best_match_count)
-      potential_matches.extend(self.members[:10])
-    for potential_match in potential_matches:
+      self_potential_matches.extend(self.members[:10])
+    for self_potential_match in self_potential_matches:
       match_count, scale_amount = image._GetMatchCount(
-          potential_match, verbose=not try_members)
+          self_potential_match, verbose=not try_members)
+      feature_proportion = image._GetFeatureProportion(self_potential_match)
       is_best = match_count > image._best_match_count
       is_complete = (
-          match_count >= match_threshold and scale_amount <= scale_threshold)
+          match_count >= match_threshold
+          and scale_amount <= scale_threshold
+          and feature_proportion < feature_threshold)
+
       if is_complete or is_best:
-        image._best_match = potential_match
+        image._best_match = self_potential_match
         image._best_match_count = match_count
+        image._best_feature_proportion = feature_proportion
         image._best_scale = scale_amount
         if is_complete:
           self._AddMember(image)
           print '%s matches %s%s => %d inl / %.2f scale' % (
               image.basename,
               self.basename,
-              '' if potential_match is self
-              else 'via ' + potential_match.basename,
+              '' if self_potential_match is self
+              else 'via ' + self_potential_match.basename,
               match_count,
               scale_amount)
           return True
@@ -158,8 +183,10 @@ class FeatureComparison(_BaseImageComparison):
     draw.text(
         (x, y + 10), 'features: %d' % len(self._features), DETAIL_COLOR)
     draw.text(
-        (x, y + 60), 'matches: %d' % self._best_match_count, DETAIL_COLOR)
-    draw.text((x, y + 70), '  sh: %f' % self._best_scale, DETAIL_COLOR)
+        (x, y + 50), 'matches: %d' % self._best_match_count, DETAIL_COLOR)
+    draw.text((x, y + 60), '  sh: %.2f' % self._best_scale, DETAIL_COLOR)
+    draw.text(
+        (x, y + 70), '  fp: %.2f' % self._best_feature_proportion, DETAIL_COLOR)
     if self.is_representative and self._best_match:
       draw.text(
           (x, y + 80), '  %s' % self._best_match.basename, DETAIL_COLOR)
@@ -234,7 +261,12 @@ class PipCounter(_BaseImageComparison):
 
 
 def AssignToCluster(
-    in_filename, representatives, match_threshold, scale_threshold, count_pips):
+    in_filename,
+    representatives,
+    match_threshold,
+    scale_threshold,
+    feature_threshold,
+    count_pips):
   """Reads an image of a die's face and assigns it to a group where it matches.
 
   The input representatives list is modified. It stores a list of representative
@@ -245,14 +277,16 @@ def AssignToCluster(
       PipCounter(in_filename) if count_pips else
       FeatureComparison(in_filename))
   for representative in representatives:
-    if representative.TakeImageIfMatch(image, match_threshold, scale_threshold):
+    if representative.TakeImageIfMatch(
+        image, match_threshold, scale_threshold, feature_threshold):
       return
   print 'starts new cluster'
   image.is_representative = True
   representatives.append(image)
 
 
-def CombineSmallClusters(representatives, match_threshold, scale_threshold):
+def CombineSmallClusters(
+    representatives, match_threshold, scale_threshold, feature_threshold):
   """Finds small clusters and combines them with existing large clusters.
 
   In the previous step, the representative images for small clusters were only
@@ -293,6 +327,7 @@ def CombineSmallClusters(representatives, match_threshold, scale_threshold):
           tail_representative,
           match_threshold,
           scale_threshold,
+          feature_threshold,
           try_members=True):
         reparented = True
         break
@@ -378,6 +413,14 @@ def BuildArgParser():
            + 'match. Default is infinity (no threshold). Set to a lower value '
            + 'if adjacent sides on a die are being confused.')
   parser.add_argument(
+      '--feature-threshold', default=1.2, type=float,
+      dest='feature_threshold',
+      help='Two images are only considered matching if they have a similar '
+           + 'overall number of features. This is useful for dice with a '
+           + 'side with very few features, such as a 1-pip face. It may '
+           + 'have a high match count compared with a 6-pip face, but they '
+           + 'will have very different overall feature counts.')
+  parser.add_argument(
       '--crop-dir', default='crop', dest='crop_dir',
       help='Subdirectory within the data directory of cropped images from '
            + 'stage 1.')
@@ -431,6 +474,7 @@ if __name__ == '__main__':
             representatives,
             args.match_threshold,
             args.scale_threshold,
+            args.feature_threshold,
             args.count_pips)
       except (NoFeaturesError, cv2.error), e:
         print e
@@ -445,7 +489,10 @@ if __name__ == '__main__':
 
   try:
     representatives = CombineSmallClusters(
-      representatives, args.match_threshold, args.scale_threshold)
+        representatives,
+        args.match_threshold,
+        args.scale_threshold,
+        args.feature_threshold)
   except KeyboardInterrupt, e:
     print 'got ^C, cancelling combining clusters'
 
