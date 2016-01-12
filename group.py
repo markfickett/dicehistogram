@@ -6,9 +6,6 @@ Example:
 where there is a subdirectory data/myd20/crop/ containing extracted die images
 from stage 1.
 
-Based on OpenCV's find_obj.py example, as in:
-    find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
-
 Send SIGHUP to render an intermediate summary image and show it.
 
 On a 2.4GHz i5 MacBook Pro, this takes about 20 minutes for 3k images.
@@ -59,6 +56,9 @@ DX = numpy.array([1, 0, 1])
 DY = numpy.array([0, 1, 1])
 class FeatureComparison(_BaseImageComparison):
   """Image data, features, and comparison results for one image of a die face.
+
+  Based on OpenCV's find_obj.py example, as in:
+      find_obj.py --feature=akaze crop/DSC_0001.JPG crop/DSC_0002.JPG
   """
 
   # Feature type selection:
