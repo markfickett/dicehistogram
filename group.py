@@ -172,7 +172,7 @@ class FeatureComparison(_BaseImageComparison):
               image.basename,
               self.basename,
               '' if self_potential_match is self
-              else 'via ' + self_potential_match.basename,
+              else ' via ' + self_potential_match.basename,
               match_count,
               scale_amount)
           return True
