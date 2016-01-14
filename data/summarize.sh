@@ -55,4 +55,4 @@
 ../summarize.py 160103skewd12/ 3 11 9 8 10 6 7 5 2 4 12 1 7 7 1 7
 ../summarize.py 160104skewd12/ 9 3 8 11 5 10 6 4 2 7 12 1 2
 # The below D6 categorization is has a handful of known errors.
-./summarize.py data/160110skewd6cw/ 6 5 4 3 3 4 2 4 2 2 4 1 1 1 1 1 1 3 1 2 1 1 1 1 1 1 1 2 1 1 1 5 1 1 2 2 1 1 1 1 2 1 1 1 1 1 2 3 1 1 1 3 1 2 1 2 1 1 2 1 1 1 1 2 1 1 1 1 1 2 2 --repeat 1
+../summarize.py 160110skewd6cw/ 6 5 4 3 3 4 2 4 2 2 4 1 1 1 1 1 1 3 1 2 1 1 1 1 1 1 1 2 1 1 1 5 1 1 2 2 1 1 1 1 2 1 1 1 1 1 2 3 1 1 1 3 1 2 1 2 1 1 2 1 1 1 1 2 1 1 1 1 1 2 2 --repeat 1
