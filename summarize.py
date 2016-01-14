@@ -59,27 +59,35 @@ def GetNormalizedHistogram(label_counts):
   return normalized_counts
 
 
-HISTOGRAM_BASE_LEN = 50
-def PrintHistogram(normalized_counts):
+def PrintSummaryStats(histogram_data):
+  values = []
   expected_value = 0
-  for label, v in normalized_counts.iteritems():
-    expected_value += label * v
-  expected_value = expected_value / len(normalized_counts)
+  for label, p, unused_5p, unused_95p in histogram_data:
+    values.append(p)
+    expected_value += label * p
 
-  print 'normalized: stddev=%.2f min=%.2f max=%.2f expected=%.2f' % (
-      numpy.std(normalized_counts.values()),
-      min(normalized_counts.values()),
-      max(normalized_counts.values()),
-      expected_value)
+  print 'per-side probabilities: stddev=%.3f min=%.3f max=%.3f fair=%.3f' % (
+      numpy.std(values),
+      min(values),
+      max(values),
+      1.0 / len(histogram_data))
+  print 'expected=%.2f' % expected_value
 
-  for label, v in normalized_counts.iteritems():
-    i = int(v * HISTOGRAM_BASE_LEN)
-    if i < HISTOGRAM_BASE_LEN:
-      bar = '=' * i
-    else:
-      bar = ('=' * (HISTOGRAM_BASE_LEN - 1)) + '*' + (
-          '=' * (i - HISTOGRAM_BASE_LEN))
-    print '%2d %4.2f %s' % (label, v, bar)
+
+HISTOGRAM_BASE_LEN = 50
+def PrintHistogram(histogram_data):
+  n = len(histogram_data)
+  fair_value = 1.0 / n
+  def ToIndex(p):
+    return int((p / fair_value) * HISTOGRAM_BASE_LEN)
+  for label, p, low_percentile, high_percentile in histogram_data:
+    bar_segments = ['='] * ToIndex(high_percentile)
+    if len(bar_segments) > HISTOGRAM_BASE_LEN:
+      bar_segments[HISTOGRAM_BASE_LEN] = '*'  # the fair value
+    bar_segments.append('>')  # high percentile
+    bar_segments[ToIndex(low_percentile)] = '<'
+    bar_segments[ToIndex(p)] = 'x'
+    print '%2d %.3f %s' % (label, p, ''.join(bar_segments))
 
 
 def GetLabelSequence(labeled_file_sets):
@@ -125,9 +133,8 @@ def GetHistogramWithSubsamples(labeled_file_sets):
   return [headers] + sorted([k] + v for k, v in csv.items())
 
 
-def BuildSequenceHeatmap(labeled_file_sets):
-  ordered_labels = GetLabelSequence(labeled_file_sets)
-  n = len(labeled_file_sets)
+def BuildSequenceHeatmap(ordered_labels):
+  n = len(set(ordered_labels))
 
   sequence_matrix = []
   for _ in range(n):
@@ -135,7 +142,6 @@ def BuildSequenceHeatmap(labeled_file_sets):
   for i in xrange(len(ordered_labels) - 1):
     sequence_matrix[ordered_labels[i] - 1][ordered_labels[i + 1] - 1] += 1
   max_cell = max([max(row) for row in sequence_matrix])
-
 
   dw = 40
   w = n * dw
@@ -159,6 +165,51 @@ def BuildSequenceHeatmap(labeled_file_sets):
           fill=(v, v, v))
 
   return sequence_graph
+
+
+def WriteHistogramData(histogram_headers, histogram_data, csv_local_path):
+  csv_path = os.path.join(data_dir, csv_local_path)
+  with open(csv_path, 'w') as csv_output_file:
+    csv_file = csv.writer(csv_output_file)
+    csv_file.writerow(histogram_headers)
+    for row in histogram_data:
+      label = row[0]
+      formatted_p = ['%.5f' % p for p in row[1:]]
+      csv_file.writerow([label] + formatted_p)
+    print 'wrote', csv_path
+
+
+# Typically 10k bootstrapped subsamples are taken, but it shows minimal
+# difference from 1k (or even 100), and takes proportionately longer.
+BOOTSTRAP_SAMPLES = 1000
+PERCENTILE_LOW = 5.0
+PERCENTILE_HIGH = 95.0
+def GetHistogramAndQuantileValues(ordered_labels):
+  """Returns (headers, data) for a histogram with 95% confidence intervals.
+
+  http://ww2.coastal.edu/kingw/statistics/R-tutorials/resample.html shows
+  resampling (including the bootstrap method) in R.
+
+  Confidence interval estimation could be replaced by using
+  https://scikits.appspot.com/bootstrap on each of the labels' values. However
+  that would require re-computing subsamples for each side's probability.
+  """
+  headers = ('X', 'p(X)', '%d%%' % PERCENTILE_LOW, '%d%%' % PERCENTILE_HIGH)
+  n = len(ordered_labels)
+  bin_counts = numpy.bincount(ordered_labels)
+  subsample_bin_counts = []
+  for _ in xrange(BOOTSTRAP_SAMPLES):
+    subsample = numpy.random.choice(ordered_labels, size=n)  # with replacement
+    subsample_bin_counts.append(numpy.bincount(subsample))
+  data = []
+  for label in sorted(set(ordered_labels)):
+    label_subsamples = [counts[label] for counts in subsample_bin_counts]
+    data.append([
+        label,
+        float(bin_counts[label]) / n,
+        numpy.percentile(label_subsamples, PERCENTILE_LOW) / n,
+        numpy.percentile(label_subsamples, PERCENTILE_HIGH) / n])
+  return headers, data
 
 
 if __name__ == '__main__':
@@ -214,22 +265,20 @@ if __name__ == '__main__':
       labeled_file_sets[i] = set()
 
   print 'Summary of', summary_data_filename
+  ordered_labels = GetLabelSequence(labeled_file_sets)
 
-  sequence_graph = BuildSequenceHeatmap(labeled_file_sets)
+  sequence_graph = BuildSequenceHeatmap(ordered_labels)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
   sequence_graph.save(sequence_graph_file)
-  print 'wrote sequence heatmap to', sequence_graph_file
-
-  if args.csv:
-    csv_path = os.path.join(data_dir, args.csv)
-    with open(csv_path, 'w') as csv_output_file:
-      csv_file = csv.writer(csv_output_file)
-      for row in GetHistogramWithSubsamples(labeled_file_sets):
-        csv_file.writerow(row)
-      print 'wrote', csv_path
 
   label_counts = {
       label: len(file_set)
       for label, file_set in labeled_file_sets.iteritems()}
   PrintChiSquared(label_counts)
-  PrintHistogram(GetNormalizedHistogram(label_counts))
+
+  histogram_headers, histogram_data = GetHistogramAndQuantileValues(
+      ordered_labels)
+  PrintSummaryStats(histogram_data)
+  if args.csv:
+    WriteHistogramData(histogram_headers, histogram_data, args.csv)
+  PrintHistogram(histogram_data)
