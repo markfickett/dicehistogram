@@ -20,6 +20,7 @@ import PIL.Image
 import PIL.ImageDraw
 
 import argparse
+import collections
 import json
 import os
 import random
@@ -31,18 +32,26 @@ import sys
 SUMMARY_MEMBER_IMAGE_SIZE = 90
 DETAIL_COLOR = (254, 0, 0)
 
+INF = float('Inf')
+
 
 class _BaseImageComparison(object):
   def __init__(self, in_filename):
     self.basename = os.path.basename(in_filename)
     self.full_image = PIL.Image.open(in_filename)
-    self.image = self.full_image.resize(
-        (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
+    self._summary_image = None  # lazily calculate a proxy res from full_image
 
     # Was this image ever a representative? Used when drawing the summary image.
     self.is_representative = False
     # All the other images that match this one.
     self.members = []
+
+  @property
+  def summary_image(self):
+    if self._summary_image is None:
+      self._summary_image = self.full_image.resize(
+          (SUMMARY_MEMBER_IMAGE_SIZE, SUMMARY_MEMBER_IMAGE_SIZE))
+    return self._summary_image
 
   def _AddMember(self, image):
     self.members.append(image)
@@ -80,8 +89,8 @@ class FeatureComparison(_BaseImageComparison):
       raise NoFeaturesError('No features in %s' % in_filename)
     self._best_match = None
     self._best_match_count = 0
-    self._best_feature_proportion = float('Inf')
-    self._best_scale = float('Inf')
+    self._best_feature_proportion = INF
+    self._best_scale = INF
 
   def _GetMatchCount(self, other, verbose=True):
     """Returns how many features match between this image and the other.
@@ -97,7 +106,7 @@ class FeatureComparison(_BaseImageComparison):
     p1, p2, matching_feature_pairs = self._FilterMatches(
         self._features, other._features, raw_matches)
     match_count = 0
-    scale_amount = float('Inf')
+    scale_amount = INF
     if len(p1) >= 4:  # Otherwise not enough for homography estimation.
       homography_mat, inlier_pt_mask = cv2.findHomography(
           p1, p2, cv2.RANSAC, 5.0)
@@ -113,7 +122,7 @@ class FeatureComparison(_BaseImageComparison):
             for dv in (DX, DY)])
         if scale_amount < 1.0:
           scale_amount = (
-              1.0 / scale_amount if scale_amount > 0 else float('Inf'))
+              1.0 / scale_amount if scale_amount > 0 else INF)
     if verbose:
       print '%s (%d) match %s (%d) = %d match => %s inl / %.2f sh' % (
           self.basename,
@@ -133,7 +142,7 @@ class FeatureComparison(_BaseImageComparison):
     a = float(len(other._features))
     b = float(len(self._features))
     if not (a and b):
-      return float('Inf')
+      return INF
     feature_proportion = a / b
     if feature_proportion < 1.0:
       feature_proportion = 1.0 / feature_proportion
@@ -209,7 +218,27 @@ class NoFeaturesError(RuntimeError):
   pass
 
 
-PIP_THRESHOLD_ADJUST = 10
+class LabelDetail(object):
+  def __init__(self):
+    self.coords = []
+    self.x_min = INF
+    self.y_min = INF
+    self.x_max = -INF
+    self.y_max = -INF
+
+  def Update(self, x, y):
+    self.coords.append((x, y))
+    if x < self.x_min:
+      self.x_min = x
+    elif x > self.x_max:
+      self.x_max = x
+    if y < self.y_min:
+      self.y_min = y
+    elif y > self.y_max:
+      self.y_max = y
+
+
+PIP_THRESHOLD_ADJUST = -45  # more negative means black pips shrink apart
 class PipCounter(_BaseImageComparison):
   def __init__(self, in_filename):
     super(PipCounter, self).__init__(in_filename)
@@ -220,27 +249,44 @@ class PipCounter(_BaseImageComparison):
     # favor the white die face.
     # http://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
     otsu_threshold_value, _ = cv2.threshold(
-        gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        gray,
+        0,
+        255,
+        cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     _, thresh = cv2.threshold(
         gray,
         otsu_threshold_value + PIP_THRESHOLD_ADJUST,
         255,
         cv2.THRESH_BINARY_INV)
 
-    noise_removal_kernel = numpy.ones((3, 3), numpy.uint8)
-    opening = cv2.morphologyEx(
-        thresh, cv2.MORPH_OPEN, noise_removal_kernel, iterations=8)
+    num_labels, labels = cv2.connectedComponents(
+        numpy.uint8(thresh))
 
-    num_components, labels = cv2.connectedComponents(
-        numpy.uint8(opening))
-    non_pip_labels = set((0,))  # Any that touch edges + 0 (the die face).
-    non_pip_labels.update(labels[0])
-    non_pip_labels.update(labels[-1])
-    for row in labels:
-      non_pip_labels.add(row[0])
-      non_pip_labels.add(row[-1])
-    self._num_pips = num_components - len(non_pip_labels)
-
+    label_details = {}
+    for i in xrange(num_labels):
+      label_details[i] = LabelDetail()
+    for y, row in enumerate(labels):
+      for x, label in enumerate(row):
+        label_details[label].Update(x, y)
+    self._num_pips = 0
+    for label, detail in label_details.iteritems():
+      fill_color = None
+      if len(detail.coords) > 100:
+        e = float(detail.y_max - detail.y_min) / (detail.x_max - detail.x_min)
+        if e < 1.0:
+          e = 1.0 / e
+        fill_proportion = float(len(detail.coords)) / (
+            (detail.y_max - detail.y_min) * (detail.x_max - detail.x_min))
+        if len(detail.coords) > 1400 and len(detail.coords) < 3200:
+          fill_color = (254, 0, 0)
+          if e < 1.65 and fill_proportion > 0.68:
+            fill_color = (0, 254, 0)
+            self._num_pips += 1
+        print '%d\tpx=%d e=%.3f fill=%.3f %s' % (
+            label, len(detail.coords), e, fill_proportion, fill_color)
+      if fill_color is not None:
+        for xy in detail.coords:
+          self.full_image.putpixel(xy, fill_color)
     print '%s = %d' % (self.basename, self._num_pips)
 
   def TakeImageIfMatch(
@@ -248,6 +294,7 @@ class PipCounter(_BaseImageComparison):
       image,
       unused_match_threshold,
       unused_scale_threshold,
+      unused_feature_threshold,
       try_members=False):
     if self._num_pips == image._num_pips:
       self._AddMember(image)
@@ -342,7 +389,7 @@ def BuildClusterSummaryImage(representatives, max_members=None):
   """Draws a composite image summarizing the clusters."""
   if not representatives:
     return
-  large_edge = representatives[0].image.size[0]
+  large_edge = representatives[0].summary_image.size[0]
   h = large_edge * len(representatives)
   w = 0
   for representative in representatives:
@@ -360,7 +407,7 @@ def BuildClusterSummaryImage(representatives, max_members=None):
       all_members = [representative] + representative.members[:max_members - 1]
     for j, member in enumerate(all_members):
       x = j * large_edge
-      summary_image.paste(member.image, (x, y))
+      summary_image.paste(member.summary_image, (x, y))
       member.DrawOnSummary(draw, (x, y))
     draw.text(
         (0, y + 20),
@@ -407,7 +454,7 @@ def BuildArgParser():
       dest='match_threshold',
       help='Number of matching features to consider two images a match.')
   parser.add_argument(
-      '--scale-threshold', default=float('Inf'), type=float,
+      '--scale-threshold', default=INF, type=float,
       dest='scale_threshold',
       help='Amount of scaling above which two images are not considered a '
            + 'match. Default is infinity (no threshold). Set to a lower value '
