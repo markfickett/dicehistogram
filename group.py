@@ -31,6 +31,7 @@ import sys
 # Edge size for the otherwise unaltered image in the summary image.
 SUMMARY_MEMBER_IMAGE_SIZE = 90
 DETAIL_COLOR = (254, 0, 0)
+IMAGE_SIZE_MAX = 65500  # hard limit imposed by PIL
 
 INF = float('Inf')
 
@@ -394,26 +395,23 @@ def CombineSmallClusters(
   return main_clusters + not_reparented
 
 
-def BuildClusterSummaryImage(representatives, max_members=None):
+def BuildClusterSummaryImage(representatives, raw_max_members):
   """Draws a composite image summarizing the clusters."""
   if not representatives:
     return
   large_edge = representatives[0].summary_image.size[0]
+  max_members = min(raw_max_members or INF, IMAGE_SIZE_MAX / large_edge)
   h = large_edge * len(representatives)
   w = 0
   for representative in representatives:
     w = max(w, 1 + len(representative.members))
-  if max_members is not None:
-    w = min(max_members, w)
+  w = min(max_members, w)
   w *= large_edge
   summary_image = PIL.Image.new('RGB', (w, h))
   draw = PIL.ImageDraw.Draw(summary_image)
   for i, representative in enumerate(representatives):
     y = i * large_edge
-    if max_members is None:
-      all_members = [representative] + representative.members
-    else:
-      all_members = [representative] + representative.members[:max_members - 1]
+    all_members = [representative] + representative.members[:max_members - 1]
     for j, member in enumerate(all_members):
       x = j * large_edge
       summary_image.paste(member.summary_image, (x, y))
@@ -430,11 +428,6 @@ def SaveGrouping(
   for representative in representatives:
     print representative.basename, (1 + len(representative.members))
 
-  summary = BuildClusterSummaryImage(representatives, summary_max_members)
-  summary.save(summary_image)
-  print 'summary image saved to', summary_image
-  summary.show()
-
   print 'saving summary data to', summary_data
   data_summary = []
   for representative in representatives:
@@ -443,6 +436,11 @@ def SaveGrouping(
          + [m.basename for m in representative.members])
   with open(summary_data, 'w') as data_file:
     json.dump(data_summary, data_file)
+
+  summary = BuildClusterSummaryImage(representatives, summary_max_members)
+  summary.save(summary_image)
+  print 'summary image saved to', summary_image
+  summary.show()
 
 
 global summary_requested
@@ -539,7 +537,7 @@ if __name__ == '__main__':
         print 'Rendering intermediate summary.'
         summary_requested = False
         BuildClusterSummaryImage(
-            representatives, max_members=summary_max_members).show()
+            representatives, summary_max_members).show()
   except KeyboardInterrupt, e:
     print 'got ^C, early stop for categorization'
 
