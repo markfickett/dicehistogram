@@ -220,22 +220,22 @@ class NoFeaturesError(RuntimeError):
 
 class LabelDetail(object):
   def __init__(self):
-    self.coords = []
-    self.x_min = INF
-    self.y_min = INF
-    self.x_max = -INF
-    self.y_max = -INF
+    self._x = []
+    self._y = []
 
   def Update(self, x, y):
-    self.coords.append((x, y))
-    if x < self.x_min:
-      self.x_min = x
-    elif x > self.x_max:
-      self.x_max = x
-    if y < self.y_min:
-      self.y_min = y
-    elif y > self.y_max:
-      self.y_max = y
+    self._x.append(x)
+    self._y.append(y)
+
+  def GetCoords(self):
+    return list(zip(self._x, self._y))
+
+  def GetBounds(self):
+    return (
+        min(self._x) if self._x else INF,
+        min(self._y) if self._y else INF,
+        max(self._x) if self._x else -INF,
+        max(self._y) if self._y else -INF)
 
 
 PIP_THRESHOLD_ADJUST = -45  # more negative means black pips shrink apart
@@ -262,30 +262,39 @@ class PipCounter(_BaseImageComparison):
     num_labels, labels = cv2.connectedComponents(
         numpy.uint8(thresh))
 
-    label_details = {}
-    for i in xrange(num_labels):
-      label_details[i] = LabelDetail()
+    # Dictionary lookups take nontrivial time here so use indices instead.
+    label_details = []
+
+    for i in xrange(num_labels + 1):
+      label_details.append(LabelDetail())
     for y, row in enumerate(labels):
       for x, label in enumerate(row):
         label_details[label].Update(x, y)
+    # TODO Use convex hull or ellipse fit to determine which regions are pips on
+    # the front face of the die.
+    # http://docs.opencv.org/2.4/modules/imgproc/doc/structural_analysis_and_shape_descriptors.html
+    # Simple label counting (excluding labels touching image edges) works for
+    # regular pipped dice. Skew d6s show pips on the sides as well as fronts.
     self._num_pips = 0
-    for label, detail in label_details.iteritems():
+    for label, detail in enumerate(label_details):
       fill_color = None
-      if len(detail.coords) > 100:
-        e = float(detail.y_max - detail.y_min) / (detail.x_max - detail.x_min)
+      coords = detail.GetCoords()
+      x_min, y_min, x_max, y_max = detail.GetBounds()
+      if len(coords) > 100:
+        e = float(y_max - y_min) / (x_max - x_min)
         if e < 1.0:
           e = 1.0 / e
-        fill_proportion = float(len(detail.coords)) / (
-            (detail.y_max - detail.y_min) * (detail.x_max - detail.x_min))
-        if len(detail.coords) > 1400 and len(detail.coords) < 3200:
+        fill_proportion = float(len(coords)) / (
+            (y_max - y_min) * (x_max - x_min))
+        if len(coords) > 1400 and len(coords) < 3200:
           fill_color = (254, 0, 0)
           if e < 1.65 and fill_proportion > 0.68:
-            fill_color = (0, 254, 0)
+            fill_color = (254, 254, 100)
             self._num_pips += 1
         print '%d\tpx=%d e=%.3f fill=%.3f %s' % (
-            label, len(detail.coords), e, fill_proportion, fill_color)
+            label, len(coords), e, fill_proportion, fill_color)
       if fill_color is not None:
-        for xy in detail.coords:
+        for xy in coords:
           self.full_image.putpixel(xy, fill_color)
     print '%s = %d' % (self.basename, self._num_pips)
 
