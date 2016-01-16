@@ -49,10 +49,13 @@
 ../summarize.py 160110koplowd6/ 6 1 4 3 5 2
 ../summarize.py 160110koplowd6b/ 1 3 4 5 6 2
 
-# Dice Lab, donated 2015 Dec
+# Dice Lab Skew Dice, donated 2015 Dec
 ../summarize.py 160101skewd12reflected/ 9 3 8 11 5 10 4 6 2 12 1 7 7 7 7 7 7 7 1 7 7 7 7 7 7 1 7 7 7 7 8 11 7 7 1 7 1 10 7 2 7 2 10 1 8 7 2 1 7 7 7 7 8 9 7 1 7 8 11 4 1 7 11 1 2 7 1 4 8 1 7 7 4 7 2 10
 ../summarize.py 160102skewd12reflected/ 3 9 11 8 10 5 4 6 2 1 7 12 7
 ../summarize.py 160103skewd12/ 3 11 9 8 10 6 7 5 2 4 12 1 7 7 1 7
 ../summarize.py 160104skewd12/ 9 3 8 11 5 10 6 4 2 7 12 1 2
-# The below D6 categorization is has a handful of known errors.
-../summarize.py 160110skewd6cw/ 6 5 4 3 3 4 2 4 2 2 4 1 1 1 1 1 1 3 1 2 1 1 1 1 1 1 1 2 1 1 1 5 1 1 2 2 1 1 1 1 2 1 1 1 1 1 2 3 1 1 1 3 1 2 1 2 1 1 2 1 1 1 1 2 1 1 1 1 1 2 2 --repeat 1
+# The below Skew D6 categorizations have a handful of known errors.
+../summarize.py 160110skewd6cw 4 2 5 3 6 1 1
+../summarize.py 160111skewd6ccw 4 3 2 5 6 1 1
+../summarize.py 160111skewd6cw 4 5 3 2 1 6 5
+../summarize.py 160112skewd6ccw 4 2 3 5 6 1 1 6
