@@ -167,8 +167,7 @@ def BuildSequenceHeatmap(ordered_labels):
   return sequence_graph
 
 
-def WriteHistogramData(histogram_headers, histogram_data, csv_local_path):
-  csv_path = os.path.join(data_dir, csv_local_path)
+def WriteHistogramData(histogram_headers, histogram_data, csv_path):
   with open(csv_path, 'w') as csv_output_file:
     csv_file = csv.writer(csv_output_file)
     csv_file.writerow(histogram_headers)
@@ -280,5 +279,6 @@ if __name__ == '__main__':
       ordered_labels)
   PrintSummaryStats(histogram_data)
   if args.csv:
-    WriteHistogramData(histogram_headers, histogram_data, args.csv)
+    WriteHistogramData(
+        histogram_headers, histogram_data, os.path.join(data_dir, args.csv))
   PrintHistogram(histogram_data)
