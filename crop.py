@@ -36,6 +36,7 @@ import PIL.ImageDraw
 
 
 EPSILON = 1e-3  # for float comparison
+DIFF_THRESHOLD_DEFAULT = 180
 # How far from square may bounds of a die be, and still be considered valid?
 # Increase this value for lozenge-shaped dice.
 ECCENTRICITY_MAX = 2.0
@@ -340,10 +341,12 @@ def BuildArgParser():
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--diff-threshold', '-t', dest='diff_threshold', type=int, default=180,
+      '--diff-threshold', '-t', dest='diff_threshold', type=int,
+      default=DIFF_THRESHOLD_DEFAULT,
       help='Pixels with a difference (summed across RGB) greater than this '
            + 'value will be considered as potentially part of the die. '
-           + 'Comparison is against the reference image.')
+           + ('Comparison is against the reference image. Default %d.'
+              % DIFF_THRESHOLD_DEFAULT))
   parser.add_argument(
       '--force', '-f', action='store_true',
       help='Overwrite existing crops.')
@@ -445,8 +448,12 @@ if __name__ == '__main__':
   except KeyboardInterrupt, e:
     print 'got ^C, early exit for crop'
 
-  print 'Processed %d images, skipped %d, die not found in %d. %s' % (
-      processed, skipped, len(no_die_found_in), no_die_found_in or '')
+  print 'Processed %d, skipped %d, die not found in %d @ threshold %d. %s' % (
+      processed,
+      skipped,
+      len(no_die_found_in),
+      args.diff_threshold,
+      no_die_found_in or '')
   if len(crop_bounds) > 10:
     SummarizeBounds(
         os.path.join(capture_dir, args.reference),
