@@ -239,13 +239,21 @@ class LabelDetail(object):
         max(self._y) if self._y else -INF)
 
 
-PIP_THRESHOLD_ADJUST = -45  # more negative means black pips shrink apart
+PIP_THRESHOLD_ADJUST = -10  # more negative means pips shrink apart
+PIP_AREA_PX_MIN = 600
+PIP_AREA_PX_MAX = 1500
+BLACK_PIPS = True
+STRICT_PIPS = False
 class PipCounter(_BaseImageComparison):
   def __init__(self, in_filename):
     super(PipCounter, self).__init__(in_filename)
 
     img = cv2.imread(in_filename)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    threshold_mode = cv2.THRESH_BINARY_INV if BLACK_PIPS else cv2.THRESH_BINARY
+    threshold_adjust = PIP_THRESHOLD_ADJUST
+    if not BLACK_PIPS:
+      threshold_adjust *= -1
     # Use Otsu thresholding to find a base threshold, then adjust down to
     # favor the white die face.
     # http://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
@@ -253,12 +261,12 @@ class PipCounter(_BaseImageComparison):
         gray,
         0,
         255,
-        cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        threshold_mode + cv2.THRESH_OTSU)
     _, thresh = cv2.threshold(
         gray,
-        otsu_threshold_value + PIP_THRESHOLD_ADJUST,
+        otsu_threshold_value + threshold_adjust,
         255,
-        cv2.THRESH_BINARY_INV)
+        threshold_mode)
 
     num_labels, labels = cv2.connectedComponents(
         numpy.uint8(thresh))
@@ -287,9 +295,9 @@ class PipCounter(_BaseImageComparison):
           e = 1.0 / e
         fill_proportion = float(len(coords)) / (
             (y_max - y_min) * (x_max - x_min))
-        if len(coords) > 1400 and len(coords) < 3200:
+        if len(coords) > PIP_AREA_PX_MIN and len(coords) < PIP_AREA_PX_MAX:
           fill_color = (254, 0, 0)
-          if e < 1.65 and fill_proportion > 0.68:
+          if not STRICT_PIPS or (e < 1.65 and fill_proportion > 0.68):
             fill_color = (254, 254, 100)
             self._num_pips += 1
         print '%d\tpx=%d e=%.3f fill=%.3f %s' % (
