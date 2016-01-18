@@ -59,3 +59,7 @@
 ../summarize.py 160111skewd6ccw 4 3 2 5 6 1 1
 ../summarize.py 160111skewd6cw 4 5 3 2 1 6 5
 ../summarize.py 160112skewd6ccw 4 2 3 5 6 1 1 6
+
+# Settlers of Catan's included dice
+../summarize.py 160117catanyellowd6 4 2 6 3 1 5 2 2 4
+../summarize.py 160117catanredd6 6 4 2 1 5 3 6 1
