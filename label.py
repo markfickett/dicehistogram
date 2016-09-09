@@ -17,17 +17,8 @@ starting with '#' recording the input labels provided to this script.
 
 import argparse
 import collections
-import csv
 import json
-import numpy
 import os
-import random
-import scipy
-import scipy.stats
-
-import PIL
-import PIL.Image
-import PIL.ImageDraw
 
 
 def GetLabelSequence(labeled_file_sets):
