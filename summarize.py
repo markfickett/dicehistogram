@@ -1,14 +1,13 @@
 #!/usr/bin/env python
-"""Stage 3: Summarize die roll data.
+"""Stage 4: Summarize die roll data.
 
 Example:
-    %(prog)s data/myd6/ 5 6 4 1 2 1 1 3 1 2 1 6 1 1 5 1 1
-where data/myd20 contains the summary.json file written by stage 2.
+    %(prog)s data/myd6/
+where data/myd20 contains the labels.csv file written by stage 3.
 
-Positional arguments are labels for the die-roll image groupings, in the same
-order as they appear in the summary data (or summary image). They are expected
-to be integers. Typically the first N will name the N sides of the die, and then
-additional labels will repeat labels for any stragglers.
+The labels.csv file contains one labels for a die-roll per line, in the same
+order as they were rolled (that is, as the captured images). They are expected
+to be integers.
 
 TODO:
  - Image of histogram?
@@ -90,19 +89,6 @@ def PrintHistogram(histogram_data):
     print '%2d %.3f %s' % (label, p, ''.join(bar_segments))
 
 
-def GetLabelSequence(labeled_file_sets):
-  """Transforms {label: set(files)} to ordered [labels].
-
-  Assumes filenames reflect roll ordering.
-  """
-  file_to_label = []
-  for label, files in labeled_file_sets.items():
-    for file in files:
-      file_to_label.append((file, label))
-  file_to_label.sort()
-  return [label for _, label in file_to_label]
-
-
 def GetLabelCounts(label_sequence):
   """Transforms ordered [labels] into {label: count}."""
   label_counts = collections.defaultdict(lambda: 0)
@@ -111,9 +97,8 @@ def GetLabelCounts(label_sequence):
   return label_counts
 
 
-def GetHistogramWithSubsamples(labeled_file_sets):
+def GetHistogramWithSubsamples(seq):
   csv = collections.defaultdict(list)
-  seq = GetLabelSequence(labeled_file_sets)
   all_labels = set(seq)
   headers = ['N']
   max_num_subsamples = 8
@@ -218,17 +203,14 @@ if __name__ == '__main__':
       epilog=main_doc,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
-      '--summary-data', '-d', dest='summary_data',
-      default='summary.json',
-      help='File name for the summary data, JSON written from stage 2.')
+      '--labels',
+      default='labels.csv',
+      help='Name of a file with one label per line. Labels are integers '
+           + 'representing one roll of a die. The file may contain comment '
+           + 'lines, starting with #.')
   parser.add_argument(
       '--sequence-graph', dest='sequence_graph', default='sequence.jpg',
       help='Save the graph of roll sequences to this file within the data dir.')
-  parser.add_argument(
-      '--repeat', type=int,
-      help='Repeat this value as the label for all remaining file sets. '
-           + 'Useful when one face does not have many features and does not '
-           + 'get matched well.')
   parser.add_argument(
       '--csv',
       help='Name of a file to write CSV histogram data. Values will include '
@@ -237,42 +219,25 @@ if __name__ == '__main__':
            + 'size.')
   args, positional = parser.parse_known_args()
   data_dir = positional[0]
-  labels = map(int, positional[1:])
 
-  summary_data_filename = os.path.join(data_dir, args.summary_data)
-  with open(summary_data_filename) as data_file:
-    summary_data = json.load(data_file)
+  labels_filename = os.path.join(data_dir, args.labels)
+  with open(labels_filename) as labels_file:
+    ordered_labels = []
+    for line in labels_file:
+      if line.startswith('#'):
+        print 'skipping comment:', line[1:].strip()
+        continue
+      ordered_labels.append(int(line.strip()))
 
-  if args.repeat is not None and len(summary_data) > len(labels):
-    labels += [args.repeat] * (len(summary_data) - len(labels))
-
-  if len(labels) != len(summary_data):
-    print labels
-    for i, l in enumerate(summary_data, start=1):
-      print i, (l[:4] + ([] if len(l) <= 4 else ['...']))
-    parser.error(
-        ('Got %d positional argument labels but %d data groupings in summary '
-         + 'data; they must match.')
-        % (len(labels), len(summary_data)))
-
-  labeled_file_sets = collections.defaultdict(lambda: set())
-  for filename_list, label in zip(summary_data, labels):
-    labeled_file_sets[label].update(filename_list)
-  for i in xrange(1, max(labels) + 1):
-    if i not in labeled_file_sets:
-      print 'warning, missing label', i
-      labeled_file_sets[i] = set()
-
-  print 'Summary of', summary_data_filename
-  ordered_labels = GetLabelSequence(labeled_file_sets)
+  print 'Summary of %d labels from %s' % (len(ordered_labels), labels_filename)
 
   sequence_graph = BuildSequenceHeatmap(ordered_labels)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
   sequence_graph.save(sequence_graph_file)
 
-  label_counts = {
-      label: len(file_set)
-      for label, file_set in labeled_file_sets.iteritems()}
+  label_counts = collections.defaultdict(lambda: 0)
+  for l in ordered_labels:
+    label_counts[l] += 1
   PrintChiSquared(label_counts)
 
   histogram_headers, histogram_data = GetHistogramAndQuantileValues(

@@ -56,10 +56,16 @@ Often the default threshold won't be exactly right. The `group.py` script prints
 ./group.py $DATA --match-count-threshold 36
 ```
 
-Finally, provide labels (reading the numbers on the die images down the left edge of the summary image) to generate a summary. For this example, the first row in the summary image (or the first sub-list in `summary.json`) is from images of the 5 on the die, the next is of 6s, and so on (with 1 and 6 seeing some repeated rows due to poor matches).
+Next, provide labels (reading the numbers on the die images down the left edge of the summary image) to generate a summary. For this example, the first row in the summary image (or the first sub-list in `summary.json`) is from images of the 5 on the die, the next is of 6s, and so on (with 1 and 6 seeing some repeated rows due to poor matches).
 
 ```shell
-./summarize.py $DATA 5 6 4 1 2 1 1 3 1 1 6 1
+./label.py $DATA 5 6 4 1 2 1 1 3 1 1 6 1
+```
+
+Finally, analyze the sequence of labels.
+
+```shell
+./summarize.py $DATA
 ```
 
 ## Dependencies
