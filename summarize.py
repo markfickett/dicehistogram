@@ -235,9 +235,7 @@ if __name__ == '__main__':
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
   sequence_graph.save(sequence_graph_file)
 
-  label_counts = collections.defaultdict(lambda: 0)
-  for l in ordered_labels:
-    label_counts[l] += 1
+  label_counts = GetLabelCounts(ordered_labels)
   PrintChiSquared(label_counts)
 
   histogram_headers, histogram_data = GetHistogramAndQuantileValues(
