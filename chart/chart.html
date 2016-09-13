@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!--
+  run python -m SimpleHTTPServer and visit localhost:8000 for XHRs
+  https://bost.ocks.org/mike/bar/3/
+-->
+<html>
+<head>
+  <title>d3</title>
+  <script src="d3/d3.min.js"></script>
+  <style type="text/css">
+    .chart rect {
+      fill: steelblue;
+      opacity: 0.9;
+    }
+    .chart rect:hover {
+      opacity: 1.0;
+    }
+
+    .chart text {
+      fill: white;
+      font: 10px sans-serif;
+      text-anchor: end;
+    }
+
+    .axis text {
+      fill: black;
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .ci {
+      fill: none;
+      stroke: #558;
+      shape-rendering: crispEdges;
+    }
+
+    .axis.y .tick line {
+      stroke: #000;
+      opacity: 0.2;
+    }
+
+    line.fair {
+      stroke: steelblue;
+      stroke-dasharray: 5, 5;
+    }
+  </style>
+</head>
+<body>
+  <p>Hello, charts!</p>
+  <svg id="d3chart" class="chart"></svg>
+  <script src="chart.js"></script>
+</body>
+</html>
