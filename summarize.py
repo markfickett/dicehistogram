@@ -178,7 +178,7 @@ def GetHistogramAndQuantileValues(ordered_labels):
   https://scikits.appspot.com/bootstrap on each of the labels' values. However
   that would require re-computing subsamples for each side's probability.
   """
-  headers = ('X', 'p(X)', '%d%%' % PERCENTILE_LOW, '%d%%' % PERCENTILE_HIGH)
+  headers = ('side', 'p', 'p_%d' % PERCENTILE_LOW, 'p_%d' % PERCENTILE_HIGH)
   n = len(ordered_labels)
   bin_counts = numpy.bincount(ordered_labels)
   subsample_bin_counts = []
