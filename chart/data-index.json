@@ -1,0 +1,17 @@
+{
+  "charts": {
+    "chessexgreen": {
+        "filenames": ["151103d20chessexgreenmarbled"]},
+    "wizpurple": {
+        "filenames": ["151031d20wizdiceopaquepurple"]},
+    "skewd6": {
+        "title": "Skew d6 From Dice Lab",
+        "filenames": ["160111skewd6ccw"]}},
+  "srcs": [
+    {"filename": "151103d20chessexgreenmarbled",
+     "name": "Chessex Green Marbled d20"},
+    {"filename": "151031d20wizdiceopaquepurple",
+     "name": "Wiz Dice Opaque Purple d20"},
+    {"filename": "160111skewd6ccw",
+     "name": "Skew d6 (CCW)"}]
+}
