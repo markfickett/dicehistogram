@@ -3,8 +3,9 @@ var loadedData = {};
 var charts = {};
 
 var margin = {top: 30, right: 30, bottom: 30, left: 50};
+var barMargin = 1;
+var barWidth = 18;
 var height = 300 - (margin.top + margin.bottom);
-var barWidth = 20;
 
 d3.selectAll('.chart')
     .attr('height', height + 'px');
@@ -48,14 +49,17 @@ function recordAndRenderIfComplete(filename, data) {
 
 function renderChart(charts, chartId, i, keys) {
   var chartDetails = charts[chartId];
-  var srcDetails = loadedData[chartDetails.filenames[0]];  // TODO multi-file
+  var srcs = chartDetails.filenames.map(function(filename) {
+    return loadedData[filename];
+  });
   var title = chartDetails.title;
   if (!title) {
-    title = srcDetails.name;
+    title = srcs[0].name;
   }
   console.log(`Rendering ${title}.`);
-  var data = srcDetails.data;
+  var numSides = srcs[0].data.length;
 
+  var sideGroupWidth = (srcs.length + 3) * barMargin + srcs.length * barWidth;
   var yScale = d3.scaleLinear()
       .range([height, 0]);
   var xScale = d3.scaleBand();
@@ -63,14 +67,24 @@ function renderChart(charts, chartId, i, keys) {
   var xAxis = d3.axisBottom(xScale);
   var yAxis = d3.axisLeft(yScale);
 
-  var chartWidth = data.length * barWidth;
+  var chartWidth = numSides * sideGroupWidth;
   var containerWidth = chartWidth + margin.left + margin.right;
   xScale
-      .domain(data.map(function(d) { return d.side; }))
+      .domain(srcs[0].data.map(function(d) { return d.side; }))
       .range([0, chartWidth]);
 
-  var fairValue = 1.0 / data.length;
-  var maxValue = d3.max(data, function(d) { return d.p_95; });
+  var fairValue = 1.0 / numSides;
+  var zippedData = [];
+  for(var s = 0; s < numSides; s++) {
+    var zippedValue = {side: s + 1, values: []};
+    for(var i = 0; i < srcs.length; i++) {
+      zippedValue.values.push(srcs[i].data[s]);
+    }
+    zippedData.push(zippedValue);
+  }
+  var maxValue = d3.max(srcs, function(src) {
+      return d3.max(src.data, function(d) { return d.p_95; })
+  });
   yScale.domain([0, maxValue]);
   yAxis.tickSizeInner(-chartWidth);
 
@@ -117,33 +131,37 @@ function renderChart(charts, chartId, i, keys) {
           .attr("y", 29)
           .style("text-andhor", "middle");
 
-  var bar = chart.selectAll("g.bar")
-      .data(data)
+  var sideGroup = chart.selectAll("g.side-group")
+      .data(zippedData)
       .enter().append("g")
-          .attr("class", "bar")
+          .attr("class", "side-group")
           .attr("transform", function(d, i) {
-              return `translate(${xScale(+d.side)}, 0)`; });
+              return "translate(" +
+                  (xScale(+d.side) + 2 * barMargin) +
+                  ", 0)";
+          });
+  var bar = sideGroup.selectAll("rect")
+      .data(function(d, i) { return d.values; })
+      .enter().append("g")
+          .attr("width", barWidth)
+          .attr("height", height)
+          .attr("transform", function(d, i) {
+              return `translate(${barWidth * i + (i + 1) * barMargin}, 0)`;
+          });
 
   bar.append("rect")
-      .attr("width", barWidth - 1)
-      .attr("height", function(d) { return height - yScale(d.p); })
-      .attr("y", function(d) { return yScale(d.p); })
-      .attr("title", function(d) { return d.p; });
+          .attr("y", function(d) { return yScale(d.p); })
+          .attr("width", barWidth)
+          .attr("height", function(d) { return height - yScale(d.p); });
 
-  bar.append("text")
-      .attr("x", barWidth / 2)
-      .attr("y", yScale(0))
-      .attr("dx", "0.35em")
-      .attr("dy", "-0.35em")
-      .text(function(d) { return d.side; });
-
+  var barCenter = barWidth / 2;
   bar.append("path")
-      .attr("d", function(d) { return "" +
-          `M ${barWidth / 2 - 3} ${yScale(d.p_5)}` +
-          `L ${barWidth / 2 + 3} ${yScale(d.p_5)}` +
-          `M ${barWidth / 2} ${yScale(d.p_5)}` +
-          `L ${barWidth / 2} ${yScale(d.p_95)}` +
-          `M ${barWidth / 2 - 3} ${yScale(d.p_95)}` +
-          `L ${barWidth / 2 + 3} ${yScale(d.p_95)}`; })
+      .attr("d", function(d) { console.log(d); return "" +
+          `M ${barCenter - 3} ${yScale(d.p_5)} ` +
+          `L ${barCenter + 3} ${yScale(d.p_5)} ` +
+          `M ${barCenter} ${yScale(d.p_5)} ` +
+          `L ${barCenter} ${yScale(d.p_95)} ` +
+          `M ${barCenter - 3} ${yScale(d.p_95)} ` +
+          `L ${barCenter + 3} ${yScale(d.p_95)}`; })
       .attr("class", "ci");
 }

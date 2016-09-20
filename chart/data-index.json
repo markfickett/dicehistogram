@@ -1,17 +1,27 @@
 {
   "charts": {
     "chessexgreen": {
-        "filenames": ["151103d20chessexgreenmarbled"]},
+      "filenames": ["151103d20chessexgreenmarbled"]},
     "wizpurple": {
-        "filenames": ["151031d20wizdiceopaquepurple"]},
+      "filenames": ["151031d20wizdiceopaquepurple"]},
     "skewd6": {
-        "title": "Skew d6 From Dice Lab",
-        "filenames": ["160111skewd6ccw"]}},
+      "title": "Skew d6 From Dice Lab",
+      "filenames": [
+        "160110skewd6cw",
+        "160111skewd6ccw",
+        "160111skewd6cw",
+        "160112skewd6ccw"]}},
   "srcs": [
     {"filename": "151103d20chessexgreenmarbled",
      "name": "Chessex Green Marbled d20"},
     {"filename": "151031d20wizdiceopaquepurple",
      "name": "Wiz Dice Opaque Purple d20"},
+    {"filename": "160110skewd6cw",
+     "name": "Skew d6 (CW A)"},
     {"filename": "160111skewd6ccw",
-     "name": "Skew d6 (CCW)"}]
+     "name": "Skew d6 (CCW A)"},
+    {"filename": "160111skewd6cw",
+     "name": "Skew d6 (CW B)"},
+    {"filename": "160112skewd6ccw",
+     "name": "Skew d6 (CCW B)"}]
 }
