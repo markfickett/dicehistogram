@@ -3,8 +3,8 @@ var loadedData = {};
 var charts = {};
 
 var margin = {top: 30, right: 30, bottom: 30, left: 50};
-var barMargin = 1;
-var barWidth = 18;
+var barMargin = 2;
+var barWidth = 14;
 var height = 300 - (margin.top + margin.bottom);
 
 d3.selectAll('.chart')
