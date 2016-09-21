@@ -2,7 +2,7 @@ var g_dataLoadRequestsPending = d3.set();
 var g_loadedData = {};
 var g_charts = {};
 
-var margin = {top: 30, right: 30, bottom: 30, left: 50};
+var margin = {top: 30, right: 100, bottom: 30, left: 50};
 var barMargin = 2;
 var barWidth = 14;
 var height = 300 - (margin.top + margin.bottom);
@@ -97,7 +97,9 @@ function renderChart(chartId, i, keys) {
   yScale.domain([0, maxValue]);
   yAxis.tickSizeInner(-chartWidth);
 
+  // Chart container, including space for axes and title.
   var container = d3.select(`#${chartId}`)
+      .attr("width", containerWidth)
       .attr("height", height + margin.top + margin.bottom);
   container.append("text")
       .attr("class", "title")
@@ -106,11 +108,10 @@ function renderChart(chartId, i, keys) {
       .style("text-anchor", "middle")
       .text(title);
 
-  var chart = container
-      .attr("width", containerWidth)
-      .append("g")
-          .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  var chart = container.append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+  // Y axis, and dotted line at even probability
   chart.append("g")
       .attr("class", "y axis")
       .attr("transform", `translate(-2, 0)`)
@@ -130,6 +131,7 @@ function renderChart(chartId, i, keys) {
       .attr("y2", yScale(fairValue))
       .attr("width", chartWidth);
 
+  // X axis
   chart.append("g")
       .attr("class", "x axis")
       .attr("transform", `translate(0, ${height + 1})`)
@@ -140,6 +142,7 @@ function renderChart(chartId, i, keys) {
           .attr("y", 29)
           .style("text-andhor", "middle");
 
+  // one group for each of the die's sides
   var sideGroup = chart.selectAll("g.side-group")
       .data(zippedData)
       .enter().append("g")
@@ -149,7 +152,9 @@ function renderChart(chartId, i, keys) {
                   (xScale(+d.side) + 2 * barMargin) +
                   ", 0)";
           });
-  var bar = sideGroup.selectAll("rect")
+  // bar containers within each side group; one bar per side for single-die
+  // graphs, or multiple bars for multiple dice / sample sizes etc
+  var bar = sideGroup.selectAll("g")
       .data(function(d, i) { return d.values; })
       .enter().append("g")
           .attr("width", barWidth)
@@ -158,11 +163,13 @@ function renderChart(chartId, i, keys) {
               return `translate(${barWidth * i + (i + 1) * barMargin}, 0)`;
           });
 
+  // the main visible bar
   bar.append("rect")
           .attr("y", function(d) { return yScale(d.p); })
           .attr("width", barWidth)
           .attr("height", function(d) { return height - yScale(d.p); });
 
+  // confidence intervals
   var barCenter = barWidth / 2;
   bar.append("path")
       .attr("d", function(d) { return "" +
