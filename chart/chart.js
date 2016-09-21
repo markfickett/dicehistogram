@@ -2,7 +2,8 @@ var g_dataLoadRequestsPending = d3.set();
 var g_loadedData = {};
 var g_charts = {};
 
-var margin = {top: 30, right: 100, bottom: 30, left: 50};
+var margin = {top: 30, right: 30, bottom: 30, left: 50};
+var legendWidth = 200;
 var barMargin = 2;
 var barWidth = 14;
 var height = 300 - (margin.top + margin.bottom);
@@ -78,6 +79,9 @@ function renderChart(chartId, i, keys) {
 
   var chartWidth = numSides * sideGroupWidth;
   var containerWidth = chartWidth + margin.left + margin.right;
+  if (srcNames) {
+    containerWidth += legendWidth;
+  }
   xScale
       .domain(srcs[0].map(function(d) { return d.side; }))
       .range([0, chartWidth]);
@@ -103,7 +107,7 @@ function renderChart(chartId, i, keys) {
       .attr("height", height + margin.top + margin.bottom);
   container.append("text")
       .attr("class", "title")
-      .attr("x", containerWidth / 2)
+      .attr("x", (margin.left + chartWidth) / 2)
       .attr("y", 20)
       .style("text-anchor", "middle")
       .text(title);
@@ -140,7 +144,7 @@ function renderChart(chartId, i, keys) {
           .text("Side")
           .attr("x", chartWidth / 2)
           .attr("y", 29)
-          .style("text-andhor", "middle");
+          .style("text-anchor", "middle");
 
   // one group for each of the die's sides
   var sideGroup = chart.selectAll("g.side-group")
@@ -165,9 +169,10 @@ function renderChart(chartId, i, keys) {
 
   // the main visible bar
   bar.append("rect")
-          .attr("y", function(d) { return yScale(d.p); })
-          .attr("width", barWidth)
-          .attr("height", function(d) { return height - yScale(d.p); });
+      .attr("class", function(d, i) { return "bar series" + i; })
+      .attr("y", function(d) { return yScale(d.p); })
+      .attr("width", barWidth)
+      .attr("height", function(d) { return height - yScale(d.p); });
 
   // confidence intervals
   var barCenter = barWidth / 2;
@@ -180,4 +185,29 @@ function renderChart(chartId, i, keys) {
           `M ${barCenter - 3} ${yScale(d.p_95)} ` +
           `L ${barCenter + 3} ${yScale(d.p_95)}`; })
       .attr("class", "ci");
+
+  // legend
+  if (srcNames) {
+    var legend = chart.append("g")
+        .attr("class", "legend")
+        .attr(
+            "transform",
+            `translate(${chartWidth + margin.right}, ${margin.top})`);
+    var series = legend.selectAll("g")
+        .data(srcNames)
+        .enter().append("g")
+            .attr("height", barWidth)
+            .attr(
+                "transform",
+                function(d, i) { return `translate(0, ${i * 20})`; });
+    series.append("text")
+        .text(function(d) { return d; })
+        .style("text-anchor", "start")
+        .style("dominant-baseline", "hanging");
+    series.append("rect")
+        .attr("class", function(d, i) { return "swatch series" + i; })
+        .attr("width", barWidth)
+        .attr("height", barWidth)
+        .attr("x", -(barWidth + 2 * barMargin));
+  }
 }

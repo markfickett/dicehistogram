@@ -12,19 +12,23 @@
       display: block;
     }
 
-    .chart rect {
-      fill: steelblue;
+    .chart .bar {
       opacity: 0.9;
     }
-    .chart rect:hover {
+    .chart .bar:hover {
       opacity: 1.0;
     }
+
+    .chart .series0 { fill: steelblue; }
+    .chart .series1 { fill: peru; }
+    .chart .series2 { fill: olivedrab; }
+    .chart .series3 { fill: mediumvioletred; }
 
     .axis text {
       fill: black;
       font: 10px sans-serif;
     }
-    .chart .title {
+    .chart .title, .legend {
       fill: black;
       font-size: 12px;
     }
