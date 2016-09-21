@@ -1,35 +1,28 @@
 {
-  "charts": {
-    "chessexgreen": {
-      "filenames": ["151103d20chessexgreenmarbled"]},
-    "wizpurple": {
-      "filenames": ["151031d20wizdiceopaquepurple"]},
-    "ccd20": {
-      "filenames": [
-        "151114d6crystalcasteclearblack",
-        "151114d6crystalcastetranslucentorange"]},
-    "skewd6": {
-      "title": "Skew d6 From Dice Lab",
-      "filenames": [
-        "160110skewd6cw",
-        "160111skewd6ccw",
-        "160111skewd6cw",
-        "160112skewd6ccw"]}},
-  "srcs": [
-    {"filename": "151103d20chessexgreenmarbled",
-     "name": "Chessex Green Marbled d20"},
-    {"filename": "151031d20wizdiceopaquepurple",
-     "name": "Wiz Dice Opaque Purple d20"},
-    {"filename": "151114d6crystalcasteclearblack",
-     "name": "Crystal Caste Clear Black d20"},
-    {"filename": "151114d6crystalcastetranslucentorange",
-     "name": "Crystal Caste Translucent Orange d20"},
-    {"filename": "160110skewd6cw",
-     "name": "Skew d6 (CW A)"},
-    {"filename": "160111skewd6ccw",
-     "name": "Skew d6 (CCW A)"},
-    {"filename": "160111skewd6cw",
-     "name": "Skew d6 (CW B)"},
-    {"filename": "160112skewd6ccw",
-     "name": "Skew d6 (CCW B)"}]
+  "chessexgreen": {
+    "title": "Chessex Green Marbled d20",
+    "filenames": ["151103d20chessexgreenmarbled"]},
+  "wizpurple": {
+    "title": "Wiz Dice Opaque Purple d20",
+    "filenames": ["151031d20wizdiceopaquepurple"]},
+  "ccd20": {
+    "title": "Crystal Caste d20s",
+    "names": [
+      "Clear Black",
+      "Translucent Orange"],
+    "filenames": [
+      "151114d6crystalcasteclearblack",
+      "151114d6crystalcastetranslucentorange"]},
+  "skewd6": {
+    "title": "Skew d6 From Dice Lab",
+    "names": [
+      "CW A",
+      "CW B",
+      "CCW A",
+      "CCW B"],
+    "filenames": [
+      "160110skewd6cw",
+      "160111skewd6cw",
+      "160111skewd6ccw",
+      "160112skewd6ccw"]}
 }

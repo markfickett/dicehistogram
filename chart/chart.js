@@ -1,6 +1,6 @@
-var dataLoadRequestsPending = 0;
-var loadedData = {};
-var charts = {};
+var g_dataLoadRequestsPending = d3.set();
+var g_loadedData = {};
+var g_charts = {};
 
 var margin = {top: 30, right: 30, bottom: 30, left: 50};
 var barMargin = 2;
@@ -12,52 +12,61 @@ d3.selectAll('.chart')
 
 d3.json(
     "data-index.json",
-    function(error, dataIndex) {
+    function(error, chartsFromJson) {
       if (error) {
         console.log('JSON loading error: ' + error);
         return;
       }
-      console.log(dataIndex);
-      charts = dataIndex.charts;
-      dataLoadRequestsPending = dataIndex.srcs.length;
-      dataIndex.srcs.forEach(function(d) {
-        loadedData[d.filename] = {
-            filename: d.filename, name: d.name, data: null};
-        d3.csv(
-            d.filename + ".csv",
-            function(d) {
-              d.p = +d.p;
-              d.p_5 = +d.p_5;
-              d.p_95 = +d.p_95;
-              return d;
-            },
-            function(error, dataSingle) {
-              recordAndRenderIfComplete(d.filename, dataSingle);
-            });
+      g_charts = chartsFromJson;
+      console.log(g_charts);
+      Object.keys(g_charts).forEach(function(chartId) {
+        var chartData = g_charts[chartId];
+        chartData.filenames.forEach(function(filename) {
+          d3.csv(
+              filename + ".csv",
+              function(d) {
+                d.p = +d.p;
+                d.p_5 = +d.p_5;
+                d.p_95 = +d.p_95;
+                return d;
+              },
+              function(error, dataSingle) {
+                recordAndRenderIfComplete(filename, dataSingle);
+              }
+          );
+          g_dataLoadRequestsPending.add(filename);
+        });
       });
     });
 
 function recordAndRenderIfComplete(filename, data) {
   console.log(`Loaded ${filename}.`);
-  loadedData[filename].data = data;
-  dataLoadRequestsPending--;
-  if (dataLoadRequestsPending <= 0) {
+  g_loadedData[filename] = data;
+  g_dataLoadRequestsPending.remove(filename);
+  if (g_dataLoadRequestsPending.empty()) {
     console.log("Loading done, ready to render.");
-    Object.keys(charts).forEach(renderChart.bind(null, charts));
+    Object.keys(g_charts).forEach(renderChart);
   }
 }
 
-function renderChart(charts, chartId, i, keys) {
-  var chartDetails = charts[chartId];
+function renderChart(chartId, i, keys) {
+  var chartDetails = g_charts[chartId];
   var srcs = chartDetails.filenames.map(function(filename) {
-    return loadedData[filename];
+    return g_loadedData[filename];
   });
-  var title = chartDetails.title;
-  if (!title) {
-    title = srcs[0].name;
+  var srcNames = null;
+  if (chartDetails.names) {
+    if (chartDetails.names.length == srcs.length) {
+    } else {
+      console.log(
+          `Length mismatch: ${srcs.length} srcs, `
+          `${chartDetails.names.length} names.`);
+    }
+    srcNames = chartDetails.names;
   }
+  var title = chartDetails.title;
   console.log(`Rendering ${title}.`);
-  var numSides = srcs[0].data.length;
+  var numSides = srcs[0].length;
 
   var sideGroupWidth = (srcs.length + 3) * barMargin + srcs.length * barWidth;
   var yScale = d3.scaleLinear()
@@ -70,7 +79,7 @@ function renderChart(charts, chartId, i, keys) {
   var chartWidth = numSides * sideGroupWidth;
   var containerWidth = chartWidth + margin.left + margin.right;
   xScale
-      .domain(srcs[0].data.map(function(d) { return d.side; }))
+      .domain(srcs[0].map(function(d) { return d.side; }))
       .range([0, chartWidth]);
 
   var fairValue = 1.0 / numSides;
@@ -78,12 +87,12 @@ function renderChart(charts, chartId, i, keys) {
   for(var s = 0; s < numSides; s++) {
     var zippedValue = {side: s + 1, values: []};
     for(var i = 0; i < srcs.length; i++) {
-      zippedValue.values.push(srcs[i].data[s]);
+      zippedValue.values.push(srcs[i][s]);
     }
     zippedData.push(zippedValue);
   }
   var maxValue = d3.max(srcs, function(src) {
-      return d3.max(src.data, function(d) { return d.p_95; })
+      return d3.max(src, function(d) { return d.p_95; })
   });
   yScale.domain([0, maxValue]);
   yAxis.tickSizeInner(-chartWidth);
@@ -156,7 +165,7 @@ function renderChart(charts, chartId, i, keys) {
 
   var barCenter = barWidth / 2;
   bar.append("path")
-      .attr("d", function(d) { console.log(d); return "" +
+      .attr("d", function(d) { return "" +
           `M ${barCenter - 3} ${yScale(d.p_5)} ` +
           `L ${barCenter + 3} ${yScale(d.p_5)} ` +
           `M ${barCenter} ${yScale(d.p_5)} ` +
