@@ -19,16 +19,18 @@
       opacity: 1.0;
     }
 
-    .chart .series0 { fill: steelblue; }
-    .chart .series1 { fill: peru; }
-    .chart .series2 { fill: olivedrab; }
-    .chart .series3 { fill: mediumvioletred; }
+    /* from colorbrewer2.org */
+    .chart .series0 { fill: #018571; }
+    .chart .series1 { fill: #80cdc1; }
+    .chart .series2 { fill: #dfc27d; }
+    .chart .series3 { fill: #a6611a; }
 
     .axis text {
       fill: black;
       font: 10px sans-serif;
     }
-    .chart .title, .legend {
+    .chart .title,
+    .legend {
       fill: black;
       font-size: 12px;
     }
@@ -42,7 +44,8 @@
 
     .ci {
       fill: none;
-      stroke: #558;
+      stroke: #000;
+      opacity: 0.6;
       shape-rendering: crispEdges;
     }
 
@@ -52,7 +55,7 @@
     }
 
     line.fair {
-      stroke: steelblue;
+      stroke: #018571;
       stroke-dasharray: 5, 5;
     }
   </style>
