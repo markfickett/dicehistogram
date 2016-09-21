@@ -163,6 +163,11 @@ def WriteHistogramData(histogram_headers, histogram_data, csv_path):
     print 'wrote', csv_path
 
 
+def _SafeBincount(a, expected_max_value):
+  bincounts = list(numpy.bincount(a))
+  return bincounts + [0] * (1 + expected_max_value - len(bincounts))
+
+
 # Typically 10k bootstrapped subsamples are taken, but it shows minimal
 # difference from 1k (or even 100), and takes proportionately longer.
 BOOTSTRAP_SAMPLES = 1000
@@ -178,13 +183,14 @@ def GetHistogramAndQuantileValues(ordered_labels):
   https://scikits.appspot.com/bootstrap on each of the labels' values. However
   that would require re-computing subsamples for each side's probability.
   """
-  headers = ('side', 'p', 'p_%d' % PERCENTILE_LOW, 'p_%d' % PERCENTILE_HIGH)
+  headers = ('side', 'p', 'ci_low', 'ci_high')
   n = len(ordered_labels)
-  bin_counts = numpy.bincount(ordered_labels)
+  max_value = max(ordered_labels)
+  bin_counts = _SafeBincount(ordered_labels, max_value)
   subsample_bin_counts = []
   for _ in xrange(BOOTSTRAP_SAMPLES):
     subsample = numpy.random.choice(ordered_labels, size=n)  # with replacement
-    subsample_bin_counts.append(numpy.bincount(subsample))
+    subsample_bin_counts.append(_SafeBincount(subsample, max_value))
   data = []
   for label in sorted(set(ordered_labels)):
     label_subsamples = [counts[label] for counts in subsample_bin_counts]
@@ -215,8 +221,10 @@ if __name__ == '__main__':
       '--csv',
       help='Name of a file to write CSV histogram data. Values will include '
            + 'normalized  frequencies for each label, and will have a column '
-           + 'for the full dataset as well as random subsamples of varying '
-           + 'size.')
+           + 'for the full dataset as well as confidence intervals.')
+  parser.add_argument(
+      '--num-labels', '-n', dest='num_labels', type=int, default=None,
+      help='Number of labels to use in analysis. Default is to use all data.')
   args, positional = parser.parse_known_args()
   data_dir = positional[0]
 
@@ -228,6 +236,8 @@ if __name__ == '__main__':
         print 'skipping comment:', line[1:].strip()
         continue
       ordered_labels.append(int(line.strip()))
+    if args.num_labels is not None:
+      ordered_labels = ordered_labels[:args.num_labels]
 
   print 'Summary of %d labels from %s' % (len(ordered_labels), labels_filename)
 

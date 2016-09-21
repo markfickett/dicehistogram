@@ -25,10 +25,13 @@ d3.json(
         chartData.filenames.forEach(function(filename) {
           d3.csv(
               filename + ".csv",
-              function(d) {
+              function(d, i) {
+                if (i == 0 && typeof(d.p) == "undefined") {
+                  console.log(`d.p error for ${filename}.`);
+                }
                 d.p = +d.p;
-                d.p_5 = +d.p_5;
-                d.p_95 = +d.p_95;
+                d.ci_low = +d.ci_low;
+                d.ci_high = +d.ci_high;
                 return d;
               },
               function(error, dataSingle) {
@@ -96,7 +99,7 @@ function renderChart(chartId, i, keys) {
     zippedData.push(zippedValue);
   }
   var maxValue = d3.max(srcs, function(src) {
-      return d3.max(src, function(d) { return d.p_95; })
+      return d3.max(src, function(d) { return d.ci_high; })
   });
   yScale.domain([0, maxValue]);
   yAxis.tickSizeInner(-chartWidth);
@@ -178,12 +181,12 @@ function renderChart(chartId, i, keys) {
   var barCenter = barWidth / 2;
   bar.append("path")
       .attr("d", function(d) { return "" +
-          `M ${barCenter - 3} ${yScale(d.p_5)} ` +
-          `L ${barCenter + 3} ${yScale(d.p_5)} ` +
-          `M ${barCenter} ${yScale(d.p_5)} ` +
-          `L ${barCenter} ${yScale(d.p_95)} ` +
-          `M ${barCenter - 3} ${yScale(d.p_95)} ` +
-          `L ${barCenter + 3} ${yScale(d.p_95)}`; })
+          `M ${barCenter - 3} ${yScale(d.ci_low)} ` +
+          `L ${barCenter + 3} ${yScale(d.ci_low)} ` +
+          `M ${barCenter} ${yScale(d.ci_low)} ` +
+          `L ${barCenter} ${yScale(d.ci_high)} ` +
+          `M ${barCenter - 3} ${yScale(d.ci_high)} ` +
+          `L ${barCenter + 3} ${yScale(d.ci_high)}`; })
       .attr("class", "ci");
 
   // legend

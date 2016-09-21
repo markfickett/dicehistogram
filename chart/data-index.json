@@ -1,4 +1,26 @@
 {
+  "d20rollcounts": {
+    "title": "Comparison of First N Rolls For Varying N (d20)",
+    "names": ["256", "512", "1024", "2048", "4096", "8300"],
+    "filenames": [
+      "151031d20wizdiceopaquepurple-256",
+      "151031d20wizdiceopaquepurple-512",
+      "151031d20wizdiceopaquepurple-1024",
+      "151031d20wizdiceopaquepurple-2048",
+      "151031d20wizdiceopaquepurple-4096",
+      "151031d20wizdiceopaquepurple"]
+  },
+  "d8rollcounts": {
+    "title": "Comparison of First N Rolls For Varying N (d8)",
+    "names": ["128", "256", "512", "1024", "2048", "3001"],
+    "filenames": [
+      "151111d8crystalcasteclearblack-128",
+      "151111d8crystalcasteclearblack-256",
+      "151111d8crystalcasteclearblack-512",
+      "151111d8crystalcasteclearblack-1024",
+      "151111d8crystalcasteclearblack-2048",
+      "151111d8crystalcasteclearblack"]
+  },
   "chessexgreen": {
     "title": "Chessex Green Marbled d20 (N=3494)",
     "filenames": ["151103d20chessexgreenmarbled"]},
