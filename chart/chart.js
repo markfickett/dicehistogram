@@ -4,8 +4,6 @@ var g_charts = {};
 
 var margin = {top: 30, right: 30, bottom: 30, left: 50};
 var legendWidth = 200;
-var barMargin = 2;
-var barWidth = 14;
 var height = 300 - (margin.top + margin.bottom);
 
 d3.selectAll('.chart')
@@ -71,6 +69,17 @@ function renderChart(chartId, i, keys) {
   var title = chartDetails.title;
   console.log(`Rendering ${title}.`);
   var numSides = srcs[0].length;
+
+  var barMargin = 1;
+  var barWidth = 14;
+  if (srcs.length > 1) {
+    barMargin = 2;
+    if (srcs.length <= 4) {
+      barWidth = 10;
+    } else {
+      barWidth = 6;
+    }
+  }
 
   var sideGroupWidth = (srcs.length + 3) * barMargin + srcs.length * barWidth;
   var yScale = d3.scaleLinear()
