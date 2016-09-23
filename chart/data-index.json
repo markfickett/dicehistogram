@@ -21,9 +21,20 @@
       "151111d8crystalcasteclearblack-2048",
       "151111d8crystalcasteclearblack"]
   },
-  "chessexgreen": {
-    "title": "Chessex Green Marbled d20 (N=3494)",
-    "filenames": ["151103d20chessexgreenmarbled"]},
+  "chessexd20": {
+    "title": "Chessex d20s",
+    "names": [
+      "Gemini Copper Steel (N=2399)",
+      "Purple/Gray (N=3003)",
+      "Red/Orange (N=3003)",
+      "Yellow (N=3003)",
+      "Green Marbled (N=3496)"],
+    "filenames": [
+      "151023d20chessexgeminicoppersteel",
+      "151109d20chessexpurplegray",
+      "151111d20chessexredorange",
+      "151111d20chessexyellow",
+      "151103d20chessexgreenmarbled"]},
   "wizpurple": {
     "title": "Wiz Dice Opaque Purple d20 (N=8300)",
     "filenames": ["151031d20wizdiceopaquepurple"]},
