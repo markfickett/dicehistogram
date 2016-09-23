@@ -72,5 +72,14 @@
     "filenames": ["151105d20wizdiceblue"]},
   "d20wizdicetranslucentblue151106": {
     "title": "Translucent Blue (borrowed, N=3003)",
-    "filenames": ["151106d20wizdicetranslucentblue"]}
+    "filenames": ["151106d20wizdicetranslucentblue"]},
+  "gswhite": {
+    "title": "Game Science White d20 (N=3001)",
+    "filenames": ["151119d20gamesciencewhite"]},
+  "gsblacknotrim": {
+    "title": "Game Science Black d20, Before Trim (N=3001)",
+    "filenames": ["151109d20gamescienceblackgold"]},
+  "gsblack": {
+    "title": "Game Science Black d20, After Trim (N=3001)",
+    "filenames": ["151109d20gamescienceblackgoldtrimmed"]}
 }
