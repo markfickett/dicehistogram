@@ -57,5 +57,20 @@
       "160110skewd6cw",
       "160111skewd6cw",
       "160111skewd6ccw",
-      "160112skewd6ccw"]}
+      "160112skewd6ccw"]},
+  "d20wizdiceopaquepurple": {
+    "title": "Opaque Purple (High City Books, N=8302)",
+    "filenames": ["151031d20wizdiceopaquepurple"]},
+  "d20wizdicetranslucentblue151029": {
+    "title": "Translucent Blue (High City Books, N=3877)",
+    "filenames": ["151029d20wizdicetranslucentblue"]},
+  "d20wizdiceyellow": {
+    "title": "Yellow (borrowed, N=3003)",
+    "filenames": ["151105d20wizdiceyellow"]},
+  "d20wizdiceblue": {
+    "title": "Opaque Blue (borrowed, N=3003)",
+    "filenames": ["151105d20wizdiceblue"]},
+  "d20wizdicetranslucentblue151106": {
+    "title": "Translucent Blue (borrowed, N=3003)",
+    "filenames": ["151106d20wizdicetranslucentblue"]}
 }
