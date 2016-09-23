@@ -78,6 +78,14 @@
     "filenames": [
       "151111d20crystalcasteclearblack",
       "151112d20crystalcastetranslucentorange"]},
+  "koplowd20": {
+    "title": "Koplow d20s (N=3003)",
+    "names": ["Blue", "Green A", "Green B"],
+    "filenames": [
+      "151113d20koplowblue",
+      "151113d20koplowgreen",
+      "151115d20koplowgreenother"]
+  },
   "skewd6": {
     "title": "Skew d6 From Dice Lab",
     "names": [
