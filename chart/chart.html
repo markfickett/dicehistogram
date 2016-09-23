@@ -32,7 +32,8 @@
       font: 10px sans-serif;
     }
     .chart .title,
-    .legend {
+    .legend,
+    .copyright {
       fill: black;
       font-size: 12px;
     }
@@ -60,15 +61,22 @@
       stroke: #018571;
       stroke-dasharray: 5, 5;
     }
+
+    .copyright {
+      fill: #aaa;
+    }
   </style>
 </head>
 <body>
   <svg class="chart" id="d20rollcounts"></svg>
   <svg class="chart" id="d8rollcounts"></svg>
-  <svg class="chart" id="chessexgreen"></svg>
-  <svg class="chart" id="wizpurple"></svg>
-  <svg class="chart" id="skewd6"></svg>
+  <svg class="chart" id="chessexgreen"></svg> <!-- TODO all chessex -->
+  <svg class="chart" id="wizpurple"></svg> <!-- all wiz (separately) -->
+  <!-- Game Science -->
   <svg class="chart" id="ccd20"></svg>
+  <!-- ccd6 -->
+  <!-- Koplow d20s -->
+  <svg class="chart" id="skewd6"></svg>
   <script src="chart.js"></script>
 </body>
 </html>

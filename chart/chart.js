@@ -222,4 +222,11 @@ function renderChart(chartId, i, keys) {
         .attr("height", barWidth)
         .attr("x", -(barWidth + 2 * barMargin));
   }
+
+  container.append("text")
+      .html("markfickett.com/dice &copy; 2016 cc-by-nc")
+      .attr("class", "copyright")
+      .attr("x", 20)
+      .attr("y", height + margin.top + margin.bottom - 10)
+      .style("dominant-baseline", "hanging");
 }
