@@ -2,7 +2,7 @@ var g_dataLoadRequestsPending = d3.set();
 var g_loadedData = {};
 var g_charts = {};
 
-var margin = {top: 30, right: 30, bottom: 30, left: 50};
+var margin = {top: 30, right: 30, bottom: 40, left: 50};
 var legendWidth = 200;
 var height = 300 - (margin.top + margin.bottom);
 
@@ -227,6 +227,6 @@ function renderChart(chartId, i, keys) {
       .html("markfickett.com/dice &copy; 2016 cc-by-nc")
       .attr("class", "copyright")
       .attr("x", 20)
-      .attr("y", height + margin.top + margin.bottom - 10)
+      .attr("y", height + margin.top + margin.bottom - 15)
       .style("dominant-baseline", "hanging");
 }
