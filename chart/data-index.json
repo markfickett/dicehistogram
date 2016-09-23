@@ -78,14 +78,39 @@
     "filenames": [
       "151111d20crystalcasteclearblack",
       "151112d20crystalcastetranslucentorange"]},
+  "ccd4": {
+    "title": "CC d4 (N=1001)",
+    "filenames": ["151126d4crystalcasteblack"]},
   "koplowd20": {
     "title": "Koplow d20s (N=3003)",
     "names": ["Blue", "Green A", "Green B"],
     "filenames": [
       "151113d20koplowblue",
       "151113d20koplowgreen",
-      "151115d20koplowgreenother"]
-  },
+      "151115d20koplowgreenother"]},
+  "d6chessexwiz": {
+    "title": "Chessex and Wiz Dice d6s",
+    "names": [
+      "Wiz Translucent Blue (HCB, N=1001)",
+      "Wiz Opaque Purple (HCB, N=3001)",
+      "Chessex Gemini Copper Steel (N=1001)"],
+    "filenames": [
+      "151114d6wizdicetranslucentblue",
+      "151113d6wizdiceopaquepurple",
+      "151114d6chessexgeminicoppersteel"]},
+  "koplowd6": {
+    "title": "Koplow Pipped d6s (N=1500)",
+    "filenames": [
+      "160110koplowd6b",
+      "160110koplowd6",
+      "160104koplowd6"]},
+  "catand6": {
+    "title": "Settlers of Catan Pipped d6s",
+    "names": ["Red (N=1990)", "Yellow (N=2000)"],
+    "filenames": ["160117catanredd6", "160117catanyellowd6"]},
+  "catancombined": {
+    "title": "Combined Catan Rolls",
+    "filenames": ["catancombined"]},
   "skewd6": {
     "title": "Skew d6 From Dice Lab",
     "names": [
@@ -97,5 +122,15 @@
       "160110skewd6cw",
       "160111skewd6cw",
       "160111skewd6ccw",
-      "160112skewd6ccw"]}
+      "160112skewd6ccw"]},
+  "skewd12": {
+    "title": "Skew 126 From Dice Lab",
+    "names": [
+      "CW (N=2684)",
+      "CCW A (N=2937)",
+      "CCW B (N=7998)"],
+    "filenames": [
+      "160104skewd12",
+      "160102skewd12reflected",
+      "160101skewd12reflected"]}
 }
