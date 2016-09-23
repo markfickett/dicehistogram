@@ -184,7 +184,18 @@ function renderChart(chartId, i, keys) {
       .attr("class", function(d, i) { return "bar series" + i; })
       .attr("y", function(d) { return yScale(d.p); })
       .attr("width", barWidth)
-      .attr("height", function(d) { return height - yScale(d.p); });
+      .attr("height", function(d) { return height - yScale(d.p); })
+      .append("title")
+          .text(function(d) {
+            var dp = (100 * (d.p - fairValue) / fairValue);
+            if (Math.abs(d.p - fairValue) < 0.001) {
+              return `${d.side} is within ${Math.abs(dp).toFixed(1)}% of.`;
+            } else if (d.p > fairValue) {
+              return `${d.side} is ${dp.toFixed(1)}% more frequent than fair.`;
+            } else {
+              return `${d.side} is ${-dp.toFixed(1)}% less frequent than fair.`;
+            }
+          });
 
   // confidence intervals
   var barCenter = barWidth / 2;
