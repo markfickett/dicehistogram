@@ -38,26 +38,6 @@
   "wizpurple": {
     "title": "Wiz Dice Opaque Purple d20 (N=8300)",
     "filenames": ["151031d20wizdiceopaquepurple"]},
-  "ccd20": {
-    "title": "Crystal Caste d20s",
-    "names": [
-      "Clear Black (N=1000)",
-      "Translucent Orange (N=3000)"],
-    "filenames": [
-      "151114d6crystalcasteclearblack",
-      "151114d6crystalcastetranslucentorange"]},
-  "skewd6": {
-    "title": "Skew d6 From Dice Lab",
-    "names": [
-      "CW A (N=1500)",
-      "CW B (N=1500)",
-      "CCW A (N=1500)",
-      "CCW B (N=5000)"],
-    "filenames": [
-      "160110skewd6cw",
-      "160111skewd6cw",
-      "160111skewd6ccw",
-      "160112skewd6ccw"]},
   "d20wizdiceopaquepurple": {
     "title": "Opaque Purple (High City Books, N=8302)",
     "filenames": ["151031d20wizdiceopaquepurple"]},
@@ -81,5 +61,33 @@
     "filenames": ["151109d20gamescienceblackgold"]},
   "gsblack": {
     "title": "Game Science Black d20, After Trim (N=3001)",
-    "filenames": ["151109d20gamescienceblackgoldtrimmed"]}
+    "filenames": ["151109d20gamescienceblackgoldtrimmed"]},
+  "ccd6": {
+    "title": "Crystal Caste d6: Cyrstal and Cube",
+    "names": [
+      "Clear Black (Cube, N=1001)",
+      "Translucent Orange (Crystal, N=3001)"],
+    "filenames": [
+      "151114d6crystalcasteclearblack",
+      "151114d6crystalcastetranslucentorange"]},
+  "ccd20": {
+    "title": "Crystal Caste d20s",
+    "names": [
+      "Clear Black (N=3001)",
+      "Translucent Orange (N=3001)"],
+    "filenames": [
+      "151111d20crystalcasteclearblack",
+      "151112d20crystalcastetranslucentorange"]},
+  "skewd6": {
+    "title": "Skew d6 From Dice Lab",
+    "names": [
+      "CW A (N=1500)",
+      "CW B (N=1500)",
+      "CCW A (N=1500)",
+      "CCW B (N=5000)"],
+    "filenames": [
+      "160110skewd6cw",
+      "160111skewd6cw",
+      "160111skewd6ccw",
+      "160112skewd6ccw"]}
 }

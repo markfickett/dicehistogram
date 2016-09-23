@@ -2,7 +2,7 @@ var g_dataLoadRequestsPending = d3.set();
 var g_loadedData = {};
 var g_charts = {};
 
-var margin = {top: 30, right: 30, bottom: 40, left: 50};
+var margin = {top: 30, right: 30, bottom: 50, left: 50};
 var legendWidth = 200;
 var height = 300 - (margin.top + margin.bottom);
 
