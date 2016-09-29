@@ -98,7 +98,7 @@ function renderChart(chartId, i, keys) {
       .domain(srcs[0].map(function(d) { return d.side; }))
       .range([0, chartWidth]);
 
-  var fairValue = 1.0 / numSides;
+  var fairValue = chartDetails.fairValue || 1.0 / numSides;
   var zippedData = [];
   for(var s = 0; s < numSides; s++) {
     var zippedValue = {side: s + 1, values: []};

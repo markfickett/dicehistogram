@@ -110,6 +110,7 @@
     "filenames": ["160117catanredd6", "160117catanyellowd6"]},
   "catancombined": {
     "title": "Combined Catan Rolls",
+    "fairValue": 0.09091,
     "filenames": ["catancombined"]},
   "skewd6": {
     "title": "Skew d6 From Dice Lab",
