@@ -153,7 +153,7 @@ function renderChart(chartId, i, keys) {
       .attr("transform", `translate(0, ${height + 1})`)
       .call(xAxis)
       .append("text")
-          .text("Side")
+          .text("Die Side Rolled")
           .attr("x", chartWidth / 2)
           .attr("y", 29)
           .style("text-anchor", "middle");
