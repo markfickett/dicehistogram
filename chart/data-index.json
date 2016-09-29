@@ -1,6 +1,6 @@
 {
   "d20rollcounts": {
-    "title": "Comparison of First N Rolls For Varying N (d20)",
+    "title": "Comparison of First N Rolls For Varying N (Wiz Dice Opaque Purple d20)",
     "names": ["256", "512", "1024", "2048", "4096", "8300"],
     "filenames": [
       "151031d20wizdiceopaquepurple-256",
@@ -11,7 +11,7 @@
       "151031d20wizdiceopaquepurple"]
   },
   "d8rollcounts": {
-    "title": "Comparison of First N Rolls For Varying N (d8)",
+    "title": "Comparison of First N Rolls For Varying N (Crystal Caste Clear Black d8)",
     "names": ["128", "256", "512", "1024", "2048", "3001"],
     "filenames": [
       "151111d8crystalcasteclearblack-128",
@@ -35,24 +35,36 @@
       "151111d20chessexredorange",
       "151111d20chessexyellow",
       "151103d20chessexgreenmarbled"]},
-  "wizpurple": {
-    "title": "Wiz Dice Opaque Purple d20 (N=8300)",
-    "filenames": ["151031d20wizdiceopaquepurple"]},
+  "wizd20s": {
+    "title": "Wiz Dice d20s (Borrowed or From High City Books)",
+    "names": [
+      "Opaque Purple (HCB, N=8302)",
+      "Translucent Blue (HCB, N=3877)",
+      "Yellow (borrowed, N=3003)",
+      "Opaque Blue (borrowed, N=3003)",
+      "Translucent Blue (borrowed, N=3003)"],
+    "filenames": [
+      "151031d20wizdiceopaquepurple",
+      "151029d20wizdicetranslucentblue",
+      "151105d20wizdiceyellow",
+      "151105d20wizdiceblue",
+      "151106d20wizdicetranslucentblue"]},
   "d20wizdiceopaquepurple": {
-    "title": "Opaque Purple (High City Books, N=8302)",
+    "title": "Opaque Purple (Wiz Dice from High City Books, N=8302)",
     "filenames": ["151031d20wizdiceopaquepurple"]},
   "d20wizdicetranslucentblue151029": {
-    "title": "Translucent Blue (High City Books, N=3877)",
+    "title": "Translucent Blue (Wiz Dice from High City Books, N=3877)",
     "filenames": ["151029d20wizdicetranslucentblue"]},
   "d20wizdiceyellow": {
-    "title": "Yellow (borrowed, N=3003)",
+    "title": "Yellow (Wiz Dice borrowed, N=3003)",
     "filenames": ["151105d20wizdiceyellow"]},
   "d20wizdiceblue": {
-    "title": "Opaque Blue (borrowed, N=3003)",
+    "title": "Opaque Blue (Wiz Dice borrowed, N=3003)",
     "filenames": ["151105d20wizdiceblue"]},
   "d20wizdicetranslucentblue151106": {
-    "title": "Translucent Blue (borrowed, N=3003)",
+    "title": "Translucent Blue (Wiz Dice borrowed, N=3003)",
     "filenames": ["151106d20wizdicetranslucentblue"]},
+
   "gswhite": {
     "title": "Game Science White d20 (N=3001)",
     "filenames": ["151119d20gamesciencewhite"]},
@@ -125,7 +137,7 @@
       "160111skewd6ccw",
       "160112skewd6ccw"]},
   "skewd12": {
-    "title": "Skew 126 From Dice Lab",
+    "title": "Skew d12 From Dice Lab",
     "names": [
       "CW (N=2684)",
       "CCW A (N=2937)",
