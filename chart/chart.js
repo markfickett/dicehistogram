@@ -138,7 +138,7 @@ function renderChart(chartId, i, keys) {
           .attr("x", -yScale(maxValue / 2))
           .attr("dy", "0.71em")
           .style("text-anchor", "middle")
-          .text("Frequency");
+          .text(`Frequency (fair = ${fairValue.toFixed(2)})`);
   chart.append("line")
       .attr("class", "fair")
       .attr("x1", 0)
