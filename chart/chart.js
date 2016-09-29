@@ -224,9 +224,7 @@ function renderChart(chartId, i, keys) {
                 "transform",
                 function(d, i) { return `translate(0, ${i * 20})`; });
     series.append("text")
-        .text(function(d) { return d; })
-        .style("text-anchor", "start")
-        .style("dominant-baseline", "hanging");
+        .text(function(d) { return d; });
     series.append("rect")
         .attr("class", function(d, i) { return "swatch series" + i; })
         .attr("width", barWidth)
