@@ -1,3 +1,13 @@
+<style type="text/css">
+  <%include file="style.css" />
+</style>
+
+<!--
+  <svg class="chart" id="d20rollcounts"></svg>
+  <svg class="chart" id="d8rollcounts"></svg>
+  <svg class="chart" id="catancombined"></svg>
+-->
+
 <h2>How Fair Is My D20?</h2>
 
 <p>An automatic system for rolling a <a href="https://www.google.com/search?q=polyhedral+dice">polyhedral die</a> and taking photos of the rolls; extracting the image of just the die from those images; clustering the images of the die by which face is shown; and analyzing the results.<p>
@@ -66,7 +76,7 @@
 
 <p>The <a href="http://www.chessex.com/Dice/Dice_Home.htm">Chessex dice</a> I tested: I bought a 7-die Copper-Steel Gemini set and a <a href="http://www.amazon.com/gp/product/B00132G3SC">bag of 6 d20s</a> (from which I tested a red, yellow and purple/gray die), and borrowed another d20 (green, probably 1990s purchase date).</p>
 
-<img src="arduino/dicehistogram/151123chessexsummary.png" alt="histogram of Chessex d20 side frequencies" />
+<svg class="chart" id="chessexd20"></svg>
 
 <p>The Chessex d20s are all mid-range fairness. The older borrowed green die (probably 1990s) proving fairer. (The rest were all purchased in 2015.) They seem to roughly favor and avoid the same numbers which, on the dice, are arranged like the two sewn <a href="https://www.google.com/search?q=baseball&tbm=isch">halves of a baseball</a>.</p>
 
@@ -84,14 +94,15 @@
 
 <p>The Wiz dice I tested: Dice from two sets out of a <a href="http://highcitybooks.com/dice/index.php?route=product/category&path=59">highcitybooks.com</a> 35-die set; and three borrowed dice. (Note that highcitybooks is as of 2015 November selling Chessex, but historically sells bulk dice from multiple brands.)</p>
 
-<img src="arduino/dicehistogram/151123dicehistogramwizdiced20hcbopaquepurple.png" alt="histogram: HCB opaque purple" />
-<img src="arduino/dicehistogram/151123dicehistogramwizdiced20hcbtranslucentblue.png" alt="histogram: HCB translucent blue" />
-
-<img src="arduino/dicehistogram/151123dicehistogramwizdiced20solidblue.png" alt="histogram: borrowed blue" />
-<img src="arduino/dicehistogram/151123dicehistogramwizdiced20translucentblue.png" alt="histogram: borrowed translucent blue" />
-<img src="arduino/dicehistogram/151123dicehistogramwizdiced20yellow.png" alt="histogram: borrowed yellow" />
+<svg class="chart" id="wizd20s"></svg>
 
 <p>These Wiz Dice were highly variable, but do tend to have symmetrical distributions around 10&frac12; (like Chessex). In this small sample, the translucent dice were less fair than the opaques.</p>
+
+<svg class="chart" id="d20wizdiceopaquepurple"></svg>
+<svg class="chart" id="d20wizdicetranslucentblue151029"></svg>
+<svg class="chart" id="d20wizdiceyellow"></svg>
+<svg class="chart" id="d20wizdiceblue"></svg>
+<svg class="chart" id="d20wizdicetranslucentblue151106"></svg>
 
 <h3 id="gamescience">Game Science</h3>
 
@@ -103,7 +114,7 @@
 
 <p>The <a href="http://www.gamesciencedice.com/">Game Science</a> dice I tested: two individual d20s; one black with gold numerals, and one white with black. (Just for fun, I've put <a href="http://www.ebay.com/itm/-/111839062129?">the white one on eBay</a>.) I tested the black d20 both before and after trimming a molding bump (left and right images above, respectively; the trimmed bump is at the right of the edge between 7 and 4). Game Science promotes its dice as especially fair.</p>
 
-<img src="arduino/dicehistogram/151123dicehistogramsummary-gamescience.png" alt="Game Science d20s histogram" />
+<svg class="chart" id="gsd20s"></svg>
 
 <p>The dice require trimming after they arrive. The two dice did both arrive with visible bumps. I tested the black die before and after trimming it, and saw a significant improvement in fairness, in fact leaving the black Game Science d20 as the fairest d20 tested (with a standard deviation of 0.07, up from 0.12, and a Chi Squared value of 0.76). But the black die's expected value was 10.38 before trimming and 10.37 afterwards (compared to 10.5 for an ideal fair d20). However the white d20 after trimming was only run-of-the-mill (standard deviation of 0.12).</p>
 
@@ -120,7 +131,7 @@
 
 <p>The <a href="http://crystalcaste.com/">Crystal Caste</a> dice I tested: <a href="http://www.amazon.com/gp/product/B002KHAH6S">hybrid translucent orange</a> and <a href="http://www.amazon.com/gp/product/B002YUIOLQ">black/white translucent</a>.</p>
 
-<img src="arduino/dicehistogram/151123crystalcasted20summary.png" alt="Crystal Caste d20 histogram" />
+<svg class="chart" id="ccd20"></svg>
 
 <p>Crystal Caste's d20s were by far the least fair tested. The orange d20 (above) was visibly egg-shaped: longest diameter 19.77mm between 4 and 17, shortest diameter 18.98mm between 1 and 20. The two d20s do follow a similar distribution, and both have slightly low expected values, 10.18 and 10.24.</p>
 
@@ -131,9 +142,13 @@
 
 <p>I also compared one "Crystal" die to its platonic solid counterpart.</p>
 
-<img src="arduino/dicehistogram/151123crystalcasted6summary.png" alt="Crystal Caste d6 histogram" />
+<svg class="chart" id="ccd6"></svg>
 
 <p><a href="http://crystalcaste.com/mm5/merchant.mvc?Screen=CTGY&Store_Code=CC&Category_Code=CD">Crystal Caste says</a> the "Cyrstal Dice" are "A totally new shape for RPG polyhedral dice: geometric cyrstals with sides of exactly the same size, guaranteeing random numbers." However their "crystal" d6 compared very poorly to their own cube d6 from another set (standard deviations of 0.25 and 0.05 respectively). (Their standard-shaped d8 also performed fairly well with a standard deviation of 0.09.)</p>
+
+<p>And the d4.</p>
+
+<svg class="chart" id="ccd4"></svg>
 
 <h3 id="koplow">Koplow</h3>
 
@@ -145,9 +160,26 @@
 
 <p>The <a href="http://www.koplowgames.com/page87.html">Koplow dice</a> I tested: three dice from a <a href="http://www.amazon.com/gp/product/B00F3AZEPS">set of 10 d20s</a>.</p>
 
-<img src="arduino/dicehistogram/151123koplowsummary.png" alt="Koplow d20 histogram" />
+<svg class="chart" id="koplowd20"></svg>
 
 <p>Unlike the other d20s, the opposing sides on Koplow d20s do not all sum to 21. The pairs are: 1/20 2/12 3/17 4/16 5/19 6/14 7/13 8/18 9/15 10/11.</p>
+
+<h3>Pipped d6s</h3>
+
+<p>I tested some standard pipped d6s: The two from my Settlers of Catan set, and three from Koplow. The Settlers d6s turned out to be some of the fairest dice tested.</p>
+
+<svg class="chart" id="pippedd6"></svg>
+
+<h3>Chessex and Wiz Dice d6s</h3>
+
+<svg class="chart" id="d6chessexwiz"></svg>
+
+<h3 id="skewdice">Skew Dice</h3>
+
+<p><a href="https://www.mathartfun.com/thedicelab.com/SkewDice.html">Dice Lab</a> sent me some Skew Dice for evaluation. These are a novelty shape that is still mathematically fair. The dice turned out to be imperfect embeddings:</p>
+
+<svg class="chart" id="skewd6"></svg>
+<svg class="chart" id="skewd12"></svg>
 
 <h3 id="geometry">Geometric Analysis</h3>
 
@@ -286,3 +318,16 @@
 <li><a href="arduino/dicehistogram/20190508disquscommentsexport.pdf">Archived Disqus comments (PDF)</a></li>
 </ul>
 
+<script type="text/javascript">
+  <%include file="d3.min.js" />
+</script>
+<script type="text/javascript">
+  var g_charts =
+    <%include file="chart_index.json" />
+  ;
+  var g_chartData = {};
+  %for chartName, chartJson in chartNameToJson.items():
+      g_chartData['${chartName}'] = ${chartJson};
+  % endfor
+  <%include file="chart.js" />
+</script>

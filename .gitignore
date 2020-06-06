@@ -1,5 +1,6 @@
 index.html
 index_venv/
+venv/
 data/*/capture
 data/*/crop
 arduino

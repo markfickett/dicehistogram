@@ -1,0 +1,156 @@
+{
+  "d20rollcounts": {
+    "title": "Comparison of First N Rolls For Varying N (Wiz Dice Opaque Purple d20)",
+    "names": ["256", "512", "1024", "2048", "4096", "8300"],
+    "filenames": [
+      "151031d20wizdiceopaquepurple-256",
+      "151031d20wizdiceopaquepurple-512",
+      "151031d20wizdiceopaquepurple-1024",
+      "151031d20wizdiceopaquepurple-2048",
+      "151031d20wizdiceopaquepurple-4096",
+      "151031d20wizdiceopaquepurple"]
+  },
+  "d8rollcounts": {
+    "title": "Comparison of First N Rolls For Varying N (Crystal Caste Clear Black d8)",
+    "names": ["128", "256", "512", "1024", "2048", "3001"],
+    "filenames": [
+      "151111d8crystalcasteclearblack-128",
+      "151111d8crystalcasteclearblack-256",
+      "151111d8crystalcasteclearblack-512",
+      "151111d8crystalcasteclearblack-1024",
+      "151111d8crystalcasteclearblack-2048",
+      "151111d8crystalcasteclearblack"]
+  },
+  "chessexd20": {
+    "title": "Chessex d20s",
+    "names": [
+      "Gemini Copper Steel (N=2399)",
+      "Purple/Gray (N=3003)",
+      "Red/Orange (N=3003)",
+      "Yellow (N=3003)",
+      "Green Marbled (N=3496)"],
+    "filenames": [
+      "151023d20chessexgeminicoppersteel",
+      "151109d20chessexpurplegray",
+      "151111d20chessexredorange",
+      "151111d20chessexyellow",
+      "151103d20chessexgreenmarbled"]},
+  "wizd20s": {
+    "title": "Wiz Dice d20s (Borrowed or From High City Books)",
+    "names": [
+      "Opaque Purple (HCB, N=8302)",
+      "Translucent Blue (HCB, N=3877)",
+      "Yellow (borrowed, N=3003)",
+      "Opaque Blue (borrowed, N=3003)",
+      "Translucent Blue (borrowed, N=3003)"],
+    "filenames": [
+      "151031d20wizdiceopaquepurple",
+      "151029d20wizdicetranslucentblue",
+      "151105d20wizdiceyellow",
+      "151105d20wizdiceblue",
+      "151106d20wizdicetranslucentblue"]},
+  "d20wizdiceopaquepurple": {
+    "title": "Opaque Purple (Wiz Dice from High City Books, N=8302)",
+    "filenames": ["151031d20wizdiceopaquepurple"]},
+  "d20wizdicetranslucentblue151029": {
+    "title": "Translucent Blue (Wiz Dice from High City Books, N=3877)",
+    "filenames": ["151029d20wizdicetranslucentblue"]},
+  "d20wizdiceyellow": {
+    "title": "Yellow (Wiz Dice borrowed, N=3003)",
+    "filenames": ["151105d20wizdiceyellow"]},
+  "d20wizdiceblue": {
+    "title": "Opaque Blue (Wiz Dice borrowed, N=3003)",
+    "filenames": ["151105d20wizdiceblue"]},
+  "d20wizdicetranslucentblue151106": {
+    "title": "Translucent Blue (Wiz Dice borrowed, N=3003)",
+    "filenames": ["151106d20wizdicetranslucentblue"]},
+  "gsd20s": {
+    "title": "Game Science D20s",
+    "names": [
+      "Game Science White d20 (N=3001)",
+      "Game Science Black d20, Before Trim (N=3001)",
+      "Game Science Black d20, After Trim (N=3001)"],
+    "filenames": [
+      "151119d20gamesciencewhite",
+      "151109d20gamescienceblackgold",
+      "151109d20gamescienceblackgoldtrimmed"]},
+  "ccd6": {
+    "title": "Crystal Caste d6: Cyrstal and Cube",
+    "names": [
+      "Clear Black (Cube, N=1001)",
+      "Translucent Orange (Crystal, N=3001)"],
+    "filenames": [
+      "151114d6crystalcasteclearblack",
+      "151114d6crystalcastetranslucentorange"]},
+  "ccd20": {
+    "title": "Crystal Caste d20s",
+    "names": [
+      "Clear Black (N=3001)",
+      "Translucent Orange (N=3001)"],
+    "filenames": [
+      "151111d20crystalcasteclearblack",
+      "151112d20crystalcastetranslucentorange"]},
+  "ccd4": {
+    "title": "CC d4 (N=1001)",
+    "filenames": ["151126d4crystalcasteblack"]},
+  "koplowd20": {
+    "title": "Koplow d20s (N=3003)",
+    "names": [
+      "Blue",
+      "Green A",
+      "Green B"],
+    "filenames": [
+      "151113d20koplowblue",
+      "151113d20koplowgreen",
+      "151115d20koplowgreenother"]},
+  "d6chessexwiz": {
+    "title": "Chessex and Wiz Dice d6s",
+    "names": [
+      "Wiz Translucent Blue (HCB, N=1001)",
+      "Wiz Opaque Purple (HCB, N=3001)",
+      "Chessex Gemini Copper Steel (N=1001)"],
+    "filenames": [
+      "151114d6wizdicetranslucentblue",
+      "151113d6wizdiceopaquepurple",
+      "151114d6chessexgeminicoppersteel"]},
+  "pippedd6": {
+    "title": "Pipped d6s: Settlers of Catan and Koplow",
+    "names": [
+      "Settlers of Catan Red (N=1990)",
+      "Settlers of Catan Yellow (N=2000)",
+      "Koplow 1 (N=1500)",
+      "Koplow 2 (N=1500)",
+      "Koplow 3 (N=1500)"],
+    "filenames": [
+      "160117catanredd6",
+      "160117catanyellowd6",
+      "160110koplowd6b",
+      "160110koplowd6",
+      "160104koplowd6"]},
+  "catancombined": {
+    "title": "Combined Catan Rolls",
+    "fairValue": 0.09091,
+    "filenames": ["catancombined"]},
+  "skewd6": {
+    "title": "Skew d6 From Dice Lab",
+    "names": [
+      "CW A (N=1500)",
+      "CW B (N=1500)",
+      "CCW A (N=1500)",
+      "CCW B (N=5000)"],
+    "filenames": [
+      "160110skewd6cw",
+      "160111skewd6cw",
+      "160111skewd6ccw",
+      "160112skewd6ccw"]},
+  "skewd12": {
+    "title": "Skew d12 From Dice Lab",
+    "names": [
+      "CW (N=2684)",
+      "CCW A (N=2937)",
+      "CCW B (N=7998)"],
+    "filenames": [
+      "160104skewd12",
+      "160102skewd12reflected",
+      "160101skewd12reflected"]}
+}
