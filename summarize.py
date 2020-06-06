@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Stage 4: Summarize die roll data.
 
 Example:
@@ -39,10 +39,13 @@ def PrintChiSquared(label_counts):
 
   See an explanation at
   http://blog.minitab.com/blog/adventures-in-statistics/how-to-correctly-interpret-p-values
+
+  :param label_counts: A dictionary of {label: count}.
   """
-  unused_x_sq, p = scipy.stats.chisquare(numpy.array(label_counts.values()))
-  print 'N=%d p=%f (%d%% chance the data is from a random source)' % (
-      sum(label_counts.values()), p, int(100 * p))
+  observed_frequencies = numpy.array(list(label_counts.values()))
+  unused_x_sq, p = scipy.stats.chisquare(observed_frequencies)
+  print('N=%d p=%f (%d%% chance the data is from a random source)' % (
+      sum(label_counts.values()), p, int(100 * p)))
 
 
 def GetNormalizedHistogram(label_counts):
@@ -65,12 +68,12 @@ def PrintSummaryStats(histogram_data):
     values.append(p)
     expected_value += label * p
 
-  print 'per-side probabilities: stddev=%.3f min=%.3f max=%.3f fair=%.3f' % (
+  print('per-side probabilities: stddev=%.3f min=%.3f max=%.3f fair=%.3f' % (
       numpy.std(values),
       min(values),
       max(values),
-      1.0 / len(histogram_data))
-  print 'expected=%.2f' % expected_value
+      1.0 / len(histogram_data)))
+  print('expected=%.2f' % expected_value)
 
 
 HISTOGRAM_BASE_LEN = 50
@@ -86,7 +89,7 @@ def PrintHistogram(histogram_data):
     bar_segments.append('>')  # high percentile
     bar_segments[ToIndex(low_percentile)] = '<'
     bar_segments[ToIndex(p)] = 'x'
-    print '%2d %.3f %s' % (label, p, ''.join(bar_segments))
+    print('%2d %.3f %s' % (label, p, ''.join(bar_segments)))
 
 
 def GetLabelCounts(label_sequence):
@@ -124,7 +127,7 @@ def BuildSequenceHeatmap(ordered_labels):
   sequence_matrix = []
   for _ in range(n):
     sequence_matrix.append([0] * n)
-  for i in xrange(len(ordered_labels) - 1):
+  for i in range(len(ordered_labels) - 1):
     sequence_matrix[ordered_labels[i] - 1][ordered_labels[i + 1] - 1] += 1
   max_cell = max([max(row) for row in sequence_matrix])
 
@@ -136,7 +139,7 @@ def BuildSequenceHeatmap(ordered_labels):
     for j in range(n):
       x = dw * i
       y = dw * j
-      v = sequence_matrix[i][j] * 254 / max_cell
+      v = int(sequence_matrix[i][j] * 254 / max_cell)
       draw.rectangle((x, y, x + dw, y + dw), fill=(v, v, v))
       if v > 100:
         v -= 40
@@ -160,7 +163,7 @@ def WriteHistogramData(histogram_headers, histogram_data, csv_path):
       label = row[0]
       formatted_p = ['%.5f' % p for p in row[1:]]
       csv_file.writerow([label] + formatted_p)
-    print 'wrote', csv_path
+    print('wrote', csv_path)
 
 
 def _SafeBincount(a, expected_max_value):
@@ -188,7 +191,7 @@ def GetHistogramAndQuantileValues(ordered_labels):
   max_value = max(ordered_labels)
   bin_counts = _SafeBincount(ordered_labels, max_value)
   subsample_bin_counts = []
-  for _ in xrange(BOOTSTRAP_SAMPLES):
+  for _ in range(BOOTSTRAP_SAMPLES):
     subsample = numpy.random.choice(ordered_labels, size=n)  # with replacement
     subsample_bin_counts.append(_SafeBincount(subsample, max_value))
   data = []
@@ -233,13 +236,13 @@ if __name__ == '__main__':
     ordered_labels = []
     for line in labels_file:
       if line.startswith('#'):
-        print 'skipping comment:', line[1:].strip()
+        print('skipping comment:', line[1:].strip())
         continue
       ordered_labels.append(int(line.strip()))
     if args.num_labels is not None:
       ordered_labels = ordered_labels[:args.num_labels]
 
-  print 'Summary of %d labels from %s' % (len(ordered_labels), labels_filename)
+  print('Summary of %d labels from %s' % (len(ordered_labels), labels_filename))
 
   sequence_graph = BuildSequenceHeatmap(ordered_labels)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
