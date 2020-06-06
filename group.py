@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Stage 2: Use feature detection/comparison to group images of rolled dice.
 
 Example:
@@ -125,14 +125,14 @@ class FeatureComparison(_BaseImageComparison):
           scale_amount = (
               1.0 / scale_amount if scale_amount > 0 else INF)
     if verbose:
-      print '%s (%d) match %s (%d) = %d match => %s inl / %.2f sh' % (
+      print('%s (%d) match %s (%d) = %d match => %s inl / %.2f sh' % (
           self.basename,
           len(self._descriptors),
           other.basename,
           len(other._descriptors),
           len(p1),
           match_count,
-          scale_amount)
+          scale_amount))
     return match_count, scale_amount
 
   def _GetFeatureProportion(self, other):
@@ -178,17 +178,18 @@ class FeatureComparison(_BaseImageComparison):
         image._best_scale = scale_amount
         if is_complete:
           self._AddMember(image)
-          print '%s matches %s%s => %d inl / %.2f scale' % (
+          print('%s matches %s%s => %d inl / %.2f scale' % (
               image.basename,
               self.basename,
               '' if self_potential_match is self
               else ' via ' + self_potential_match.basename,
               match_count,
-              scale_amount)
+              scale_amount))
           return True
     return False
 
-  def DrawOnSummary(self, draw, (x, y)):
+  def DrawOnSummary(self, draw, coords):
+    x, y = coords
     draw.text((x, y), self.basename)
     draw.text(
         (x, y + 10), 'features: %d' % len(self._features), DETAIL_COLOR)
@@ -300,12 +301,12 @@ class PipCounter(_BaseImageComparison):
           if not STRICT_PIPS or (e < 1.65 and fill_proportion > 0.68):
             fill_color = (254, 254, 100)
             self._num_pips += 1
-        print '%d\tpx=%d e=%.3f fill=%.3f %s' % (
-            label, len(coords), e, fill_proportion, fill_color)
+        print('%d\tpx=%d e=%.3f fill=%.3f %s' % (
+            label, len(coords), e, fill_proportion, fill_color))
       if fill_color is not None:
         for xy in coords:
           self.full_image.putpixel(xy, fill_color)
-    print '%s = %d' % (self.basename, self._num_pips)
+    print('%s = %d' % (self.basename, self._num_pips))
 
   def TakeImageIfMatch(
       self,
@@ -319,7 +320,8 @@ class PipCounter(_BaseImageComparison):
       return True
     return False
 
-  def DrawOnSummary(self, draw, (x, y)):
+  def DrawOnSummary(self, draw, coords):
+    x, y = coords
     draw.text((x, y), self.basename)
     draw.text(
         (x, y + 10), str(self._num_pips), DETAIL_COLOR)
@@ -345,7 +347,7 @@ def AssignToCluster(
     if representative.TakeImageIfMatch(
         image, match_threshold, scale_threshold, feature_threshold):
       return
-  print 'starts new cluster'
+  print('starts new cluster')
   image.is_representative = True
   representatives.append(image)
 
@@ -372,8 +374,8 @@ def CombineSmallClusters(
   for first_small_index in range(1, len(representatives_by_len)):
     if cluster_sizes[first_small_index] < cluster_sizes[0] / 4:
       break
-  print 'splitting: %s %s' % (
-      cluster_sizes[:first_small_index], cluster_sizes[first_small_index:])
+  print('splitting: %s %s' % (
+      cluster_sizes[:first_small_index], cluster_sizes[first_small_index:]))
 
   main_clusters, tail_clusters = [], []
   for i, (unused_n, representative) in enumerate(representatives_by_len):
@@ -382,8 +384,8 @@ def CombineSmallClusters(
     else:
       tail_clusters.append(representative)
 
-  print 'reparent: %d large clusters, %d small clusters' % (
-      len(main_clusters), len(tail_clusters))
+  print('reparent: %d large clusters, %d small clusters' % (
+      len(main_clusters), len(tail_clusters)))
   not_reparented = []
   for tail_representative in tail_clusters:
     reparented = False
@@ -397,7 +399,7 @@ def CombineSmallClusters(
         reparented = True
         break
     if not reparented:
-      print 'failed to reparent', tail_representative.basename
+      print('failed to reparent', tail_representative.basename)
       not_reparented.append(tail_representative)
 
   return main_clusters + not_reparented
@@ -434,9 +436,9 @@ def SaveGrouping(
     representatives, summary_data, summary_image, summary_max_members=None):
   """Writes the summary image and the JSON representation of the groupings."""
   for representative in representatives:
-    print representative.basename, (1 + len(representative.members))
+    print(representative.basename, (1 + len(representative.members)))
 
-  print 'saving summary data to', summary_data
+  print('saving summary data to', summary_data)
   data_summary = []
   for representative in representatives:
     data_summary.append(
@@ -447,7 +449,7 @@ def SaveGrouping(
 
   summary = BuildClusterSummaryImage(representatives, summary_max_members)
   summary.save(summary_image)
-  print 'summary image saved to', summary_image
+  print('summary image saved to', summary_image)
   summary.show()
 
 
@@ -517,7 +519,7 @@ if __name__ == '__main__':
       args.summary_max_members if args.summary_max_members > 0 else None)
 
   signal.signal(signal.SIGHUP, RequestSummary)
-  print 'Send SIGHUP (kill -HUP %d) for current summary image.' % os.getpid()
+  print('Send SIGHUP (kill -HUP %d) for current summary image.' % os.getpid())
 
   # List of representative images (with their member lists).
   representatives = []
@@ -529,7 +531,7 @@ if __name__ == '__main__':
     for i, cropped_image_filename in enumerate(cropped_image_names):
       if not cropped_image_filename.lower().endswith('jpg'):
         continue
-      print '%d/%d ' % (i, n)
+      print('%d/%d ' % (i, n))
       try:
         AssignToCluster(
             os.path.join(crop_dir, cropped_image_filename),
@@ -538,16 +540,16 @@ if __name__ == '__main__':
             args.scale_threshold,
             args.feature_threshold,
             args.count_pips)
-      except (NoFeaturesError, cv2.error), e:
-        print e
+      except (NoFeaturesError, cv2.error) as e:
+        print(e)
         failed_files.append(cropped_image_filename)
       if summary_requested:
-        print 'Rendering intermediate summary.'
+        print('Rendering intermediate summary.')
         summary_requested = False
         BuildClusterSummaryImage(
             representatives, summary_max_members).show()
-  except KeyboardInterrupt, e:
-    print 'got ^C, early stop for categorization'
+  except KeyboardInterrupt as e:
+    print('got ^C, early stop for categorization')
 
   try:
     representatives = CombineSmallClusters(
@@ -555,12 +557,12 @@ if __name__ == '__main__':
         args.match_threshold,
         args.scale_threshold,
         args.feature_threshold)
-  except KeyboardInterrupt, e:
-    print 'got ^C, cancelling combining clusters'
+  except KeyboardInterrupt as e:
+    print('got ^C, cancelling combining clusters')
 
-  print len(failed_files), 'failed files:', failed_files
+  print(len(failed_files), 'failed files:', failed_files)
   if not representatives:
-    print 'No data!'
+    print('No data!')
     sys.exit(1)
 
   SaveGrouping(
