@@ -155,7 +155,7 @@ def BuildSequenceHeatmap(ordered_labels):
   return sequence_graph
 
 
-def WriteHistogramData(histogram_headers, histogram_data, csv_path):
+def WriteHistogramCsv(histogram_headers, histogram_data, csv_path):
   with open(csv_path, 'w') as csv_output_file:
     csv_file = csv.writer(csv_output_file)
     csv_file.writerow(histogram_headers)
@@ -164,6 +164,13 @@ def WriteHistogramData(histogram_headers, histogram_data, csv_path):
       formatted_p = ['%.5f' % p for p in row[1:]]
       csv_file.writerow([label] + formatted_p)
     print('wrote', csv_path)
+
+
+def GetHistogramJson(histogram_headers, histogram_data):
+  json_data = []
+  for row in histogram_data:
+    json_data.append(dict(zip(histogram_headers, row)))
+  return json_data
 
 
 def _SafeBincount(a, expected_max_value):
@@ -205,6 +212,33 @@ def GetHistogramAndQuantileValues(ordered_labels):
   return headers, data
 
 
+DEFAULT_LABELS_FILENAME = 'labels.csv'
+
+
+def LoadOrderedLabels(
+      data_dir, labels_filename=DEFAULT_LABELS_FILENAME, num_labels=None):
+  """
+  Loads an ordered list of labels (arbitrary strings) from a file with one value
+  per line, skipping comments (lines starting with #).
+
+  :param data_dir: Path to the directory in which to find a labels file.
+  :param labels_filename: File name for the labels.
+  :param num_labels: If not None, only read this many labels.
+  """
+  labels_file_path = os.path.join(data_dir, labels_filename)
+  with open(labels_file_path) as labels_file:
+    ordered_labels = []
+    for line in labels_file:
+      if line.startswith('#'):
+        print('skipping comment:', line[1:].strip())
+        continue
+      ordered_labels.append(int(line.strip()))
+    if num_labels is not None:
+      ordered_labels = ordered_labels[:num_labels]
+  print('Loaded %d labels from %r.' % (len(ordered_labels), labels_file_path))
+  return ordered_labels
+
+
 if __name__ == '__main__':
   summary_line, _, main_doc = __doc__.partition('\n\n')
   parser = argparse.ArgumentParser(
@@ -213,7 +247,7 @@ if __name__ == '__main__':
       formatter_class=argparse.RawDescriptionHelpFormatter)
   parser.add_argument(
       '--labels',
-      default='labels.csv',
+      default=DEFAULT_LABELS_FILENAME,
       help='Name of a file with one label per line. Labels are integers '
            + 'representing one roll of a die. The file may contain comment '
            + 'lines, starting with #.')
@@ -231,18 +265,10 @@ if __name__ == '__main__':
   args, positional = parser.parse_known_args()
   data_dir = positional[0]
 
-  labels_filename = os.path.join(data_dir, args.labels)
-  with open(labels_filename) as labels_file:
-    ordered_labels = []
-    for line in labels_file:
-      if line.startswith('#'):
-        print('skipping comment:', line[1:].strip())
-        continue
-      ordered_labels.append(int(line.strip()))
-    if args.num_labels is not None:
-      ordered_labels = ordered_labels[:args.num_labels]
+  ordered_labels = LoadOrderedLabels(
+      data_dir, labels_filename=args.labels, num_labels=args.num_labels)
 
-  print('Summary of %d labels from %s' % (len(ordered_labels), labels_filename))
+  print('Summary of labels:')
 
   sequence_graph = BuildSequenceHeatmap(ordered_labels)
   sequence_graph_file = os.path.join(data_dir, args.sequence_graph)
@@ -255,6 +281,6 @@ if __name__ == '__main__':
       ordered_labels)
   PrintSummaryStats(histogram_data)
   if args.csv:
-    WriteHistogramData(
+    WriteHistogramCsv(
         histogram_headers, histogram_data, os.path.join(data_dir, args.csv))
   PrintHistogram(histogram_data)
