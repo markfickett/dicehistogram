@@ -70,7 +70,10 @@ Finally, analyze the sequence of labels.
 
 ## Dependencies
 
-* [Python Imaging Library (PIL)](http://www.pythonware.com/products/pil/) for extracting the die from raw imagery and building a summary image
+Python dependencies including [Python Imaging Library (PIL)](http://www.pythonware.com/products/pil/) for extracting the die from raw imagery and building a summary image, `numpy`, and `scipy` are specified in `requirements.txt` for installation using `pip`.
+
+Other dependencies:
+
 * [OpenCV](http://docs.opencv.org/doc/tutorials/introduction/linux_install/linux_install.html)
   * for feature extraction and matching, to cluster images of die faces
   * requires [CMake](https://cmake.org/install/) and other libraries (some of which its CMake build will install automatically)
