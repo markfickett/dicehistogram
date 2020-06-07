@@ -83,12 +83,25 @@ def PrintHistogram(histogram_data):
   def ToIndex(p):
     return int((p / fair_value) * HISTOGRAM_BASE_LEN)
   for label, p, low_percentile, high_percentile in histogram_data:
-    bar_segments = ['='] * ToIndex(high_percentile)
-    if len(bar_segments) > HISTOGRAM_BASE_LEN:
-      bar_segments[HISTOGRAM_BASE_LEN] = '*'  # the fair value
-    bar_segments.append('>')  # high percentile
-    bar_segments[ToIndex(low_percentile)] = '<'
-    bar_segments[ToIndex(p)] = 'x'
+    # Set up a blank canvas of bar segments we will fill in.
+    bar_segments = [' '] * (1 + max(
+        ToIndex(high_percentile), ToIndex(fair_value)))
+    # Draw a -- line from the fair value to the observed frequency.
+    for index in range(*sorted([HISTOGRAM_BASE_LEN, ToIndex(p)])):
+      bar_segments[index] = '-'
+    # Draw a == line covering the confidence interval.
+    ci_low_index = ToIndex(low_percentile)
+    ci_high_index = ToIndex(high_percentile)
+    for ci_index in range(ci_low_index + 1, ci_high_index):
+      bar_segments[ci_index] = '='
+    # Add point markings, which cover any bars at the same location.
+    # Mark the fair value.
+    bar_segments[HISTOGRAM_BASE_LEN] = '*'
+    # Mark the low and high ends of the confidence interval.
+    bar_segments[ci_low_index] = '['
+    bar_segments[ci_high_index] = ']'
+    # And finally mark the observed frequency itself.
+    bar_segments[ToIndex(p)] = 'o'
     print('%2d %.3f %s' % (label, p, ''.join(bar_segments)))
 
 
