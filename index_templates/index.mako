@@ -96,12 +96,8 @@
 
 <svg class="chart" id="wizd20s"></svg>
 
-<p>These Wiz Dice were highly variable, but do tend to have symmetrical distributions around 10&frac12; (like Chessex). In this small sample, the translucent dice were less fair than the opaques.</p>
+<p>In this small sample, the translucent dice were less fair than the opaques. These Wiz Dice were highly variable, but do tend to have symmetrical distributions around 10&frac12; (like Chessex). The pattern is more easily visible with one of the above dice on its own:</p>
 
-<svg class="chart" id="d20wizdiceopaquepurple"></svg>
-<svg class="chart" id="d20wizdicetranslucentblue151029"></svg>
-<svg class="chart" id="d20wizdiceyellow"></svg>
-<svg class="chart" id="d20wizdiceblue"></svg>
 <svg class="chart" id="d20wizdicetranslucentblue151106"></svg>
 
 <h3 id="gamescience">Game Science</h3>
@@ -145,10 +141,6 @@
 <svg class="chart" id="ccd6"></svg>
 
 <p><a href="http://crystalcaste.com/mm5/merchant.mvc?Screen=CTGY&Store_Code=CC&Category_Code=CD">Crystal Caste says</a> the "Cyrstal Dice" are "A totally new shape for RPG polyhedral dice: geometric cyrstals with sides of exactly the same size, guaranteeing random numbers." However their "crystal" d6 compared very poorly to their own cube d6 from another set (standard deviations of 0.25 and 0.05 respectively). (Their standard-shaped d8 also performed fairly well with a standard deviation of 0.09.)</p>
-
-<p>And the d4.</p>
-
-<svg class="chart" id="ccd4"></svg>
 
 <h3 id="koplow">Koplow</h3>
 

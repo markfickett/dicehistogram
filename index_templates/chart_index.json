@@ -67,9 +67,9 @@
   "gsd20s": {
     "title": "Game Science D20s",
     "names": [
-      "Game Science White d20 (N=3001)",
-      "Game Science Black d20, Before Trim (N=3001)",
-      "Game Science Black d20, After Trim (N=3001)"],
+      "White (N=3001)",
+      "Black Before Trim (N=3001)",
+      "Black After Trim (N=3001)"],
     "filenames": [
       "151119d20gamesciencewhite",
       "151109d20gamescienceblackgold",
@@ -77,8 +77,8 @@
   "ccd6": {
     "title": "Crystal Caste d6: Cyrstal and Cube",
     "names": [
-      "Clear Black (Cube, N=1001)",
-      "Translucent Orange (Crystal, N=3001)"],
+      "Cube (N=1001)",
+      "Crystal (N=3001)"],
     "filenames": [
       "151114d6crystalcasteclearblack",
       "151114d6crystalcastetranslucentorange"]},
