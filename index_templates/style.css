@@ -18,11 +18,11 @@
 
     /* from colorbrewer2.org */
     .chart .series0 { fill: #01665e; }
-    .chart .series1 { fill: #5ab4ac; }
-    .chart .series2 { fill: #c7eae5; }
-    .chart .series3 { fill: #f6e8c3; }
-    .chart .series4 { fill: #d8b365; }
-    .chart .series5 { fill: #8c510a; }
+    .chart .series2 { fill: #5ab4ac; }
+    .chart .series4 { fill: #c7eae5; }
+    .chart .series5 { fill: #f6e8c3; }
+    .chart .series1 { fill: #d8b365; }
+    .chart .series3 { fill: #8c510a; }
 
     .axis text {
       fill: black;
@@ -60,9 +60,8 @@
     }
 
     line.fair {
-      stroke: #018571;
-      stroke-dasharray: 2, 2;
-      stroke-width: 2px;
+      stroke: #000;
+      stroke-width: 1px;
     }
 
     .copyright {

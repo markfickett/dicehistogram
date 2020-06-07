@@ -322,7 +322,7 @@
   <%include file="d3.min.js" />
 </script>
 <script type="text/javascript">
-  var g_charts =
+  var g_chartConfigs =
     <%include file="chart_index.json" />
   ;
   var g_chartData = {};
