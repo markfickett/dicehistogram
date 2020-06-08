@@ -4,12 +4,12 @@ var LEGEND_WIDTH = 200;
 var HEIGHT = 300 - (MARGIN.top + MARGIN.bottom);
 d3.selectAll('.chart').attr('height', HEIGHT + 'px');
 
-Object.keys(g_chartConfigs)
+Object.keys(g_chartIdToConfig)
   .forEach(extractChartDetails);
 
 /**
  * Looks up the <svg> to render into in the DOM, and chart data from
- * g_chartConfigs and g_chartData written by the index.mako template.
+ * g_chartIdToConfig and g_dataIdToHistogramData written by index.mako.
  */
 function extractChartDetails(chartId, unused_i, unused_keys) {
   // Chart container, including space for axes and title.
@@ -18,9 +18,9 @@ function extractChartDetails(chartId, unused_i, unused_keys) {
     console.log(`No chart ${chartId} found in DOM, skipping.`);
     return;
   }
-  var chartDetails = g_chartConfigs[chartId];
-  var srcs = chartDetails.filenames.map(function(filename) {
-    return g_chartData[filename];
+  var chartDetails = g_chartIdToConfig[chartId];
+  var srcs = chartDetails.dataIds.map(function(dataId) {
+    return g_dataIdToHistogramData[dataId];
   });
   var srcNames = null;
   if (chartDetails.names) {

@@ -2,12 +2,6 @@
   <%include file="style.css" />
 </style>
 
-<!--
-  <svg class="chart" id="d20rollcounts"></svg>
-  <svg class="chart" id="d8rollcounts"></svg>
-  <svg class="chart" id="catancombined"></svg>
--->
-
 <h2>How Fair Is My D20?</h2>
 
 <p>An automatic system for rolling a <a href="https://www.google.com/search?q=polyhedral+dice">polyhedral die</a> and taking photos of the rolls; extracting the image of just the die from those images; clustering the images of the die by which face is shown; and analyzing the results.<p>
@@ -48,9 +42,9 @@
 
 <p>The below data is from an opaque purple Wiz Dice d20, rolled 8000 times.</p>
 
-<img src="arduino/dicehistogram/151031d20wizdiceopaquepurplesubsamples.png" alt="histogram showing frequency of each side after different numbers of rolls" />
+<svg class="chart" id="d20rollcounts"></svg>
 
-<p>The different datasets are from random subsamples of the actual rolled sequence. So the blue series labeled "100" is from taking 100 random rolls from the set of 8000, and charting the relative normalized frequency of each side within that subsample; similarly for the other sample counts.</p>
+<p>The different datasets are from the first N rolls of the actual rolled sequence. So the series labeled "100" is from taking the first 100 rolls from the set of 8000, and charting the relative normalized frequency of each side within that subsample; similarly for the other sample counts.</p>
 
 <p>"Normalized Frequency" is used so Y values on different histograms / for different dice can be compared easily. For example, an ideal fair d20 rolled 3000 times would show each face 150 times. So if a 20 actually comes up 102 times, the normalized frequency is 0.68. That is, in the example 20s showed up 68% of the times you would expect from a fair die. And frequencies of 1.0 correspond to what would be expected of a fair die.</p>
 
@@ -58,7 +52,7 @@
 
 <p>For a Crystal Caste clear black d8, rolled 3000 times:</p>
 
-<img src="arduino/dicehistogram/151111d8crystalcasteclearblacksubsamples.png" alt="histogram of subsamples for a d8" />
+<svg class="chart" id="d8rollcounts"></svg>
 
 <p>In this case, with 512 samples the frequencies look somewhat different from those at 3000 samples, but with 1024 it's fairly close.</p>
 
@@ -161,6 +155,10 @@
 <p>I tested some standard pipped d6s: The two from my Settlers of Catan set, and three from Koplow. The Settlers d6s turned out to be some of the fairest dice tested.</p>
 
 <svg class="chart" id="pippedd6"></svg>
+
+<p>In the game Settles of Catan, the two dice are rolled together, to get a number from 2 to 12. Even with slightly imperfect individual dice for rolling numbers from 1 to 6, the combined effect of rolling two dice results in clearly different frequencies in rolling for example a 7 (just over 16.6% of the time, which in fact is about the theoretical 1/6th) versus a 6 (about 13.7%).</p>
+
+<svg class="chart" id="catancombined"></svg>
 
 <h3>Chessex and Wiz Dice d6s</h3>
 
@@ -314,12 +312,7 @@
   <%include file="d3.min.js" />
 </script>
 <script type="text/javascript">
-  var g_chartConfigs =
-    <%include file="chart_index.json" />
-  ;
-  var g_chartData = {};
-  %for chartName, chartJson in chartNameToJson.items():
-      g_chartData['${chartName}'] = ${chartJson};
-  % endfor
+  var g_chartIdToConfig = ${chart_id_to_config_json};
+  var g_dataIdToHistogramData = ${data_id_to_histogram_data_json};
   <%include file="chart.js" />
 </script>
