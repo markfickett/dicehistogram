@@ -243,7 +243,6 @@ def LoadOrderedLabels(
     ordered_labels = []
     for line in labels_file:
       if line.startswith('#'):
-        print('skipping comment:', line[1:].strip())
         continue
       ordered_labels.append(int(line.strip()))
     if num_labels is not None:
