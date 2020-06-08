@@ -152,7 +152,13 @@
 
 <h3>Pipped d6s</h3>
 
-<p>I tested some standard pipped d6s: The two from my Settlers of Catan set, and three from Koplow. The Settlers d6s turned out to be some of the fairest dice tested.</p>
+<div class="imagerow">
+<img src="arduino/dicehistogram/160117d6catanred300.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160117d6catanyellow300.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160110d6kplowb330.JPG" alt="" width="200"/>
+</div>
+
+<p>I tested some standard pipped d6s: The two from my Settlers of Catan set, and three from Koplow. The Settlers d6s turned out to be some of the fairest dice tested. (In the images above the dice have appear to have a green cast because I repainted the interior of the rolling bucket green, for better contrast with the white dice.)</p>
 
 <svg class="chart" id="pippedd6"></svg>
 
@@ -166,9 +172,22 @@
 
 <h3 id="skewdice">Skew Dice</h3>
 
-<p><a href="https://www.mathartfun.com/thedicelab.com/SkewDice.html">Dice Lab</a> sent me some Skew Dice for evaluation. These are a novelty shape that is still mathematically fair. The dice turned out to be imperfect embeddings:</p>
+<p><a href="https://www.mathartfun.com/thedicelab.com/SkewDice.html">Dice Lab</a> sent me some Skew Dice for evaluation. These are a novelty shape that is still mathematically fair. Since the dice are asymmetrical, there is a "clockwise" and "counter-clockwise" version of each shape. The dice turned out to be imperfect embeddings:</p>
 
+<div class="imagerow">
+<img src="arduino/dicehistogram/160110d6skewcw320.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160111d6skewccw320.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160111d6skewcw320.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160112d6skewccw320.jpg" alt="" width="200"/>
+</div>
 <svg class="chart" id="skewd6"></svg>
+
+<div class="imagerow">
+<img src="arduino/dicehistogram/160101d12skewreflected300.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160102d12skewreflected300.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160103d12skew300.jpg" alt="" width="200"/>
+<img src="arduino/dicehistogram/160104d12skew300.jpg" alt="" width="200"/>
+</div>
 <svg class="chart" id="skewd12"></svg>
 
 <h3 id="geometry">Geometric Analysis</h3>

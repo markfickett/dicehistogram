@@ -187,11 +187,13 @@ CHART_ID_TO_CONFIG = {
   'skewd12': {
     'title': 'Skew d12 From Dice Lab',
     'names': [
-      'CW (N=2684)',
+      'CW A (N=2684)',
+      'CW B (N=2440)',
       'CCW A (N=2937)',
       'CCW B (N=7998)'],
     'dataIds': [
       '160104skewd12',
+      '160103skewd12',
       '160102skewd12reflected',
       '160101skewd12reflected']}
 }
