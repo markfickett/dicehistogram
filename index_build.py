@@ -90,18 +90,6 @@ CHART_ID_TO_CONFIG = {
       '151106d20wizdicetranslucentblue',
     ],
   },
-  'd20wizdiceopaquepurple': {
-    'title': 'Opaque Purple (Wiz Dice from High City Books, N=8302)',
-    'dataIds': ['151031d20wizdiceopaquepurple']},
-  'd20wizdicetranslucentblue151029': {
-    'title': 'Translucent Blue (Wiz Dice from High City Books, N=3877)',
-    'dataIds': ['151029d20wizdicetranslucentblue']},
-  'd20wizdiceyellow': {
-    'title': 'Yellow (Wiz Dice borrowed, N=3003)',
-    'dataIds': ['151105d20wizdiceyellow']},
-  'd20wizdiceblue': {
-    'title': 'Opaque Blue (Wiz Dice borrowed, N=3003)',
-    'dataIds': ['151105d20wizdiceblue']},
   'd20wizdicetranslucentblue151106': {
     'title': 'Translucent Blue (Wiz Dice borrowed, N=3003)',
     'dataIds': ['151106d20wizdicetranslucentblue']},
@@ -131,9 +119,6 @@ CHART_ID_TO_CONFIG = {
     'dataIds': [
       '151111d20crystalcasteclearblack',
       '151112d20crystalcastetranslucentorange']},
-  'ccd4': {
-    'title': 'CC d4 (N=1001)',
-    'dataIds': ['151126d4crystalcasteblack']},
   'koplowd20': {
     'title': 'Koplow d20s (N=3003)',
     'names': [
