@@ -168,6 +168,14 @@
 
 <h3>Chessex and Wiz Dice d6s</h3>
 
+<div class="imagerow">
+<img src="arduino/dicehistogram/151114d6chessexgemenicoppersteel660.jpg" alt="" width="200"/> <!-- showing #3 -->
+<img src="arduino/dicehistogram/151114d6wizdicetranslucentblue660.jpg" alt="" width="200"/> <!-- showing #5 -->
+<img src="arduino/dicehistogram/151113d6wizdiceopaquepurple660.jpg" alt="" width="200"/> <!-- showing #4 -->
+</div>
+
+<p>The d6s with numerals were not appreciably different in fairness from pipped d6s.</p>
+
 <svg class="chart" id="d6chessexwiz"></svg>
 
 <h3 id="skewdice">Skew Dice</h3>
