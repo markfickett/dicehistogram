@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Stage 1: Extract dice from images by comparing to a reference image.
 
 Example:
@@ -47,7 +47,7 @@ PIXEL_AREA_ABORT_MAX = 5.0
 
 
 def _Summarize(name, image):
-  print name, image.mode, image.size, image.format
+  print(name, image.mode, image.size, image.format)
 
 
 class NoDieFoundError(RuntimeError):
@@ -184,8 +184,8 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
 
         region_valid = diff_area.Check()
         if debug:
-          print '%svalid region at (%d, %d) %s' % (
-              '' if region_valid else 'in', x, y, diff_area)
+          print('%svalid region at (%d, %d) %s' % (
+              '' if region_valid else 'in', x, y, diff_area))
           diff_area.DrawAreaOnDiff()
         if region_valid:
           return diff_area.bound
@@ -195,13 +195,15 @@ def FindLargeDiffBound(diff, scan_distance, diff_threshold, debug=False):
   raise NoDieFoundError('No valid diff found.')
 
 
-def MakeSquare((x_min_in, y_min_in, x_max_in, y_max_in), (w, h), length):
+def MakeSquare(bounds, size, length):
   """Returns an adjusted version of the input bound which is length x length.
 
   Args:
     (w, h): The overall image size. The returned bound must not be outside it.
     length: The side length of the target, square size.
   """
+  (x_min_in, y_min_in, x_max_in, y_max_in) = bounds
+  (w, h) = size
   x_min, x_max = AdjustBound(x_min_in, x_max_in, w, length)
   y_min, y_max = AdjustBound(y_min_in, y_max_in, h, length)
   return (x_min, y_min, x_max, y_max)
@@ -256,11 +258,10 @@ class CropWorker(multiprocessing.Process):
   def run(self):
     try:
       self._Run()
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
       pass  # Exit but leat the controlling process clean up.
-    except multiprocessing.queues.Empty, e:
-      print 'worker', self.pid, 'queue empty'
-      pass
+    except multiprocessing.queues.Empty as e:
+      print('worker', self.pid, 'queue empty')
 
   def _Run(self):
     reference = PIL.Image.open(
@@ -276,7 +277,7 @@ class CropWorker(multiprocessing.Process):
       try:
         bounds = self.ExtractSubject(raw_image_filename, resized_reference)
         self._result_queue.put(CropResult(raw_image_filename, None, bounds))
-      except NoDieFoundError, e:
+      except NoDieFoundError as e:
         self._result_queue.put(
             CropResult(raw_image_filename, e.message or 'not found', None))
 
@@ -439,21 +440,21 @@ if __name__ == '__main__':
       if not result_queue.empty():
         processed += 1
         r = result_queue.get_nowait()
-        print '%d/%d %s %s' % (
-            processed, n, r.filename, r.not_found_message or '')
+        print('%d/%d %s %s' % (
+            processed, n, r.filename, r.not_found_message or ''))
         if r.not_found_message is not None:
           no_die_found_in.append(r.filename)
         else:
           crop_bounds.append(r.crop_bounds)
-  except KeyboardInterrupt, e:
-    print 'got ^C, early exit for crop'
+  except KeyboardInterrupt as e:
+    print('got ^C, early exit for crop')
 
-  print 'Processed %d, skipped %d, die not found in %d @ threshold %d. %s' % (
+  print('Processed %d, skipped %d, die not found in %d @ threshold %d. %s' % (
       processed,
       skipped,
       len(no_die_found_in),
       args.diff_threshold,
-      no_die_found_in or '')
+      no_die_found_in or ''))
   if len(crop_bounds) > 10:
     SummarizeBounds(
         os.path.join(capture_dir, args.reference),

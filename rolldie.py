@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Roll dice on a Raspberry Pi.
 
 1. Prepare empty rolling chamber.
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     if START_NUM <= 0:
       RollDie(servo)
       reference_name = TakePicture(GROUP, 'reference.JPG')
-      print 'Took reference: %s' % reference_name
+      print('Took reference: %s' % reference_name)
       raw_input('Press enter to continue. ')
     i = START_NUM
     errors = 0
@@ -81,11 +82,11 @@ if __name__ == '__main__':
       RollDie(servo)
       try:
         picture_name = TakePicture(GROUP, '%05d.JPG' % i)
-        print '%d/%d\t%s' % (i + 1, NUM_ROLLS, picture_name)
+        print('%d/%d\t%s' % (i + 1, NUM_ROLLS, picture_name))
         i += 1
-      except picamera.exc.PiCameraRuntimeError, e:
-        print e
+      except picamera.exc.PiCameraRuntimeError as e:
+        print(e)
         errors += 1
-  except KeyboardInterrupt, e:
-    print 'stopping'
+  except KeyboardInterrupt as e:
+    print('stopping')
   RPIO.cleanup()

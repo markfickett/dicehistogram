@@ -1,5 +1,11 @@
-#!/usr/bin/env python
-"""Summarize combined rolls from multiple dice."""
+#!/usr/bin/env python3
+"""Summarize combined rolls from multiple dice.
+
+Example:
+    ./summarize.py data/160117catanredd6/ --csv /tmp/red.csv
+    ./summarize.py data/160117catanyellowd6/ --csv /tmp/yellow.csv
+    ./combine.py /tmp/red.csv /tmp/yellow.csv
+"""
 
 import collections
 import csv
@@ -19,8 +25,10 @@ def LoadSummaryData(summary_file_path):
   data = {}
   with open(summary_file_path) as summary_file:
     reader = csv.reader(summary_file)
-    headers = reader.next()
     for row in reader:
+      if reader.line_num == 1:
+        headers = row
+        continue
       label, p, p5, p95 = row
       data[int(label)] = numpy.array([float(p), float(p5), float(p95)])
   return headers, data
@@ -28,8 +36,8 @@ def LoadSummaryData(summary_file_path):
 
 def CombineSummaryData(data_a, data_b):
   combined = collections.defaultdict(lambda: numpy.array([0.0, 0.0, 0.0]))
-  for label_a, p_a in data_a.iteritems():
-    for label_b, p_b in data_b.iteritems():
+  for label_a, p_a in data_a.items():
+    for label_b, p_b in data_b.items():
       combined[label_a + label_b] += p_a * p_b
   return sorted(combined.items())
 
@@ -41,6 +49,6 @@ if __name__ == '__main__':
     summary_data.append(data)
   combined = CombineSummaryData(summary_data[0], summary_data[1])
   unpacked_combined = [(label, a[0], a[1], a[2]) for label, a in combined]
-  summarize.WriteHistogramData(
+  summarize.WriteHistogramCsv(
       summary_headers, unpacked_combined, 'combined.csv')
   summarize.PrintHistogram(unpacked_combined)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Stage 3: Apply manual labels to categorized images.
 
 Example:
@@ -69,9 +69,9 @@ if __name__ == '__main__':
     labels += [args.repeat] * (len(summary_data) - len(labels))
 
   if len(labels) != len(summary_data):
-    print labels
+    print(labels)
     for i, l in enumerate(summary_data, start=1):
-      print i, (l[:4] + ([] if len(l) <= 4 else ['...']))
+      print(i, (l[:4] + ([] if len(l) <= 4 else ['...'])))
     parser.error(
         ('Got %d positional argument labels but %d data groupings in summary '
          + 'data; they must match.')
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     labeled_file_sets[label].update(filename_list)
   for i in xrange(1, max(labels) + 1):
     if i not in labeled_file_sets:
-      print 'warning, missing label', i
+      print('warning, missing label', i)
       labeled_file_sets[i] = set()
 
   ordered_labels = GetLabelSequence(labeled_file_sets)
@@ -95,4 +95,4 @@ if __name__ == '__main__':
 
     labels_file.write('\n'.join(map(str, ordered_labels)))
 
-  print 'Wrote %d labels to %s' % (len(ordered_labels), labels_filename)
+  print('Wrote %d labels to %s' % (len(ordered_labels), labels_filename))
