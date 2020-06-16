@@ -93,6 +93,9 @@ CHART_ID_TO_CONFIG = {
   'd20wizdicetranslucentblue151106': {
     'title': 'Translucent Blue (Wiz Dice borrowed, N=3003)',
     'dataIds': ['151106d20wizdicetranslucentblue']},
+  'd20wizdicetranslucentbluehcb': {
+    'title': 'Translucent Blue (HCB, N=3877)',
+    'dataIds': ['151029d20wizdicetranslucentblue']},
   'gsd20s': {
     'title': 'Game Science D20s',
     'names': [
@@ -119,6 +122,9 @@ CHART_ID_TO_CONFIG = {
     'dataIds': [
       '151111d20crystalcasteclearblack',
       '151112d20crystalcastetranslucentorange']},
+  'd20crystalcastetranslucentorange': {
+    'title': 'Crystal Caste Translucent Orange (N=3001)',
+    'dataIds': ['151112d20crystalcastetranslucentorange']},
   'koplowd20': {
     'title': 'Koplow d20s (N=3003)',
     'names': [

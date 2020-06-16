@@ -12,6 +12,8 @@
 
 <p>Skip to:</p>
 <ul>
+  <li><a href="#geometry">Comparison with Geometric Analysis</a></li>
+  <li><a href="#saltwater">Comparison with Salt Water Float Test</a></li>
   <li><a href="#hardware">Hardware: Die Rolling Machine</a></li>
   <li><a href="#software">Software: Computer Vision</a></li>
   <li><a href="#license">License: cc-nc-4.0</a></li>
@@ -198,7 +200,7 @@
 </div>
 <svg class="chart" id="skewd12"></svg>
 
-<h3 id="geometry">Geometric Analysis</h3>
+<h2 id="geometry">Geometric Analysis</h3>
 
 <p>Following the example of <a href="http://www.1000d4.com/2013/02/14/how-true-are-your-d20s/">1000d4.com</a>, I measured the distances between opposite sides of several d20s using digital calipers. Below is a comparison of those measurements and observed rolls.</p>
 
@@ -215,6 +217,37 @@
 <p>The Wiz Dice (above) and Game Science (below) d20s have some correlation between diameters and frequencies, but (especially for the fairer Game Science die) not to the extent that diameters are a reliable predictor of observed rolls.</p>
 
 <img src="arduino/dicehistogram/151109d20gamescienceblackgoldtrimmeddiameters.png" alt="frequency histogram versus diameters: Game Science" />
+
+<h2 id="saltwater">Salt Water Float</h3>
+
+<p>Many people recommend floating a d20 in a salt water bath to check its balance (<a href="https://www.youtube.com/watch?v=VI3N4Qg-JZM">Daniel Fisher's video</a> is referenced by many, including <a href="https://thecriticaldice.com/blogs/news/how-to-salt-water-test-your-dice">a writeup at Critical Dice</a>). It does <a href="https://rpg.stackexchange.com/questions/65206/is-the-saltwater-float-represented-in-this-question-a-good-way-to-test-for-loade">seem to uncover imbalances</a>.
+
+<p>I tried floating a couple of the least fair dice, but neither showed a strong orientation preference. I could coax the dice to settle with any face up, and when spun, I did not observe the same side up (or axis vertical) consistently.</p>
+
+<p>However, <a href="#geometry">geometric analysis (above)</a> on the same dice does correlate strongly with observed roll frequencies. So using calipers seems to be a better predictor of unfair die behavior than the saltwater float test.</p>
+
+<table border="0" cellpadding="0" cellspacing="0" class="transparenttable">
+  <tr>
+    <td>
+      <iframe height="560" width="315" src="https://www.youtube.com/embed/fqCx8N82bNc" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+    </td>
+    <td>
+      <svg class="chart" id="d20wizdicetranslucentbluehcb"></svg>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <iframe height="560" width="315" src="https://www.youtube.com/embed/kHMS6t2EPAU" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
+    </td>
+    <td>
+      <svg class="chart" id="d20crystalcastetranslucentorange"></svg>
+    </td>
+  </tr>
+</table>
+
+<p>As others have observed, I also found that different dice have very different densities (and of course this test can't be applied to metal dice).</p>
+
+<img src="arduino/dicehistogram/200611saltwaterglass700.jpg" alt="Dice in a glass of salt water, some floating" />
 
 <h2 id="hardware">Hardware Setup (Die Roller and Camera)</h2>
 

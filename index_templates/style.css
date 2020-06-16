@@ -1,70 +1,69 @@
-    body {
-      background-color: #ddd;
-    }
+body {
+  background-color: #ddd;
+}
 
-    .chart {
-      display: block;
-      background-color: white;
-      margin: 15px;
-      padding: 10px;
-    }
+.chart {
+  display: block;
+  background-color: white;
+  margin: 15px;
+  padding: 10px;
+}
 
-    .chart .bar {
-      opacity: 0.9;
-    }
-    .chart .bar:hover {
-      opacity: 1.0;
-    }
+.chart .bar {
+  opacity: 0.9;
+}
+.chart .bar:hover {
+  opacity: 1.0;
+}
 
-    /* from colorbrewer2.org */
-    .chart .series0 { fill: #01665e; }
-    .chart .series2 { fill: #5ab4ac; }
-    .chart .series4 { fill: #c7eae5; }
-    .chart .series5 { fill: #f6e8c3; }
-    .chart .series1 { fill: #d8b365; }
-    .chart .series3 { fill: #8c510a; }
+/* from colorbrewer2.org */
+.chart .series0 { fill: #01665e; }
+.chart .series2 { fill: #5ab4ac; }
+.chart .series4 { fill: #c7eae5; }
+.chart .series5 { fill: #f6e8c3; }
+.chart .series1 { fill: #d8b365; }
+.chart .series3 { fill: #8c510a; }
 
-    .axis text {
-      fill: black;
-      font: 10px sans-serif;
-    }
-    .chart .title,
-    .legend,
-    .copyright {
-      fill: black;
-      font-size: 12px;
-    }
+.axis text {
+  fill: black;
+  font: 10px sans-serif;
+}
+.chart .title,
+.legend,
+.copyright {
+  fill: black;
+  font-size: 12px;
+}
 
-    .legend text {
-      text-anchor: start;
-      dominant-baseline: mathematical;
-    }
+.legend text {
+  text-anchor: start;
+  dominant-baseline: mathematical;
+}
 
-    .axis path,
-    .axis line {
-      fill: none;
-      stroke: #000;
-      shape-rendering: crispEdges;
-    }
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
 
-    .ci {
-      fill: none;
-      stroke: #000;
-      opacity: 0.6;
-      shape-rendering: crispEdges;
-    }
+.ci {
+  fill: none;
+  stroke: #000;
+  opacity: 0.6;
+  shape-rendering: crispEdges;
+}
 
-    .axis.y .tick line {
-      stroke: #000;
-      opacity: 0.2;
-    }
+.axis.y .tick line {
+  stroke: #000;
+  opacity: 0.2;
+}
 
-    line.fair {
-      stroke: #000;
-      stroke-width: 1px;
-    }
+line.fair {
+  stroke: #000;
+  stroke-width: 1px;
+}
 
-    .copyright {
-      fill: #aaa;
-    }
-
+.copyright {
+  fill: #aaa;
+}
