@@ -365,6 +365,7 @@
 <li><a href="http://arstechnica.co.uk/the-multiverse/2016/08/how-fair-is-your-d20/">Ars Technica</a></li>
 <li><a href="https://tamino.wordpress.com/2016/05/01/lucky-d20/">Open Mind</a> compares this and another die-fairness study</li>
 <li><a href="https://lobste.rs/s/tkcyji/dice_roller_comparing_fairness_d20_dice">lobste.rs</a> (2019)</li>
+<li><a href="www.pixels-dice.com/excellent-balance">Pixels Dice</a> on Kickstarter compares their data to this Chessex and Game Science data (2021).</li>
 <li><a href="arduino/dicehistogram/20190508disquscommentsexport.pdf">Archived Disqus comments (PDF)</a></li>
 </ul>
 
